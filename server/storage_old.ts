@@ -96,6 +96,8 @@ export class DatabaseStorage implements IStorage {
     limit?: number;
     offset?: number;
   }): Promise<Campaign[]> {
+    let query = db.select().from(campaigns);
+    
     const conditions = [];
     if (filters?.category) {
       conditions.push(eq(campaigns.category, filters.category));
@@ -107,21 +109,20 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(campaigns.creatorId, filters.creatorId));
     }
 
-    let query = db.select().from(campaigns);
-    
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
 
-    const results = await query.orderBy(desc(campaigns.createdAt));
-    
-    if (filters?.limit && filters?.offset) {
-      return results.slice(filters.offset, filters.offset + filters.limit);
-    } else if (filters?.limit) {
-      return results.slice(0, filters.limit);
+    query = query.orderBy(desc(campaigns.createdAt));
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
     }
-    
-    return results;
+    if (filters?.offset) {
+      query = query.offset(filters.offset);
+    }
+
+    return await query.execute();
   }
 
   async getCampaign(id: string): Promise<Campaign | undefined> {
@@ -162,6 +163,8 @@ export class DatabaseStorage implements IStorage {
 
   // Contribution operations
   async getContributions(campaignId?: string, backerId?: string): Promise<Contribution[]> {
+    let query = db.select().from(contributions);
+    
     const conditions = [];
     if (campaignId) {
       conditions.push(eq(contributions.campaignId, campaignId));
@@ -170,13 +173,11 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(contributions.backerId, backerId));
     }
 
-    let query = db.select().from(contributions);
-    
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
 
-    return await query.orderBy(desc(contributions.createdAt));
+    return await query.orderBy(desc(contributions.createdAt)).execute();
   }
 
   async createContribution(contributionData: InsertContribution): Promise<Contribution> {
@@ -204,6 +205,8 @@ export class DatabaseStorage implements IStorage {
     transactionType?: string;
     limit?: number;
   }): Promise<Transaction[]> {
+    let query = db.select().from(transactions);
+    
     const conditions = [];
     if (filters?.campaignId) {
       conditions.push(eq(transactions.campaignId, filters.campaignId));
@@ -212,19 +215,17 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(transactions.transactionType, filters.transactionType));
     }
 
-    let query = db.select().from(transactions);
-    
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
 
-    const results = await query.orderBy(desc(transactions.createdAt));
+    query = query.orderBy(desc(transactions.createdAt));
 
     if (filters?.limit) {
-      return results.slice(0, filters.limit);
+      query = query.limit(filters.limit);
     }
 
-    return results;
+    return await query.execute();
   }
 
   async createTransaction(transactionData: InsertTransaction): Promise<Transaction> {
@@ -253,7 +254,7 @@ export class DatabaseStorage implements IStorage {
       query = query.where(eq(aiInteractions.userId, userId));
     }
 
-    return await query.orderBy(desc(aiInteractions.createdAt));
+    return await query.orderBy(desc(aiInteractions.createdAt)).execute();
   }
 
   // Statistics

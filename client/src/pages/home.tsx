@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
+import { MainNavigation } from "@/components/navigation/MainNavigation";
+import { ThreeBackground } from "@/components/three/ThreeBackground";
 import CampaignCard from "@/components/campaign/campaign-card";
 import { useAuth } from "@/hooks/useAuth";
 import { Plus, TrendingUp, Users, Wallet } from "lucide-react";
@@ -35,10 +35,11 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen bg-background relative">
+      <ThreeBackground />
+      <MainNavigation />
       
-      <div className="pt-16">
+      <div className="relative z-10">
         {/* Welcome Section */}
         <section className="py-12 bg-gradient-to-b from-background to-muted/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -195,8 +196,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-
-      <Footer />
     </div>
   );
 }

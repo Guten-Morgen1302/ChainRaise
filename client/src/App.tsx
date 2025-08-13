@@ -15,6 +15,7 @@ import AccessGuide from "@/pages/AccessGuide";
 import Dashboard from "@/pages/dashboard";
 import KYC from "@/pages/kyc";
 import Explorer from "@/pages/explorer";
+import AdminPage from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
           <Route path="/campaigns/:id" component={CampaignDetail} />
           <Route path="/create" component={CreateCampaign} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/admin" component={AdminPage} />
           <Route path="/kyc" component={KYC} />
           <Route path="/kyc-verification" component={KYCVerification} />
           <Route path="/features" component={FeatureShowcase} />

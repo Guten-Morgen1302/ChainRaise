@@ -4,8 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
+import { PageLayout } from "@/components/layout/PageLayout";
 import CampaignCard from "@/components/campaign/campaign-card";
 import { Search, Filter, Loader2 } from "lucide-react";
 import type { Campaign } from "@shared/schema";
@@ -35,12 +34,9 @@ export default function Campaigns() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
-      <div className="pt-16">
-        {/* Header */}
-        <section className="py-12 bg-gradient-to-b from-background to-muted/20">
+    <PageLayout backTo="/" backLabel="Back to Home">
+      {/* Header */}
+      <section className="py-12 bg-gradient-to-b from-background to-muted/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -145,11 +141,8 @@ export default function Campaigns() {
                 </Button>
               </div>
             )}
-          </div>
-        </section>
-      </div>
-
-      <Footer />
-    </div>
+        </div>
+      </section>
+    </PageLayout>
   );
 }

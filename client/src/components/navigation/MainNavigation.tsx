@@ -1,187 +1,147 @@
-import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
   Home, 
   Search, 
   PlusCircle, 
-  BarChart3, 
-  Shield, 
-  Wallet, 
-  User,
-  Menu,
-  X
+  User, 
+  TrendingUp,
+  Shield,
+  Brain,
+  Settings,
+  LogOut
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 export function MainNavigation() {
   const [location] = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { user, logout } = useAuth();
 
-  const navigationItems = [
-    { path: "/", label: "Home", icon: Home },
-    { path: "/campaigns", label: "Campaigns", icon: Search },
-    { path: "/create", label: "Create", icon: PlusCircle, requiresAuth: true },
-    { path: "/dashboard", label: "Dashboard", icon: BarChart3, requiresAuth: true },
-    { path: "/explorer", label: "Explorer", icon: Wallet },
+  const navItems = [
+    { href: "/", icon: Home, label: "Home" },
+    { href: "/campaigns", icon: Search, label: "Explore" },
+    { href: "/create", icon: PlusCircle, label: "Create" },
+    { href: "/dashboard", icon: TrendingUp, label: "Dashboard" },
+    { href: "/explorer", icon: Brain, label: "AI Explorer" },
   ];
 
-  const isActive = (path: string) => {
-    if (path === "/" && location === "/") return true;
-    if (path !== "/" && location.startsWith(path)) return true;
-    return false;
-  };
-
-  const getKYCStatus = () => {
-    if (!user?.kycStatus) return "Not Started";
-    return user.kycStatus === "verified" ? "Verified" : 
-           user.kycStatus === "pending" ? "Pending" : "Rejected";
-  };
-
-  const getKYCBadgeVariant = () => {
-    if (!user?.kycStatus) return "outline";
-    return user.kycStatus === "verified" ? "default" : 
-           user.kycStatus === "pending" ? "secondary" : "destructive";
-  };
-
   return (
-    <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CF</span>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
-              CryptoFund
-            </span>
-          </Link>
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between px-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center space-x-2">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600" />
+          <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            CryptoFund
+          </span>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navigationItems.map((item) => {
-              if (item.requiresAuth && !isAuthenticated) return null;
-              
-              return (
-                <Link key={item.path} href={item.path}>
-                  <Button
-                    variant={isActive(item.path) ? "default" : "ghost"}
-                    className="flex items-center space-x-2"
-                    data-testid={`nav-link-${item.label.toLowerCase()}`}
-                  >
-                    <item.icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </Button>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* User Actions */}
-          <div className="hidden md:flex items-center space-x-4">
-            {isAuthenticated ? (
-              <>
-                {/* KYC Status */}
-                <Link href="/kyc-verification">
-                  <Badge variant={getKYCBadgeVariant()} className="cursor-pointer">
-                    <Shield className="w-3 h-3 mr-1" />
-                    KYC: {getKYCStatus()}
-                  </Badge>
-                </Link>
-
-                {/* User Profile */}
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium">
-                    {user?.firstName || 'User'}
-                  </span>
-                </div>
-
-                {/* Logout */}
-                <Button variant="outline" size="sm" asChild>
-                  <a href="/api/logout" data-testid="button-logout">
-                    Logout
-                  </a>
+        {/* Center Navigation */}
+        <div className="hidden md:flex items-center space-x-1">
+          {navItems.map((item) => {
+            const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={isActive ? "default" : "ghost"}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
                 </Button>
-              </>
-            ) : (
-              <Button asChild data-testid="button-login">
-                <a href="/api/login">Login</a>
-              </Button>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            data-testid="button-mobile-menu"
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
+              </Link>
+            );
+          })}
         </div>
 
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t">
-            <div className="space-y-2">
-              {navigationItems.map((item) => {
-                if (item.requiresAuth && !isAuthenticated) return null;
-                
-                return (
-                  <Link key={item.path} href={item.path}>
-                    <Button
-                      variant={isActive(item.path) ? "default" : "ghost"}
-                      className="w-full justify-start"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      data-testid={`mobile-nav-link-${item.label.toLowerCase()}`}
-                    >
-                      <item.icon className="w-4 h-4 mr-2" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                );
-              })}
-
-              <div className="pt-4 border-t mt-4">
-                {isAuthenticated ? (
-                  <div className="space-y-3">
-                    <Link href="/kyc-verification">
-                      <div className="flex items-center space-x-2 p-2">
-                        <Badge variant={getKYCBadgeVariant()}>
-                          <Shield className="w-3 h-3 mr-1" />
-                          KYC: {getKYCStatus()}
-                        </Badge>
-                      </div>
-                    </Link>
-
-                    <div className="flex items-center space-x-2 p-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
-                        <User className="w-3 h-3 text-white" />
-                      </div>
-                      <span className="text-sm">{user?.firstName || 'User'}</span>
-                    </div>
-
-                    <Button variant="outline" size="sm" asChild className="w-full">
-                      <a href="/api/logout">Logout</a>
-                    </Button>
+        {/* User Menu */}
+        <div className="flex items-center space-x-4">
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.profileImageUrl || ""} alt={user.firstName || "User"} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                      {user.firstName?.[0] || user.email?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex flex-col space-y-1 p-2">
+                  <p className="text-sm font-medium leading-none">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user.email}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant={user.kycStatus === "verified" ? "default" : "secondary"}>
+                      {user.kycStatus === "verified" ? (
+                        <>
+                          <Shield className="h-3 w-3 mr-1" />
+                          Verified
+                        </>
+                      ) : (
+                        "Pending KYC"
+                      )}
+                    </Badge>
                   </div>
-                ) : (
-                  <Button asChild className="w-full">
-                    <a href="/api/login">Login</a>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/kyc" className="flex items-center">
+                    <Shield className="mr-2 h-4 w-4" />
+                    KYC Verification
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Navigation */}
+      <div className="md:hidden border-t">
+        <div className="flex items-center justify-around py-2">
+          {navItems.slice(0, 4).map((item) => {
+            const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={isActive ? "default" : "ghost"}
+                  size="sm"
+                  className="flex flex-col items-center gap-1 h-auto py-2"
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span className="text-xs">{item.label}</span>
+                </Button>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
