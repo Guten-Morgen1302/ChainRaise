@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoFund - Web3 Crowdfunding Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/heroicons@2.0.18/24/outline/index.js" type="module"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        'cyber': {
+                            'blue': '#00D4FF',
+                            'purple': '#8B5CF6',
+                            'green': '#10B981',
+                            'pink': '#EC4899',
+                            'yellow': '#F59E0B'
+                        },
+                        'glass': {
+                            'white': 'rgba(255, 255, 255, 0.1)',
+                            'dark': 'rgba(15, 23, 42, 0.8)'
+                        }
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            'from': { boxShadow: '0 0 20px -10px rgba(0, 212, 255, 0.5)' },
+                            'to': { boxShadow: '0 0 20px -10px rgba(0, 212, 255, 0.8)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .neon-border {
+            border: 1px solid transparent;
+            background: linear-gradient(45deg, #00D4FF, #8B5CF6) border-box;
+            border-radius: 12px;
+        }
+        .cyber-gradient {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+        }
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+        }
+        .progress-glow {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white overflow-x-hidden">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-morphism border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="text-2xl font-bold bg-gradient-to-r from-cyber-blue to-cyber-purple bg-clip-text text-transparent">
+                        CryptoFund
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#home" class="text-gray-300 hover:text-cyber-blue transition-colors duration-300">Home</a>
+                    <a href="#campaigns" class="text-gray-300 hover:text-cyber-blue transition-colors duration-300">Campaigns</a>
+                    <a href="#create" class="text-gray-300 hover:text-cyber-blue transition-colors duration-300">Create</a>
+                    <a href="#explorer" class="text-gray-300 hover:text-cyber-blue transition-colors duration-300">Explorer</a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button class="glass-morphism px-4 py-2 rounded-lg hover:bg-white/20 transition-all duration-300">
+                        <span class="text-sm font-mono">0x1a2b...c3d4</span>
+                    </button>
+                    <button class="bg-gradient-to-r from-cyber-blue to-cyber-purple px-6 py-2 rounded-lg font-medium hover:scale-105 transition-transform duration-300">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <div id="main-content" class="pt-16">
+        
+        <!-- Landing Page Hero Section -->
+        <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+            <!-- Animated background -->
+            <div class="absolute inset-0 cyber-gradient">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%2300D4FF" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+            </div>
+            
+            <!-- Hero Content -->
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="mb-8">
+                    <h1 class="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-white via-cyber-blue to-cyber-purple bg-clip-text text-transparent animate-float">
+                        The Future of<br/>
+                        <span class="glow-text">Crowdfunding</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                        Launch campaigns, raise funds transparently on blockchain, and build the next generation of innovative projects with our Web3 crowdfunding platform.
+                    </p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
+                    <button class="bg-gradient-to-r from-cyber-blue to-cyber-green px-8 py-4 rounded-xl font-semibold text-lg hover:scale-105 transform transition-all duration-300 animate-glow">
+                        Launch Campaign
+                    </button>
+                    <button class="glass-morphism px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white/20 transition-all duration-300">
+                        Explore Projects
+                    </button>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    <div class="glass-morphism p-6 rounded-xl text-center">
+                        <div class="text-3xl font-black text-cyber-blue mb-2">$2.4M+</div>
+                        <div class="text-gray-400">Total Raised</div>
+                    </div>
+                    <div class="glass-morphism p-6 rounded-xl text-center">
+                        <div class="text-3xl font-black text-cyber-green mb-2">1,247</div>
+                        <div class="text-gray-400">Active Campaigns</div>
+                    </div>
+                    <div class="glass-morphism p-6 rounded-xl text-center">
+                        <div class="text-3xl font-black text-cyber-purple mb-2">45K+</div>
+                        <div class="text-gray-400">Global Backers</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trending Campaigns Section -->
+        <section id="campaigns" class="py-20 bg-slate-800/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-black mb-6 bg-gradient-to-r from-cyber-blue to-cyber-purple bg-clip-text text-transparent">
+                        Trending Campaigns
+                    </h2>
+                    <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                        Discover groundbreaking projects backed by our global community
+                    </p>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="flex flex-wrap justify-center gap-4 mb-12">
+                    <button class="glass-morphism px-6 py-3 rounded-lg font-medium hover:bg-cyber-blue/20 transition-all duration-300 border-cyber-blue/50">
+                        All Categories
+                    </button>
+                    <button class="glass-morphism px-6 py-3 rounded-lg font-medium hover:bg-cyber-blue/20 transition-all duration-300">
+                        Technology
+                    </button>
+                    <button class="glass-morphism px-6 py-3 rounded-lg font-medium hover:bg-cyber-blue/20 transition-all duration-300">
+                        Gaming
+                    </button>
+                    <button class="glass-morphism px-6 py-3 rounded-lg font-medium hover:bg-cyber-blue/20 transition-all duration-300">
+                        DeFi
+                    </button>
+                    <button class="glass-morphism px-6 py-3 rounded-lg font-medium hover:bg-cyber-blue/20 transition-all duration-300">
+                        Creative
+                    </button>
+                </div>
+
+                <!-- Campaign Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- @COMPONENT: CampaignCard -->
+                    <!-- Campaign 1 -->
+                    <div class="group glass-morphism rounded-2xl overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-cyber-blue/20">
+                        <!-- Revolutionary VR headset for decentralized metaverse experiences -->
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" 
+                                 alt="VR Headset Technology" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <div class="absolute top-4 left-4 bg-cyber-green/90 px-3 py-1 rounded-full text-sm font-medium">
+                                Technology
+                            </div>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-mono">
+                                87% funded
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-cyber-blue transition-colors duration-300">
+                                NextGen VR Metaverse Platform
+                            </h3>
+                            <p class="text-gray-400 mb-4 text-sm">
+                                Revolutionary VR experience with haptic feedback and blockchain integration for true digital ownership.
+                            </p>
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-400">Progress</span>
+                                    <span class="font-mono text-cyber-green">$347K / $400K</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-cyber-green to-cyber-blue h-2 rounded-full progress-glow" style="width: 87%"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">1,234 backers</span>
+                                </div>
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">12 days left</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign 2 -->
+                    <div class="group glass-morphism rounded-2xl overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-cyber-purple/20">
+                        <!-- Sustainable blockchain gaming ecosystem with play-to-earn mechanics -->
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" 
+                                 alt="Gaming Controller Setup" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <div class="absolute top-4 left-4 bg-cyber-purple/90 px-3 py-1 rounded-full text-sm font-medium">
+                                Gaming
+                            </div>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-mono">
+                                156% funded
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-cyber-purple transition-colors duration-300">
+                                EcoPlay - Sustainable Gaming DAO
+                            </h3>
+                            <p class="text-gray-400 mb-4 text-sm">
+                                Carbon-neutral gaming ecosystem where players earn real rewards while contributing to environmental causes.
+                            </p>
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-400">Progress</span>
+                                    <span class="font-mono text-cyber-purple">$156K / $100K</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-cyber-purple to-cyber-pink h-2 rounded-full progress-glow" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">2,891 backers</span>
+                                </div>
+                                <div class="text-sm text-green-400">
+                                    <span class="font-mono">Successfully funded!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign 3 -->
+                    <div class="group glass-morphism rounded-2xl overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-cyber-yellow/20">
+                        <!-- Decentralized finance protocol for small business lending -->
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" 
+                                 alt="Financial Technology Dashboard" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <div class="absolute top-4 left-4 bg-cyber-yellow/90 text-black px-3 py-1 rounded-full text-sm font-medium">
+                                DeFi
+                            </div>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-mono">
+                                43% funded
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-cyber-yellow transition-colors duration-300">
+                                SmallBiz DeFi Protocol
+                            </h3>
+                            <p class="text-gray-400 mb-4 text-sm">
+                                Democratizing business lending through decentralized finance with AI-powered credit scoring and community governance.
+                            </p>
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-400">Progress</span>
+                                    <span class="font-mono text-cyber-yellow">$215K / $500K</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-cyber-yellow to-cyber-green h-2 rounded-full progress-glow" style="width: 43%"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">567 backers</span>
+                                </div>
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">28 days left</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign 4 -->
+                    <div class="group glass-morphism rounded-2xl overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-cyber-green/20">
+                        <!-- Innovative renewable energy storage solution for smart cities -->
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" 
+                                 alt="Renewable Energy Solar Panels" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <div class="absolute top-4 left-4 bg-cyber-green/90 px-3 py-1 rounded-full text-sm font-medium">
+                                GreenTech
+                            </div>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-mono">
+                                72% funded
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-cyber-green transition-colors duration-300">
+                                GridSync Energy Storage
+                            </h3>
+                            <p class="text-gray-400 mb-4 text-sm">
+                                Revolutionary energy storage system using blockchain to optimize smart city power grids with renewable sources.
+                            </p>
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-400">Progress</span>
+                                    <span class="font-mono text-cyber-green">$720K / $1M</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-cyber-green to-cyan-400 h-2 rounded-full progress-glow" style="width: 72%"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">3,421 backers</span>
+                                </div>
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">8 days left</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign 5 -->
+                    <div class="group glass-morphism rounded-2xl overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-cyber-pink/20">
+                        <!-- Digital art creation platform with AI-assisted tools -->
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" 
+                                 alt="Digital Art Creation" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <div class="absolute top-4 left-4 bg-cyber-pink/90 px-3 py-1 rounded-full text-sm font-medium">
+                                Creative
+                            </div>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-mono">
+                                91% funded
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-cyber-pink transition-colors duration-300">
+                                AI Canvas - Creative Studio
+                            </h3>
+                            <p class="text-gray-400 mb-4 text-sm">
+                                Next-generation digital art platform combining human creativity with AI assistance for professional artists and creators.
+                            </p>
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-400">Progress</span>
+                                    <span class="font-mono text-cyber-pink">$182K / $200K</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-cyber-pink to-purple-400 h-2 rounded-full progress-glow" style="width: 91%"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">876 backers</span>
+                                </div>
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">5 days left</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign 6 -->
+                    <div class="group glass-morphism rounded-2xl overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-400/20">
+                        <!-- Quantum computing research project for cryptography advancement -->
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" 
+                                 alt="Quantum Computing Technology" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <div class="absolute top-4 left-4 bg-cyan-400/90 text-black px-3 py-1 rounded-full text-sm font-medium">
+                                Research
+                            </div>
+                            <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-mono">
+                                34% funded
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2 group-hover:text-cyan-400 transition-colors duration-300">
+                                QuantumCrypt Research Lab
+                            </h3>
+                            <p class="text-gray-400 mb-4 text-sm">
+                                Advancing quantum-resistant cryptography research to secure the future of blockchain and digital communications.
+                            </p>
+                            <div class="mb-4">
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-400">Progress</span>
+                                    <span class="font-mono text-cyan-400">$340K / $1M</span>
+                                </div>
+                                <div class="w-full bg-slate-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full progress-glow" style="width: 34%"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">234 backers</span>
+                                </div>
+                                <div class="text-sm text-gray-400">
+                                    <span class="font-mono">45 days left</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: CampaignCard -->
+                </div>
+
+                <div class="text-center mt-12">
+                    <button class="glass-morphism px-8 py-4 rounded-xl font-semibold hover:bg-white/20 transition-all duration-300">
+                        View All Campaigns
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Transaction Feed -->
+        <section id="explorer" class="py-20 bg-slate-900">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-black mb-6 bg-gradient-to-r from-cyber-green to-cyber-blue bg-clip-text text-transparent">
+                        Live Blockchain Explorer
+                    </h2>
+                    <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                        Real-time transparency - every transaction recorded on Polygon blockchain
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Transaction Feed -->
+                    <div class="glass-morphism rounded-2xl p-6">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                            <div class="w-3 h-3 bg-cyber-green rounded-full animate-pulse"></div>
+                            Live Transactions
+                        </h3>
+                        
+                        <div class="space-y-4 max-h-96 overflow-y-auto">
+                            <!-- Transaction 1 -->
+                            <div class="bg-slate-800/50 rounded-xl p-4 border border-cyber-green/20">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="font-mono text-sm text-cyber-green">CONTRIBUTION</div>
+                                    <div class="font-mono text-xs text-gray-400">2 min ago</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="text-sm text-gray-400">NextGen VR Metaverse Platform</div>
+                                    <div class="font-mono text-lg font-bold text-white">+0.5 ETH</div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-mono text-gray-500">0x1a2b...c3d4</span>
+                                    <a href="#" class="text-cyber-blue hover:text-cyber-green transition-colors">View on Polygonscan</a>
+                                </div>
+                            </div>
+
+                            <!-- Transaction 2 -->
+                            <div class="bg-slate-800/50 rounded-xl p-4 border border-cyber-purple/20">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="font-mono text-sm text-cyber-purple">WITHDRAWAL</div>
+                                    <div class="font-mono text-xs text-gray-400">8 min ago</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="text-sm text-gray-400">EcoPlay - Sustainable Gaming DAO</div>
+                                    <div class="font-mono text-lg font-bold text-white">-2.1 ETH</div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-mono text-gray-500">0x5e6f...g7h8</span>
+                                    <a href="#" class="text-cyber-blue hover:text-cyber-green transition-colors">View on Polygonscan</a>
+                                </div>
+                            </div>
+
+                            <!-- Transaction 3 -->
+                            <div class="bg-slate-800/50 rounded-xl p-4 border border-cyber-yellow/20">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="font-mono text-sm text-cyber-yellow">CONTRIBUTION</div>
+                                    <div class="font-mono text-xs text-gray-400">15 min ago</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="text-sm text-gray-400">SmallBiz DeFi Protocol</div>
+                                    <div class="font-mono text-lg font-bold text-white">+1.2 ETH</div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-mono text-gray-500">0x9i0j...k1l2</span>
+                                    <a href="#" class="text-cyber-blue hover:text-cyber-green transition-colors">View on Polygonscan</a>
+                                </div>
+                            </div>
+
+                            <!-- Transaction 4 -->
+                            <div class="bg-slate-800/50 rounded-xl p-4 border border-cyber-green/20">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="font-mono text-sm text-cyber-green">CONTRIBUTION</div>
+                                    <div class="font-mono text-xs text-gray-400">22 min ago</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="text-sm text-gray-400">GridSync Energy Storage</div>
+                                    <div class="font-mono text-lg font-bold text-white">+0.8 ETH</div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-mono text-gray-500">0x3m4n...o5p6</span>
+                                    <a href="#" class="text-cyber-blue hover:text-cyber-green transition-colors">View on Polygonscan</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Panel -->
+                    <div class="glass-morphism rounded-2xl p-6">
+                        <h3 class="text-2xl font-bold mb-6">Network Statistics</h3>
+                        
+                        <div class="space-y-6">
+                            <!-- Total Volume -->
+                            <div class="bg-slate-800/50 rounded-xl p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-400">24h Volume</span>
+                                    <span class="text-cyber-green font-mono text-sm">+12.4%</span>
+                                </div>
+                                <div class="font-mono text-2xl font-bold text-white">47.3 ETH</div>
+                                <div class="text-sm text-gray-500 font-mono">≈ $89,247 USD</div>
+                            </div>
+
+                            <!-- Active Campaigns -->
+                            <div class="bg-slate-800/50 rounded-xl p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-400">Active Campaigns</span>
+                                    <span class="text-cyber-blue font-mono text-sm">+3 today</span>
+                                </div>
+                                <div class="font-mono text-2xl font-bold text-white">1,247</div>
+                                <div class="text-sm text-gray-500">Across 12 categories</div>
+                            </div>
+
+                            <!-- Gas Tracker -->
+                            <div class="bg-slate-800/50 rounded-xl p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-400">Polygon Gas Price</span>
+                                    <span class="text-cyber-purple font-mono text-sm">Low</span>
+                                </div>
+                                <div class="font-mono text-2xl font-bold text-white">0.02 GWEI</div>
+                                <div class="text-sm text-gray-500">≈ $0.001 USD</div>
+                            </div>
+
+                            <!-- Success Rate -->
+                            <div class="bg-slate-800/50 rounded-xl p-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-gray-400">Success Rate</span>
+                                    <span class="text-cyber-yellow font-mono text-sm">This month</span>
+                                </div>
+                                <div class="font-mono text-2xl font-bold text-white">73.2%</div>
+                                <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
+                                    <div class="bg-gradient-to-r from-cyber-yellow to-cyber-green h-2 rounded-full" style="width: 73.2%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Create Campaign Section -->
+        <section id="create" class="py-20 bg-slate-800/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-black mb-6 bg-gradient-to-r from-cyber-purple to-cyber-pink bg-clip-text text-transparent">
+                        Launch Your Vision
+                    </h2>
+                    <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                        Turn your innovative ideas into reality with our AI-powered campaign creation tools
+                    </p>
+                </div>
+
+                <div class="max-w-4xl mx-auto">
+                    <!-- KYC Status -->
+                    <div class="glass-morphism rounded-2xl p-8 mb-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-bold">KYC Verification Status</h3>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-cyber-yellow rounded-full animate-pulse"></div>
+                                <span class="text-cyber-yellow font-medium">Pending Review</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-cyber-green/20 rounded-full flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-cyber-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                                <div class="font-medium text-cyber-green mb-2">Identity Verified</div>
+                                <div class="text-sm text-gray-400">Government ID confirmed</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-cyber-yellow/20 rounded-full flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-cyber-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="font-medium text-cyber-yellow mb-2">Under Review</div>
+                                <div class="text-sm text-gray-400">Business documents processing</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="w-16 h-16 mx-auto mb-4 bg-gray-600/20 rounded-full flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="font-medium text-gray-400 mb-2">Pending</div>
+                                <div class="text-sm text-gray-400">Final approval needed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Creation Preview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Form Preview -->
+                        <div class="glass-morphism rounded-2xl p-6">
+                            <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-cyber-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Campaign Builder
+                            </h3>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Campaign Title</label>
+                                    <input type="text" 
+                                           placeholder="Revolutionary IoT Smart Home System" 
+                                           class="w-full px-4 py-3 bg-slate-800/50 border border-gray-600 rounded-lg focus:border-cyber-blue focus:ring-2 focus:ring-cyber-blue/20 transition-all duration-300" 
+                                           data-mock="true" />
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                                    <select class="w-full px-4 py-3 bg-slate-800/50 border border-gray-600 rounded-lg focus:border-cyber-blue focus:ring-2 focus:ring-cyber-blue/20 transition-all duration-300" data-mock="true">
+                                        <option>Technology</option>
+                                        <option>Gaming</option>
+                                        <option>DeFi</option>
+                                        <option>Creative</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-300 mb-2">Funding Goal</label>
+                                        <input type="text" 
+                                               placeholder="500 ETH" 
+                                               class="w-full px-4 py-3 bg-slate-800/50 border border-gray-600 rounded-lg focus:border-cyber-blue focus:ring-2 focus:ring-cyber-blue/20 transition-all duration-300" 
+                                               data-mock="true" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-300 mb-2">Duration</label>
+                                        <input type="text" 
+                                               placeholder="30 days" 
+                                               class="w-full px-4 py-3 bg-slate-800/50 border border-gray-600 rounded-lg focus:border-cyber-blue focus:ring-2 focus:ring-cyber-blue/20 transition-all duration-300" 
+                                               data-mock="true" />
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Campaign Description</label>
+                                    <textarea rows="4" 
+                                              placeholder="Tell the world about your innovative project..." 
+                                              class="w-full px-4 py-3 bg-slate-800/50 border border-gray-600 rounded-lg focus:border-cyber-blue focus:ring-2 focus:ring-cyber-blue/20 transition-all duration-300" 
+                                              data-mock="true"></textarea>
+                                </div>
+
+                                <button class="w-full bg-gradient-to-r from-cyber-purple to-cyber-pink px-6 py-3 rounded-lg font-medium hover:scale-105 transform transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    Complete KYC to Launch Campaign
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- AI Assistant Preview -->
+                        <div class="glass-morphism rounded-2xl p-6">
+                            <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                                <div class="w-5 h-5 bg-gradient-to-r from-cyber-blue to-cyber-purple rounded-full animate-pulse"></div>
+                                AI Campaign Assistant
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <!-- AI Suggestion 1 -->
+                                <div class="bg-gradient-to-r from-cyber-blue/10 to-cyber-purple/10 rounded-lg p-4 border border-cyber-blue/30">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 bg-cyber-blue/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-4 h-4 text-cyber-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="font-medium text-cyber-blue mb-1">Title Optimization</div>
+                                            <div class="text-sm text-gray-400">Consider adding "Next-Gen" for higher engagement rates (+23% average)</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- AI Suggestion 2 -->
+                                <div class="bg-gradient-to-r from-cyber-green/10 to-cyan-400/10 rounded-lg p-4 border border-cyber-green/30">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 bg-cyber-green/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-4 h-4 text-cyber-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="font-medium text-cyber-green mb-1">Funding Prediction</div>
+                                            <div class="text-sm text-gray-400">87% success probability based on similar IoT campaigns</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- AI Suggestion 3 -->
+                                <div class="bg-gradient-to-r from-cyber-yellow/10 to-orange-400/10 rounded-lg p-4 border border-cyber-yellow/30">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 bg-cyber-yellow/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-4 h-4 text-cyber-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="font-medium text-cyber-yellow mb-1">Optimal Pricing</div>
+                                            <div class="text-sm text-gray-400">Recommended: 300-400 ETH goal for 30-day campaigns in tech category</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Credibility Score -->
+                                <div class="bg-slate-800/50 rounded-lg p-4 mt-6">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="font-medium">Campaign Credibility Score</span>
+                                        <span class="font-mono text-2xl font-bold text-cyber-green">8.4/10</span>
+                                    </div>
+                                    <div class="w-full bg-slate-700 rounded-full h-3">
+                                        <div class="bg-gradient-to-r from-cyber-green to-cyber-blue h-3 rounded-full progress-glow" style="width: 84%"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-400 mt-2">Based on KYC status, social proof, and market analysis</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-slate-900 border-t border-gray-800 py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="md:col-span-2">
+                        <div class="text-3xl font-bold bg-gradient-to-r from-cyber-blue to-cyber-purple bg-clip-text text-transparent mb-4">
+                            CryptoFund
+                        </div>
+                        <p class="text-gray-400 mb-6 max-w-md">
+                            The future of crowdfunding is here. Launch campaigns, raise funds transparently on blockchain, and build the next generation of innovative projects.
+                        </p>
+                        <div class="flex space-x-6">
+                            <a href="#" class="text-gray-400 hover:text-cyber-blue transition-colors duration-300">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                                </svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-cyber-blue transition-colors duration-300">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                                </svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-cyber-blue transition-colors duration-300">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.758-1.378l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.624 0 11.99-5.367 11.99-11.986C24.007 5.367 18.641.001 12.017.001z"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Platform</h3>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="#" class="hover:text-cyber-blue transition-colors duration-300">Browse Campaigns</a></li>
+                            <li><a href="#" class="hover:text-cyber-blue transition-colors duration-300">Create Campaign</a></li>
+                            <li><a href="#" class="hover:text-cyber-blue transition-colors duration-300">KYC Verification</a></li>
+                            <li><a href="#" class="hover:text-cyber-blue transition-colors duration-300">Blockchain Explorer</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Resources</h3>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="#" class="hover:text-cyber-blue transition-colors duration-300">How It Works</a></li>
+                            <li><a href="#" class="hover:text-cyber-blue transition-colors duration-300">Documentation</a></li>
+                            <li><a href="#" class="hover:text-cyber-blue transition-colors duration-300">Support</a></li>
+                            <li><a href="#" class="hover:text-cyber-blue transition-colors duration-300">API</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                    <p>&copy; 2024 CryptoFund. Powering the future of decentralized crowdfunding.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        (function() {
+            // TODO: Implement business logic, API calls, or state management
+            
+            // Mock smooth scrolling for navigation
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Mock wallet connection handler
+            document.querySelector('button:contains("Connect Wallet")')?.addEventListener('click', function() {
+                // TODO: Implement Web3 wallet connection logic
+                this.textContent = 'Connecting...';
+                setTimeout(() => {
+                    this.textContent = '0x1a2b...c3d4';
+                    this.classList.remove('bg-gradient-to-r', 'from-cyber-blue', 'to-cyber-purple');
+                    this.classList.add('glass-morphism');
+                }, 2000);
+            });
+
+            // Mock form interactions
+            document.querySelectorAll('input, textarea, select').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement?.classList.add('transform', 'scale-105');
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement?.classList.remove('transform', 'scale-105');
+                });
+            });
+
+            // Add loading states for buttons
+            document.querySelectorAll('button').forEach(button => {
+                if (!button.disabled && !button.getAttribute('href')) {
+                    button.addEventListener('click', function(e) {
+                        if (this.textContent.includes('Launch') || this.textContent.includes('Create')) {
+                            e.preventDefault();
+                            // TODO: Implement campaign creation logic
+                        }
+                    });
+                }
+            });
+
+            // Mock real-time updates for transaction feed
+            setInterval(() => {
+                // TODO: Implement real-time blockchain transaction updates
+                const feed = document.querySelector('#explorer .space-y-4');
+                if (feed && Math.random() > 0.7) {
+                    // Add visual indicator of new transaction without actually updating DOM
+                    const indicator = document.querySelector('.animate-pulse');
+                    if (indicator) {
+                        indicator.classList.add('bg-cyber-green');
+                        setTimeout(() => {
+                            indicator.classList.remove('bg-cyber-green');
+                        }, 1000);
+                    }
+                }
+            }, 5000);
+        })();
+    </script>
+</body>
+</html>

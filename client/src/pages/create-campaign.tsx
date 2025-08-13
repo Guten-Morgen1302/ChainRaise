@@ -1,0 +1,462 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest } from "@/lib/queryClient";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
+import CampaignAssistant from "@/components/ai/campaign-assistant";
+import KYCStatus from "@/components/kyc/kyc-status";
+import { insertCampaignSchema } from "@shared/schema";
+import { 
+  Lightbulb, 
+  Target, 
+  Calendar, 
+  Image as ImageIcon, 
+  Tag,
+  Rocket,
+  AlertTriangle,
+  CheckCircle,
+  Clock
+} from "lucide-react";
+import { useLocation } from "wouter";
+
+const createCampaignFormSchema = insertCampaignSchema.extend({
+  tags: z.string().optional(),
+});
+
+type CreateCampaignForm = z.infer<typeof createCampaignFormSchema>;
+
+export default function CreateCampaign() {
+  const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
+
+  const form = useForm<CreateCampaignForm>({
+    resolver: zodResolver(createCampaignFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      category: "",
+      fundingType: "reward",
+      goalAmount: "",
+      currency: "ETH",
+      imageUrl: "",
+      tags: "",
+    },
+  });
+
+  const { data: userProfile } = useQuery({
+    queryKey: ["/api/auth/user"],
+    enabled: isAuthenticated,
+  });
+
+  const createCampaignMutation = useMutation({
+    mutationFn: async (data: CreateCampaignForm) => {
+      const { tags, ...campaignData } = data;
+      const tagsArray = tags ? tags.split(",").map(tag => tag.trim()).filter(Boolean) : [];
+      
+      return await apiRequest("POST", "/api/campaigns", {
+        ...campaignData,
+        tags: tagsArray,
+        deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Campaign Created Successfully!",
+        description: "Your campaign is now live and ready for backers.",
+      });
+      setLocation(`/campaigns/${data.id}`);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You need to complete KYC verification to create campaigns.",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 2000);
+        return;
+      }
+      toast({
+        title: "Campaign Creation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: CreateCampaignForm) => {
+    createCampaignMutation.mutate(data);
+  };
+
+  const categories = [
+    { value: "Technology", label: "Technology", color: "bg-cyber-green" },
+    { value: "Gaming", label: "Gaming", color: "bg-cyber-purple" },
+    { value: "DeFi", label: "DeFi", color: "bg-cyber-yellow" },
+    { value: "Creative", label: "Creative", color: "bg-cyber-pink" },
+    { value: "GreenTech", label: "Green Technology", color: "bg-cyber-green" },
+    { value: "Research", label: "Research", color: "bg-cyan-400" },
+  ];
+
+  const fundingTypes = [
+    { value: "donation", label: "Donation", description: "Keep-it-all funding model" },
+    { value: "reward", label: "Reward", description: "Offer rewards to backers" },
+    { value: "equity", label: "Equity Simulation", description: "Share future value with backers" },
+  ];
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-16 flex justify-center items-center min-h-screen">
+          <Card className="glass-morphism max-w-md">
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="w-12 h-12 text-cyber-yellow mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
+              <p className="text-muted-foreground mb-4">
+                You need to be logged in to create campaigns.
+              </p>
+              <Button 
+                onClick={() => window.location.href = '/api/login'}
+                className="bg-gradient-to-r from-cyber-blue to-cyber-purple"
+              >
+                Log In
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const progress = (currentStep / totalSteps) * 100;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      <div className="pt-16">
+        {/* Header */}
+        <section className="py-12 bg-gradient-to-b from-background to-muted/20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-8"
+            >
+              <h1 className="text-4xl md:text-6xl font-black mb-4 gradient-text">
+                Launch Your Vision
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Turn your innovative ideas into reality with our AI-powered campaign creation tools
+              </p>
+            </motion.div>
+
+            {/* Progress Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="mb-8"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm text-muted-foreground">Step {currentStep} of {totalSteps}</span>
+                <span className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</span>
+              </div>
+              <Progress value={progress} className="h-2 progress-glow" />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* KYC Status Check */}
+        {userProfile?.kycStatus !== "verified" && (
+          <section className="py-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <KYCStatus />
+            </div>
+          </section>
+        )}
+
+        {/* Main Form */}
+        <section className="py-16">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Form */}
+              <div className="lg:col-span-2">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                    <Card className="glass-morphism">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Lightbulb className="w-5 h-5 text-cyber-blue" />
+                          Campaign Basics
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="title"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Campaign Title *</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Revolutionary IoT Smart Home System"
+                                  className="form-focus"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description *</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Tell the world about your innovative project..."
+                                  className="form-focus min-h-[120px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Category *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="form-focus">
+                                      <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {categories.map((category) => (
+                                      <SelectItem key={category.value} value={category.value}>
+                                        <div className="flex items-center gap-2">
+                                          <div className={`w-3 h-3 rounded-full ${category.color}/70`}></div>
+                                          {category.label}
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="fundingType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Funding Model *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="form-focus">
+                                      <SelectValue placeholder="Select funding type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {fundingTypes.map((type) => (
+                                      <SelectItem key={type.value} value={type.value}>
+                                        <div>
+                                          <div className="font-medium">{type.label}</div>
+                                          <div className="text-xs text-muted-foreground">{type.description}</div>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="glass-morphism">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Target className="w-5 h-5 text-cyber-green" />
+                          Funding Details
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="goalAmount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Funding Goal *</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="100"
+                                    className="form-focus"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="currency"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Currency</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="form-focus">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="ETH">ETH</SelectItem>
+                                    <SelectItem value="MATIC">MATIC</SelectItem>
+                                    <SelectItem value="USDC">USDC</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="glass-morphism">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <ImageIcon className="w-5 h-5 text-cyber-purple" />
+                          Media & Tags
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="imageUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Campaign Image URL</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="https://example.com/image.jpg"
+                                  className="form-focus"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="tags"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Tags (comma separated)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="blockchain, innovation, IoT"
+                                  className="form-focus"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <div className="flex justify-between">
+                      <Button type="button" variant="outline" disabled={currentStep === 1}>
+                        Previous
+                      </Button>
+                      
+                      <Button 
+                        type="submit"
+                        className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transition-all duration-300"
+                        disabled={createCampaignMutation.isPending || userProfile?.kycStatus !== "verified"}
+                      >
+                        {createCampaignMutation.isPending ? (
+                          <>
+                            <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                            Creating Campaign...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="w-4 h-4 mr-2" />
+                            Launch Campaign
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </div>
+
+              {/* AI Assistant Sidebar */}
+              <div className="lg:col-span-1">
+                <div className="sticky top-24">
+                  <CampaignAssistant 
+                    title={form.watch("title")}
+                    description={form.watch("description")}
+                    category={form.watch("category")}
+                    goalAmount={parseFloat(form.watch("goalAmount") || "0")}
+                    onTitleSuggestion={(title) => form.setValue("title", title)}
+                    onDescriptionSuggestion={(description) => form.setValue("description", description)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}

@@ -1,0 +1,118 @@
+Build me a full-stack, multi-page Web3 crowdfunding platform — think Kickstarter meets GoFundMe meets AngelList — but with next-level, jaw-dropping cyberpunk x glassmorphism UI and real blockchain fund tracking for global use.
+
+Core Concept
+A global, trust-first crowdfunding dApp where:
+
+Creators launch campaigns after on-chain verified KYC.
+
+Backers fund using crypto (Polygon testnet) or fiat (mock Razorpay/Stripe).
+
+Every contribution is transparently recorded on-chain with a public explorer view.
+
+UI is so stunning that it feels like a high-budget sci-fi fintech dashboard.
+
+Roles & Flows
+Creator
+
+Must pass KYC (upload docs → AI-assisted OCR verification → admin approval).
+
+Can create campaigns with:
+
+Funding model: Donation / Reward / Equity Simulation
+
+Goal amount & deadline
+
+Rich campaign story with videos/images
+
+Category & tags
+
+Manage dashboard: track pledges, withdraw funds, update backers.
+
+Backer
+
+Browse campaigns by category, funding type, or trending.
+
+Contribute in crypto or fiat.
+
+See real-time progress bar, backer list, and live transaction feed.
+
+Blockchain Magic
+Polygon Mumbai testnet smart contract to store:
+
+Campaign metadata
+
+Contributions
+
+Equity simulation data
+
+Ethers.js integration in frontend.
+
+Every transaction linked to Polygonscan.
+
+Funding Transparency Page: Filterable ledger of all contributions.
+
+UI/UX Direction
+Cyberpunk neon meets minimal glassmorphism.
+
+Animated gradients, particle backgrounds, liquid hover effects.
+
+Real-time animated charts & progress bars.
+
+Campaign cards with hover parallax + glow borders.
+
+Framer Motion page transitions.
+
+Mobile-first with buttery-smooth swipes & gestures.
+
+Multi-page layout:
+
+Landing Page (hero + trending campaigns carousel + search)
+
+Campaign List
+
+Campaign Detail Page (interactive tabs: Story / Updates / Backers / On-Chain Ledger)
+
+KYC Page
+
+Creator Dashboard
+
+Backer Dashboard
+
+Global Transaction Feed
+
+About/How It Works
+
+AI Campaign Assistant (improves description, estimates funding probability)
+
+Bonus Features for the “W”
+AI-driven campaign credibility score (based on KYC + social proof + funding velocity).
+
+Live whale donor tracking — highlight big contributions instantly.
+
+Gamified backer profiles with badges, ranks, and streaks.
+
+Instant shareable “campaign QR codes” for IRL fundraising events.
+
+Night/day mode toggle with animated theme morph.
+
+Tech Stack
+Frontend: Next.js + Tailwind CSS + Shadcn UI + Framer Motion + Three.js (for subtle 3D effects)
+
+Backend: Next.js API Routes (Node.js) + Supabase (auth, storage, campaigns, KYC)
+
+Blockchain: Solidity smart contract on Polygon Mumbai + Ethers.js frontend integration
+
+Payments: Crypto (Polygon) + Fiat mock (Razorpay/Stripe test mode)
+
+AI: OpenAI API for description enhancement + credibility scoring
+
+Storage: Supabase for images/docs, IPFS for decentralized campaign assets
+
+Key Judge Impress Points
+Live, interactive blockchain explorer inside the site (not just links out).
+
+Ultra-polished animated micro-interactions for every button and scroll.
+
+AI built-in → feels like a smart assistant, not just a static site.
+
+International-ready with multi-language support toggle.

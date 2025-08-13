@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(222.2, 84%, 4.9%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222.2, 84%, 4.9%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(222.2, 84%, 4.9%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --primary: hsl(196, 100%, 50%);
+  --primary-foreground: hsl(222.2, 84%, 4.9%);
+  --secondary: hsl(217.2, 32.6%, 17.5%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --muted: hsl(217.2, 32.6%, 17.5%);
+  --muted-foreground: hsl(215, 20.2%, 65.1%);
+  --accent: hsl(217.2, 32.6%, 17.5%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217.2, 32.6%, 17.5%);
+  --input: hsl(217.2, 32.6%, 17.5%);
+  --ring: hsl(196, 100%, 50%);
+  --chart-1: hsl(196, 100%, 50%);
+  --chart-2: hsl(159, 78%, 37%);
+  --chart-3: hsl(42, 93%, 56%);
+  --chart-4: hsl(147, 79%, 42%);
+  --chart-5: hsl(341, 75%, 51%);
+  
+  /* Cyberpunk colors */
+  --cyber-blue: hsl(196, 100%, 50%);
+  --cyber-purple: hsl(262, 73%, 65%);
+  --cyber-green: hsl(160, 78%, 37%);
+  --cyber-pink: hsl(330, 81%, 60%);
+  --cyber-yellow: hsl(42, 93%, 56%);
+  
+  /* Glass morphism */
+  --glass-white: hsla(0, 0%, 100%, 0.1);
+  --glass-dark: hsla(222, 47%, 11%, 0.8);
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: hsl(222.2, 84%, 4.9%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222.2, 84%, 4.9%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(222.2, 84%, 4.9%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --primary: hsl(196, 100%, 50%);
+  --primary-foreground: hsl(222.2, 84%, 4.9%);
+  --secondary: hsl(217.2, 32.6%, 17.5%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --muted: hsl(217.2, 32.6%, 17.5%);
+  --muted-foreground: hsl(215, 20.2%, 65.1%);
+  --accent: hsl(217.2, 32.6%, 17.5%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217.2, 32.6%, 17.5%);
+  --input: hsl(217.2, 32.6%, 17.5%);
+  --ring: hsl(196, 100%, 50%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer components {
+  .glass-morphism {
+    background: var(--glass-white);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .cyber-gradient {
+    background: linear-gradient(135deg, hsl(222.2, 84%, 4.9%) 0%, hsl(217.2, 32.6%, 17.5%) 50%, hsl(215, 20.2%, 20%) 100%);
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 10px var(--cyber-blue);
+  }
+  
+  .progress-glow {
+    box-shadow: 0 0 20px hsla(160, 78%, 37%, 0.6);
+  }
+  
+  .neon-border {
+    border: 1px solid transparent;
+    background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple)) border-box;
+    border-radius: var(--radius);
+  }
+}
+
+@layer utilities {
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px -10px var(--cyber-blue);
+  }
+  to {
+    box-shadow: 0 0 20px -5px var(--cyber-blue);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cyber-blue);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyber-purple);
+}
+
+/* Loading spinner for buttons */
+.btn-loading {
+  position: relative;
+  color: transparent;
+}
+
+.btn-loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  border: 2px solid transparent;
+  border-top-color: var(--primary-foreground);
+  border-radius: 50%;
+  animation: spin 1s ease infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Form focus states */
+.form-focus {
+  transition: all 0.3s ease;
+}
+
+.form-focus:focus {
+  border-color: var(--cyber-blue);
+  box-shadow: 0 0 0 2px hsla(196, 100%, 50%, 0.2);
+  transform: scale(1.02);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.5s ease;
+}
+
+.card-hover:hover {
+  transform: scale(1.05);
+  box-shadow: 0 25px 50px -12px hsla(196, 100%, 50%, 0.25);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Dot pattern background */
+.dot-pattern {
+  background-image: radial-gradient(circle, var(--cyber-blue) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.1;
+}
