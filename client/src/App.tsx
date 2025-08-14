@@ -21,9 +21,13 @@ import NotFound from "@/pages/not-found";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // For development - show main app regardless of authentication status
+  // In production, this would be conditional on isAuthenticated
+  const showMainApp = !isLoading;
+
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
+      {!showMainApp ? (
         <>
           <Route path="/" component={Landing} />
           <Route path="/features" component={FeatureShowcase} />
@@ -43,6 +47,7 @@ function Router() {
           <Route path="/features" component={FeatureShowcase} />
           <Route path="/access-guide" component={AccessGuide} />
           <Route path="/explorer" component={Explorer} />
+          <Route path="/landing" component={Landing} />
           <Route component={NotFound} />
         </>
       )}

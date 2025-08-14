@@ -66,7 +66,7 @@ export function MainNavigation() {
 
         {/* User Menu */}
         <div className="flex items-center space-x-4">
-          {user && (
+          {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -119,6 +119,14 @@ export function MainNavigation() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : (
+            <Button 
+              onClick={() => window.location.href = '/api/login'} 
+              variant="outline"
+              size="sm"
+            >
+              Login
+            </Button>
           )}
         </div>
       </div>
