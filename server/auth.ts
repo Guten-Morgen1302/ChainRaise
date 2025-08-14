@@ -149,18 +149,30 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    const user = req.user as SelectUser;
-    res.status(200).json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      kycStatus: user.kycStatus,
-      profileImageUrl: user.profileImageUrl,
-      walletAddress: user.walletAddress,
-    });
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Authentication error", error: err.message });
+      }
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      req.logIn(user, (err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Login error", error: err.message });
+        }
+        res.status(200).json({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          kycStatus: user.kycStatus,
+          profileImageUrl: user.profileImageUrl,
+          walletAddress: user.walletAddress,
+        });
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {

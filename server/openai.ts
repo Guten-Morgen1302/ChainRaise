@@ -41,13 +41,18 @@ export async function optimizeCampaignTitle(title: string): Promise<{
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+    const result = JSON.parse(content);
     return {
       suggestions: result.suggestions || [],
       engagementBoost: result.engagementBoost || "0%",
     };
   } catch (error) {
-    throw new Error("Failed to optimize campaign title: " + error.message);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new Error("Failed to optimize campaign title: " + errorMessage);
   }
 }
 
@@ -71,13 +76,18 @@ export async function enhanceCampaignDescription(description: string, category: 
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+    const result = JSON.parse(content);
     return {
       enhancedDescription: result.enhancedDescription || description,
       keyImprovements: result.keyImprovements || [],
     };
   } catch (error) {
-    throw new Error("Failed to enhance campaign description: " + error.message);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new Error("Failed to enhance campaign description: " + errorMessage);
   }
 }
 
@@ -112,14 +122,19 @@ export async function analyzeCampaignCredibility(campaignData: {
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+    const result = JSON.parse(content);
     return {
       score: Math.max(0, Math.min(10, result.score || 0)),
       factors: result.factors || [],
       recommendations: result.recommendations || [],
     };
   } catch (error) {
-    throw new Error("Failed to analyze campaign credibility: " + error.message);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new Error("Failed to analyze campaign credibility: " + errorMessage);
   }
 }
 
@@ -150,13 +165,18 @@ export async function predictFundingSuccess(campaignData: {
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+    const result = JSON.parse(content);
     return {
       successProbability: Math.max(0, Math.min(1, result.successProbability || 0)),
       recommendedGoal: result.recommendedGoal || campaignData.goalAmount,
       marketInsights: result.marketInsights || [],
     };
   } catch (error) {
-    throw new Error("Failed to predict funding success: " + error.message);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new Error("Failed to predict funding success: " + errorMessage);
   }
 }

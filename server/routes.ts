@@ -14,8 +14,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   setupAuth(app);
 
-  // Auth routes are now handled in setupAuth function
-  // No need for separate auth route as it's handled in auth.ts
+  // Add auth-specific routes that might be missing
+  app.get('/api/auth/user', isAuthenticated, (req: any, res) => {
+    const user = req.user;
+    res.json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      kycStatus: user.kycStatus,
+      profileImageUrl: user.profileImageUrl,
+      walletAddress: user.walletAddress,
+    });
+  });
 
   // Campaign routes
   app.get('/api/campaigns', async (req, res) => {
@@ -34,16 +46,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/campaigns/:id', async (req, res) => {
+  // Get campaigns by category (more specific route)
+  app.get('/api/campaigns/:category', async (req, res) => {
     try {
-      const campaign = await storage.getCampaign(req.params.id);
-      if (!campaign) {
-        return res.status(404).json({ message: "Campaign not found" });
+      const { category } = req.params;
+      const { status, limit, offset } = req.query;
+      
+      // Check if this is a category or an actual campaign ID (UUIDs are 36 chars)
+      if (category.length === 36 && category.includes('-')) {
+        // This is likely a UUID, treat as campaign ID
+        const campaign = await storage.getCampaign(category);
+        if (!campaign) {
+          return res.status(404).json({ message: "Campaign not found" });
+        }
+        return res.json(campaign);
       }
-      res.json(campaign);
+      
+      // This is a category filter
+      const campaigns = await storage.getCampaigns({
+        category: category,
+        status: status as string,
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined,
+      });
+      res.json(campaigns);
     } catch (error) {
-      console.error("Error fetching campaign:", error);
-      res.status(500).json({ message: "Failed to fetch campaign" });
+      console.error("Error fetching campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch campaigns" });
     }
   });
 
