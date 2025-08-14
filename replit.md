@@ -25,10 +25,11 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Centralized error middleware with proper HTTP status codes
 
 ## Authentication & Authorization
-- **Provider**: Replit's OpenID Connect (OIDC) authentication system
+- **Provider**: Manual username/password authentication system
 - **Session Management**: Express sessions with PostgreSQL storage using connect-pg-simple
-- **Strategy**: Passport.js with custom OIDC strategy
-- **User Management**: Automatic user creation/update on authentication
+- **Strategy**: Passport.js with Local Strategy for username/password authentication
+- **Password Security**: Scrypt hashing with salt for secure password storage
+- **User Management**: Manual user registration and login with form validation
 
 ## Database & ORM
 - **Database**: PostgreSQL with connection via environment variable
