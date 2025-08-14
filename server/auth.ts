@@ -120,6 +120,35 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // GET /api/login - Check if user is already logged in or provide login info
+  app.get("/api/login", (req, res) => {
+    if (req.isAuthenticated()) {
+      const user = req.user as SelectUser;
+      res.json({
+        authenticated: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          kycStatus: user.kycStatus,
+          profileImageUrl: user.profileImageUrl,
+          walletAddress: user.walletAddress,
+        }
+      });
+    } else {
+      res.json({
+        authenticated: false,
+        message: "Please login",
+        endpoints: {
+          login: "POST /api/login with username and password",
+          register: "POST /api/register with user details"
+        }
+      });
+    }
+  });
+
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
     const user = req.user as SelectUser;
     res.status(200).json({

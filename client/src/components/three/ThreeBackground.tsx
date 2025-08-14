@@ -105,7 +105,7 @@ export function ThreeBackground({ className = "" }: ThreeBackgroundProps) {
     camera.position.z = 30;
 
     // Animation loop
-    let animationId: number;
+    let animationId: number | undefined;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
 
