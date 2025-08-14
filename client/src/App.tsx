@@ -32,11 +32,12 @@ function Router() {
           <Route path="/" component={Landing} />
           <Route path="/features" component={FeatureShowcase} />
           <Route path="/access-guide" component={AccessGuide} />
-          <Route component={NotFound} />
+          <Route path="*" component={NotFound} />
         </>
       ) : (
         <>
           <Route path="/" component={Home} />
+          <Route path="/home" component={Home} />
           <Route path="/campaigns" component={Campaigns} />
           <Route path="/campaigns/:id" component={CampaignDetail} />
           <Route path="/create" component={CreateCampaign} />
@@ -48,7 +49,7 @@ function Router() {
           <Route path="/access-guide" component={AccessGuide} />
           <Route path="/explorer" component={Explorer} />
           <Route path="/landing" component={Landing} />
-          <Route component={NotFound} />
+          <Route path="*" component={NotFound} />
         </>
       )}
     </Switch>
