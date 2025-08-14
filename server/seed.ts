@@ -57,7 +57,7 @@ export async function seedDatabase() {
         goalAmount: "500000.0",
         currency: "ETH",
         deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
-        imageUrl: "/api/placeholder/400/300",
+        imageUrl: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=300&fit=crop&crop=entropy",
         status: "active" as const,
         smartContractAddress: "0x9876543210987654321098765432109876543210",
         tags: ["gaming", "blockchain", "nft", "web3"],
@@ -77,7 +77,7 @@ export async function seedDatabase() {
         goalAmount: "250000.0",
         currency: "ETH",
         deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000), // 45 days from now
-        imageUrl: "/api/placeholder/400/300",
+        imageUrl: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=300&fit=crop&crop=entropy",
         status: "active" as const,
         smartContractAddress: "0x1111222233334444555566667777888899990000",
         tags: ["fashion", "sustainability", "marketplace", "eco-friendly"],
@@ -97,7 +97,7 @@ export async function seedDatabase() {
         goalAmount: "1000000.0",
         currency: "ETH",
         deadline: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
-        imageUrl: "/api/placeholder/400/300",
+        imageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop&crop=entropy",
         status: "active" as const,
         smartContractAddress: "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
         tags: ["defi", "lending", "protocol", "yield"],

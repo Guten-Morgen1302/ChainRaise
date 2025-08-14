@@ -278,6 +278,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Placeholder image endpoint
+  app.get('/api/placeholder/:width/:height', (req, res) => {
+    const { width, height } = req.params;
+    const w = parseInt(width) || 400;
+    const h = parseInt(height) || 300;
+    
+    // Generate SVG placeholder
+    const svg = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grad)"/>
+      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" dy="0.3em">
+        Campaign Image
+      </text>
+    </svg>`;
+    
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+    res.send(svg);
+  });
+
   // Statistics routes
   app.get('/api/stats', async (req, res) => {
     try {
