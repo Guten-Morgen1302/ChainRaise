@@ -96,6 +96,49 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// KYC Applications table
+export const kycApplications = pgTable("kyc_applications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  firstName: varchar("first_name").notNull(),
+  lastName: varchar("last_name").notNull(),
+  email: varchar("email").notNull(),
+  phone: varchar("phone").notNull(),
+  dateOfBirth: varchar("date_of_birth").notNull(),
+  address: text("address").notNull(),
+  city: varchar("city").notNull(),
+  state: varchar("state").notNull(),
+  zipCode: varchar("zip_code").notNull(),
+  country: varchar("country").notNull(),
+  idType: varchar("id_type").notNull(), // passport, driver_license, national_id
+  idNumber: varchar("id_number").notNull(),
+  occupation: varchar("occupation").notNull(),
+  sourceOfFunds: varchar("source_of_funds").notNull(),
+  monthlyIncome: varchar("monthly_income").notNull(),
+  idFrontImageUrl: varchar("id_front_image_url"),
+  idBackImageUrl: varchar("id_back_image_url"),
+  selfieImageUrl: varchar("selfie_image_url"),
+  status: varchar("status").default("pending"), // pending, approved, rejected, under_review
+  adminComments: text("admin_comments"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Admin users table
+export const adminUsers = pgTable("admin_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: varchar("username").unique().notNull(),
+  email: varchar("email").unique().notNull(),
+  password: varchar("password").notNull(),
+  role: varchar("role").default("admin"), // admin, super_admin
+  permissions: text("permissions").array(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // AI Assistant interactions
 export const aiInteractions = pgTable("ai_interactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -123,6 +166,22 @@ export const insertCampaignSchema = createInsertSchema(campaigns).omit({
   updatedAt: true,
 });
 
+export const insertKycApplicationSchema = createInsertSchema(kycApplications).omit({
+  id: true,
+  status: true,
+  adminComments: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertContributionSchema = createInsertSchema(contributions).omit({
   id: true,
   createdAt: true,
@@ -138,11 +197,15 @@ export const insertAiInteractionSchema = createInsertSchema(aiInteractions).omit
   createdAt: true,
 });
 
-// Types
-export type UpsertUser = typeof users.$inferInsert;
+// Type exports
 export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Campaign = typeof campaigns.$inferSelect;
 export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+export type KycApplication = typeof kycApplications.$inferSelect;
+export type InsertKycApplication = z.infer<typeof insertKycApplicationSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 export type Contribution = typeof contributions.$inferSelect;
 export type InsertContribution = z.infer<typeof insertContributionSchema>;
 export type Transaction = typeof transactions.$inferSelect;

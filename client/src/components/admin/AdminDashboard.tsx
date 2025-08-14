@@ -1,4 +1,5 @@
 import { useState } from "react";
+import KYCManagement from "./KYCManagement";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -187,9 +188,9 @@ export function AdminDashboard() {
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users & KYC</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="kyc">KYC Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -392,6 +393,10 @@ export function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="kyc">
+          <KYCManagement />
         </TabsContent>
       </Tabs>
     </div>

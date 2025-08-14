@@ -8,7 +8,7 @@ import {
   analyzeCampaignCredibility,
   predictFundingSuccess 
 } from "./openai";
-import { insertCampaignSchema, insertContributionSchema, insertTransactionSchema } from "@shared/schema";
+import { insertCampaignSchema, insertContributionSchema, insertTransactionSchema, insertKycApplicationSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -315,27 +315,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // KYC routes
-  app.put('/api/user/kyc', isAuthenticated, async (req: any, res) => {
+  app.post('/api/kyc/submit', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { documents, status } = req.body;
-      
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      const updatedUser = await storage.upsertUser({
-        ...user,
-        kycStatus: status || "pending",
-        kycDocuments: documents,
-        updatedAt: new Date(),
+      const kycData = insertKycApplicationSchema.parse({
+        ...req.body,
+        userId,
       });
 
-      res.json(updatedUser);
+      // Check if user already has a pending/approved KYC
+      const existingKyc = await storage.getKycApplication(userId);
+      if (existingKyc && (existingKyc.status === 'pending' || existingKyc.status === 'approved')) {
+        return res.status(400).json({ message: "KYC application already exists" });
+      }
+
+      const kycApplication = await storage.createKycApplication(kycData);
+      
+      // Update user's KYC status to pending
+      await storage.updateUser(userId, { kycStatus: 'pending' });
+
+      res.json(kycApplication);
     } catch (error) {
-      console.error("Error updating KYC:", error);
-      res.status(500).json({ message: "Failed to update KYC status" });
+      console.error("Error submitting KYC:", error);
+      res.status(500).json({ message: "Failed to submit KYC application" });
+    }
+  });
+
+  app.get('/api/kyc/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const kycApplication = await storage.getKycApplication(userId);
+      
+      if (!kycApplication) {
+        return res.json({ status: 'not_submitted' });
+      }
+
+      res.json({
+        status: kycApplication.status,
+        submittedAt: kycApplication.createdAt,
+        reviewedAt: kycApplication.reviewedAt,
+        adminComments: kycApplication.adminComments,
+      });
+    } catch (error) {
+      console.error("Error fetching KYC status:", error);
+      res.status(500).json({ message: "Failed to fetch KYC status" });
+    }
+  });
+
+  // Admin KYC routes
+  app.get('/api/admin/kyc/applications', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check here
+      const { status } = req.query;
+      const applications = await storage.getAllKycApplications(status as string);
+      res.json(applications);
+    } catch (error) {
+      console.error("Error fetching KYC applications:", error);
+      res.status(500).json({ message: "Failed to fetch KYC applications" });
+    }
+  });
+
+  app.get('/api/admin/kyc/applications/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check here
+      const { id } = req.params;
+      const application = await storage.getKycApplicationById(id);
+      
+      if (!application) {
+        return res.status(404).json({ message: "KYC application not found" });
+      }
+
+      res.json(application);
+    } catch (error) {
+      console.error("Error fetching KYC application:", error);
+      res.status(500).json({ message: "Failed to fetch KYC application" });
+    }
+  });
+
+  app.put('/api/admin/kyc/applications/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check here
+      const { id } = req.params;
+      const { status, adminComments } = req.body;
+
+      const application = await storage.getKycApplicationById(id);
+      if (!application) {
+        return res.status(404).json({ message: "KYC application not found" });
+      }
+
+      const updatedApplication = await storage.updateKycApplication(id, {
+        status,
+        adminComments,
+        reviewedBy: req.user.username,
+        reviewedAt: new Date(),
+      });
+
+      // Update user's KYC status
+      await storage.updateUser(application.userId, { kycStatus: status });
+
+      res.json(updatedApplication);
+    } catch (error) {
+      console.error("Error updating KYC application:", error);
+      res.status(500).json({ message: "Failed to update KYC application" });
+    }
+  });
+
+  // Campaign creation route (modified to check KYC)
+  app.post('/api/campaigns', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Check if user has verified KYC
+      const user = await storage.getUser(userId);
+      if (user?.kycStatus !== 'verified') {
+        return res.status(403).json({ 
+          message: "KYC verification required to create campaigns",
+          kycStatus: user?.kycStatus || 'not_submitted'
+        });
+      }
+
+      const campaignData = insertCampaignSchema.parse({
+        ...req.body,
+        creatorId: userId,
+      });
+
+      const campaign = await storage.createCampaign(campaignData);
+      res.json(campaign);
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      res.status(500).json({ message: "Failed to create campaign" });
     }
   });
 

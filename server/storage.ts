@@ -4,8 +4,10 @@ import {
   contributions,
   transactions,
   aiInteractions,
+  kycApplications,
+  adminUsers,
   type User,
-  type UpsertUser,
+  type InsertUser,
   type Campaign,
   type InsertCampaign,
   type Contribution,
@@ -14,6 +16,10 @@ import {
   type InsertTransaction,
   type AiInteraction,
   type InsertAiInteraction,
+  type KycApplication,
+  type InsertKycApplication,
+  type AdminUser,
+  type InsertAdminUser,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql } from "drizzle-orm";
@@ -27,7 +33,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User>;
   
   // Session store for authentication
   sessionStore: any;
@@ -60,6 +66,18 @@ export interface IStorage {
   // AI interaction operations
   createAiInteraction(interaction: InsertAiInteraction): Promise<AiInteraction>;
   getAiInteractions(userId: string, campaignId?: string): Promise<AiInteraction[]>;
+  
+  // KYC operations
+  createKycApplication(application: InsertKycApplication): Promise<KycApplication>;
+  getKycApplication(userId: string): Promise<KycApplication | undefined>;
+  getKycApplicationById(id: string): Promise<KycApplication | undefined>;
+  getAllKycApplications(status?: string): Promise<KycApplication[]>;
+  updateKycApplication(id: string, updates: Partial<KycApplication>): Promise<KycApplication>;
+  
+  // Admin operations
+  createAdminUser(admin: InsertAdminUser): Promise<AdminUser>;
+  getAdminByUsername(username: string): Promise<AdminUser | undefined>;
+  getAdminByEmail(email: string): Promise<AdminUser | undefined>;
   
   // Statistics
   getCampaignStats(): Promise<{
@@ -108,21 +126,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
     const [user] = await db
-      .insert(users)
-      .values({
-        ...userData,
-        id: userData.id || sql`gen_random_uuid()`,
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
       .returning();
     return user;
   }
@@ -329,6 +337,84 @@ export class DatabaseStorage implements IStorage {
       totalBackers,
       successRate: parseFloat(successRate.toFixed(1)),
     };
+  }
+
+  // KYC operations
+  async createKycApplication(applicationData: InsertKycApplication): Promise<KycApplication> {
+    const [application] = await db
+      .insert(kycApplications)
+      .values({
+        ...applicationData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return application;
+  }
+
+  async getKycApplication(userId: string): Promise<KycApplication | undefined> {
+    const [application] = await db
+      .select()
+      .from(kycApplications)
+      .where(eq(kycApplications.userId, userId))
+      .orderBy(desc(kycApplications.createdAt));
+    return application || undefined;
+  }
+
+  async getKycApplicationById(id: string): Promise<KycApplication | undefined> {
+    const [application] = await db
+      .select()
+      .from(kycApplications)
+      .where(eq(kycApplications.id, id));
+    return application || undefined;
+  }
+
+  async getAllKycApplications(status?: string): Promise<KycApplication[]> {
+    let query = db.select().from(kycApplications);
+    
+    if (status) {
+      query = query.where(eq(kycApplications.status, status)) as any;
+    }
+
+    return await query.orderBy(desc(kycApplications.createdAt));
+  }
+
+  async updateKycApplication(id: string, updates: Partial<KycApplication>): Promise<KycApplication> {
+    const [application] = await db
+      .update(kycApplications)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(kycApplications.id, id))
+      .returning();
+    return application;
+  }
+
+  // Admin operations
+  async createAdminUser(adminData: InsertAdminUser): Promise<AdminUser> {
+    const [admin] = await db
+      .insert(adminUsers)
+      .values({
+        ...adminData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return admin;
+  }
+
+  async getAdminByUsername(username: string): Promise<AdminUser | undefined> {
+    const [admin] = await db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.username, username));
+    return admin || undefined;
+  }
+
+  async getAdminByEmail(email: string): Promise<AdminUser | undefined> {
+    const [admin] = await db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.email, email));
+    return admin || undefined;
   }
 }
 
