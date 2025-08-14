@@ -61,7 +61,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transform transition-all duration-300 animate-glow text-lg px-8 py-4"
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/auth'}
             >
               Launch Campaign
             </Button>
