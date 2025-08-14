@@ -63,7 +63,7 @@ export default function CreateCampaign() {
   });
 
   const { data: userProfile } = useQuery({
-    queryKey: ["/api/auth/user"],
+    queryKey: ["/api/user"],
     enabled: isAuthenticated,
   });
 
@@ -93,7 +93,7 @@ export default function CreateCampaign() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/auth";
         }, 2000);
         return;
       }
@@ -138,7 +138,7 @@ export default function CreateCampaign() {
                 You need to be logged in to create campaigns.
               </p>
               <Button 
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => window.location.href = '/auth'}
                 className="bg-gradient-to-r from-cyber-blue to-cyber-purple"
               >
                 Log In
@@ -192,7 +192,7 @@ export default function CreateCampaign() {
         </section>
 
         {/* KYC Status Check */}
-        {userProfile?.kycStatus !== "verified" && (
+        {user?.kycStatus !== "verified" && (
           <section className="py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <KYCStatus />
@@ -348,7 +348,7 @@ export default function CreateCampaign() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Currency</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                                   <FormControl>
                                     <SelectTrigger className="form-focus">
                                       <SelectValue />
@@ -387,6 +387,7 @@ export default function CreateCampaign() {
                                   placeholder="https://example.com/image.jpg"
                                   className="form-focus"
                                   {...field}
+                                  value={field.value || ""}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -422,7 +423,7 @@ export default function CreateCampaign() {
                       <Button 
                         type="submit"
                         className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transition-all duration-300"
-                        disabled={createCampaignMutation.isPending || userProfile?.kycStatus !== "verified"}
+                        disabled={createCampaignMutation.isPending || user?.kycStatus !== "verified"}
                       >
                         {createCampaignMutation.isPending ? (
                           <>

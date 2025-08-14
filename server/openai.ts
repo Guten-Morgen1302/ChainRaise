@@ -5,6 +5,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key"
 });
 
+const hasValidApiKey = () => {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR;
+  return apiKey && apiKey !== "default_key" && apiKey.startsWith("sk-");
+};
+
 export interface CampaignOptimization {
   titleSuggestions: string[];
   descriptionEnhancements: string[];
@@ -25,6 +30,17 @@ export async function optimizeCampaignTitle(title: string): Promise<{
   suggestions: string[];
   engagementBoost: string;
 }> {
+  if (!hasValidApiKey()) {
+    return {
+      suggestions: [
+        `Enhanced: ${title}`,
+        `Professional: ${title}`,
+        `Innovative: ${title}`
+      ],
+      engagementBoost: "AI optimization unavailable - requires OpenAI API key"
+    };
+  }
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -60,6 +76,13 @@ export async function enhanceCampaignDescription(description: string, category: 
   enhancedDescription: string;
   keyImprovements: string[];
 }> {
+  if (!hasValidApiKey()) {
+    return {
+      enhancedDescription: description,
+      keyImprovements: ["AI enhancement unavailable - requires OpenAI API key"]
+    };
+  }
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -106,6 +129,18 @@ export async function analyzeCampaignCredibility(campaignData: {
   }[];
   recommendations: string[];
 }> {
+  if (!hasValidApiKey()) {
+    return {
+      score: campaignData.creatorKycStatus === "verified" ? 7.5 : 5.0,
+      factors: [
+        { factor: "KYC Status", impact: campaignData.creatorKycStatus === "verified" ? "positive" : "negative", score: campaignData.creatorKycStatus === "verified" ? 8 : 4 },
+        { factor: "Goal Amount", impact: "neutral", score: 6 },
+        { factor: "Description Length", impact: campaignData.description.length > 100 ? "positive" : "negative", score: campaignData.description.length > 100 ? 7 : 5 }
+      ],
+      recommendations: ["AI analysis unavailable - requires OpenAI API key"]
+    };
+  }
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -149,6 +184,14 @@ export async function predictFundingSuccess(campaignData: {
   recommendedGoal: number;
   marketInsights: string[];
 }> {
+  if (!hasValidApiKey()) {
+    return {
+      successProbability: Math.min(0.85, Math.max(0.45, 0.70 - (campaignData.goalAmount / 100000))),
+      recommendedGoal: campaignData.goalAmount,
+      marketInsights: ["AI prediction unavailable - requires OpenAI API key"]
+    };
+  }
+  
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
