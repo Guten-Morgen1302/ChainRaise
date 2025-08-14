@@ -1,0 +1,47 @@
+Looking at your codebase and the console logs, I can identify several errors without making any changes:
+
+Current Errors Found:
+1. Three.js Shader Error (Active)
+THREE.WebGLProgram: Shader Error 0 - VALIDATE_STATUS false
+ERROR: 0:71: 'color' : redefinition
+Location: client/src/components/three/ThreeBackground.tsx
+Issue: The vertex shader is trying to redeclare the color attribute which already exists in Three.js built-in attributes
+Impact: 3D background effects are broken
+2. Authentication System Issues
+From the attached analysis document and console logs:
+
+Missing Route: The console shows GET /api/auth/user calls, but in server/routes.ts the route is defined as /api/auth/user while server/auth.ts defines /api/user
+Route Mismatch: Frontend is calling /api/auth/user but backend only has /api/user
+Impact: Authentication state checking fails
+3. Database/Data Issues
+From console logs:
+
+GET /api/campaigns 200 in 509ms :: []
+GET /api/contributions 200 in 476ms :: []
+GET /api/stats 200 in 592ms :: {"totalRaised":"0.0","activeCampaigns":"0"...
+Issue: All data queries return empty results
+Possible Causes: No seed data, database connection issues, or data creation blocked by auth
+4. Missing Dependencies
+From the analysis document:
+
+Missing passport-related packages for authentication
+Potential missing OpenAI API key configuration
+5. CORS Issues
+The analysis mentions missing CORS headers which could cause API call failures.
+
+6. Potential Database Schema Issues
+The analysis mentions problems with user upsert method in the database layer.
+
+7. Environment Variables
+Missing configuration for:
+
+OpenAI API key (for AI features)
+Session secrets
+Other service integrations
+Error Priority:
+Critical: Three.js shader error (currently breaking UI)
+Critical: Authentication route mismatch
+High: Empty database/no seed data
+Medium: Missing environment variables
+Low: CORS configuration
+The most immediate visible error is the Three.js shader issue causing console spam, followed by the authentication system problems preventing full application functionality.
