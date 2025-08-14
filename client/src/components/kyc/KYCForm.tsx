@@ -109,13 +109,53 @@ export default function KYCForm({ onSubmitSuccess }: KYCFormProps) {
     }));
   };
 
-  const onSubmit = (data: KycFormData) => {
+  const validateCurrentStep = (data: KycFormData): boolean => {
+    if (currentStep === 1) {
+      // Validate personal information fields
+      const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address', 'city', 'state', 'zipCode', 'country'];
+      return requiredFields.every(field => {
+        const value = data[field as keyof KycFormData];
+        return value && value.toString().trim() !== '';
+      });
+    } else if (currentStep === 2) {
+      // Validate identity verification fields
+      const requiredFields = ['idType', 'idNumber', 'occupation', 'sourceOfFunds', 'monthlyIncome'];
+      return requiredFields.every(field => {
+        const value = data[field as keyof KycFormData];
+        return value && value.toString().trim() !== '';
+      });
+    }
+    return true;
+  };
+
+  const onSubmit = async (data: KycFormData) => {
+    console.log('Form submitted with data:', data);
+    console.log('Current step:', currentStep);
+    
+    // For steps 1 and 2, validate current step and proceed
     if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
+      const stepValid = validateCurrentStep(data);
+      console.log('Step valid:', stepValid);
+      
+      if (stepValid) {
+        setCurrentStep(currentStep + 1);
+        toast({
+          title: `Step ${currentStep} completed!`,
+          description: "Proceeding to the next step.",
+        });
+      } else {
+        const errors = form.formState.errors;
+        console.log('Form errors:', errors);
+        toast({
+          title: "Please fill all required fields",
+          description: "Complete all fields in this step before proceeding.",
+          variant: "destructive",
+        });
+      }
       return;
     }
     
-    // Validate that required documents are uploaded
+    // Final step - validate documents and submit
     if (!uploadedFiles.idFront || !uploadedFiles.selfie) {
       toast({
         title: "Documents Required",
