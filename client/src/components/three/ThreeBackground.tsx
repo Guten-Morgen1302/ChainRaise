@@ -95,7 +95,6 @@ export function ThreeBackground({ className = "" }: ThreeBackgroundProps) {
         }
       `,
       transparent: true,
-      vertexColors: true,
       blending: THREE.AdditiveBlending
     });
 
