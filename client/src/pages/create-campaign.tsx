@@ -35,7 +35,14 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 
-const createCampaignFormSchema = insertCampaignSchema.extend({
+const createCampaignFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
+  fundingType: z.string().min(1, "Funding type is required"),
+  goalAmount: z.string().min(1, "Goal amount is required"),
+  currency: z.string().default("ETH"),
+  imageUrl: z.string().optional(),
   tags: z.string().optional(),
 });
 
@@ -106,7 +113,16 @@ export default function CreateCampaign() {
   });
 
   const onSubmit = (data: CreateCampaignForm) => {
-    createCampaignMutation.mutate(data);
+    console.log("Form submission triggered:", data);
+    console.log("Form errors:", form.formState.errors);
+    
+    // Ensure required fields are present
+    const submissionData = {
+      ...data,
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    
+    createCampaignMutation.mutate(submissionData);
   };
 
   const categories = [
@@ -415,20 +431,40 @@ export default function CreateCampaign() {
                       </CardContent>
                     </Card>
 
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <Button type="button" variant="outline" disabled={currentStep === 1}>
                         Previous
                       </Button>
+                      
+                      {user?.kycStatus !== "verified" && (
+                        <div className="text-sm text-muted-foreground">
+                          <AlertTriangle className="w-4 h-4 inline mr-1" />
+                          KYC verification required to create campaigns
+                        </div>
+                      )}
                       
                       <Button 
                         type="submit"
                         className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transition-all duration-300"
                         disabled={createCampaignMutation.isPending || user?.kycStatus !== "verified"}
+                        onClick={() => {
+                          console.log("Button clicked!");
+                          console.log("User KYC status:", user?.kycStatus);
+                          console.log("Form valid:", form.formState.isValid);
+                          console.log("Form errors:", form.formState.errors);
+                          console.log("Form values:", form.getValues());
+                        }}
+                        data-testid="button-launch-campaign"
                       >
                         {createCampaignMutation.isPending ? (
                           <>
                             <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full mr-2"></div>
                             Creating Campaign...
+                          </>
+                        ) : user?.kycStatus !== "verified" ? (
+                          <>
+                            <AlertTriangle className="w-4 h-4 mr-2" />
+                            KYC Required
                           </>
                         ) : (
                           <>
