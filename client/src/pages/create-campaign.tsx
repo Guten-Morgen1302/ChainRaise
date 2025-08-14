@@ -16,7 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
-import Navbar from "@/components/layout/navbar";
+import { MainNavigation } from "@/components/navigation/MainNavigation";
+import { ThreeBackground } from "@/components/three/ThreeBackground";
 import Footer from "@/components/layout/footer";
 import CampaignAssistant from "@/components/ai/campaign-assistant";
 import KYCStatus from "@/components/kyc/kyc-status";
@@ -125,9 +126,10 @@ export default function CreateCampaign() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="pt-16 flex justify-center items-center min-h-screen">
+      <div className="min-h-screen bg-background relative">
+        <ThreeBackground />
+        <MainNavigation />
+        <div className="relative z-10 pt-16 flex justify-center items-center min-h-screen">
           <Card className="glass-morphism max-w-md">
             <CardContent className="p-8 text-center">
               <AlertTriangle className="w-12 h-12 text-cyber-yellow mx-auto mb-4" />
@@ -151,10 +153,11 @@ export default function CreateCampaign() {
   const progress = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen bg-background relative">
+      <ThreeBackground />
+      <MainNavigation />
       
-      <div className="pt-16">
+      <div className="relative z-10 pt-16">
         {/* Header */}
         <section className="py-12 bg-gradient-to-b from-background to-muted/20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

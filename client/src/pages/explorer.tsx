@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import Navbar from "@/components/layout/navbar";
+import { MainNavigation } from "@/components/navigation/MainNavigation";
+import { ThreeBackground } from "@/components/three/ThreeBackground";
 import Footer from "@/components/layout/footer";
 import TransactionFeed from "@/components/blockchain/transaction-feed";
 import NetworkStats from "@/components/blockchain/network-stats";
@@ -108,10 +109,11 @@ export default function Explorer() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen bg-background relative">
+      <ThreeBackground />
+      <MainNavigation />
       
-      <div className="pt-16">
+      <div className="relative z-10 pt-16">
         {/* Header */}
         <section className="py-12 bg-gradient-to-b from-background to-muted/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

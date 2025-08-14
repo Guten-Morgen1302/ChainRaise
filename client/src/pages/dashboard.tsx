@@ -9,7 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import Navbar from "@/components/layout/navbar";
+import { MainNavigation } from "@/components/navigation/MainNavigation";
+import { ThreeBackground } from "@/components/three/ThreeBackground";
 import Footer from "@/components/layout/footer";
 import CampaignCard from "@/components/campaign/campaign-card";
 import { 
@@ -69,9 +70,10 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="pt-16 flex justify-center items-center min-h-screen">
+      <div className="min-h-screen bg-background relative">
+        <ThreeBackground />
+        <MainNavigation />
+        <div className="relative z-10 pt-16 flex justify-center items-center min-h-screen">
           <div className="text-center">
             <div className="w-8 h-8 animate-spin border-2 border-cyber-blue border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading dashboard...</p>
@@ -93,10 +95,11 @@ export default function Dashboard() {
   const activeCampaigns = myCampaigns.filter(campaign => campaign.status === "active").length;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen bg-background relative">
+      <ThreeBackground />
+      <MainNavigation />
       
-      <div className="pt-16">
+      <div className="relative z-10 pt-16">
         {/* Header */}
         <section className="py-12 bg-gradient-to-b from-background to-muted/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
