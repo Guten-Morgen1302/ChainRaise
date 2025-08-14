@@ -121,7 +121,7 @@ export function MainNavigation() {
             </DropdownMenu>
           ) : (
             <Button 
-              onClick={() => window.location.href = '/api/login'} 
+              onClick={() => window.location.href = '/auth'} 
               variant="outline"
               size="sm"
             >
