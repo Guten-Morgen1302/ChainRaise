@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/campaigns/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const campaign = await storage.getCampaign(req.params.id);
       
       if (!campaign) {
@@ -107,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/contributions', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const contributionData = insertContributionSchema.parse({
         ...req.body,
         backerId: userId,
@@ -166,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store AI interaction
       await storage.createAiInteraction({
-        userId: req.user.claims.sub,
+        userId: req.user.id,
         interactionType: "title_optimization",
         inputData: { title },
         outputData: result,
@@ -190,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store AI interaction
       await storage.createAiInteraction({
-        userId: req.user.claims.sub,
+        userId: req.user.id,
         interactionType: "description_enhancement",
         inputData: { description, category },
         outputData: result,
@@ -206,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/ai/analyze-credibility', isAuthenticated, async (req: any, res) => {
     try {
       const { campaignData } = req.body;
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = await storage.getUser(req.user.id);
       
       const result = await analyzeCampaignCredibility({
         ...campaignData,
@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store AI interaction
       await storage.createAiInteraction({
-        userId: req.user.claims.sub,
+        userId: req.user.id,
         interactionType: "credibility_analysis",
         inputData: campaignData,
         outputData: result,
@@ -236,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store AI interaction
       await storage.createAiInteraction({
-        userId: req.user.claims.sub,
+        userId: req.user.id,
         interactionType: "funding_prediction",
         inputData: campaignData,
         outputData: result,
@@ -263,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // KYC routes
   app.put('/api/user/kyc', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { documents, status } = req.body;
       
       const user = await storage.getUser(userId);
