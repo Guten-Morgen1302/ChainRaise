@@ -71,7 +71,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  public sessionStore: session.SessionStore;
+  public sessionStore: any;
 
   constructor() {
     const MemoryStore = createMemoryStore(session);
@@ -149,7 +149,7 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(campaigns);
     
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as any;
     }
 
     const results = await query.orderBy(desc(campaigns.createdAt));
@@ -212,7 +212,7 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(contributions);
     
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as any;
     }
 
     return await query.orderBy(desc(contributions.createdAt));
@@ -254,7 +254,7 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(transactions);
     
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as any;
     }
 
     const results = await query.orderBy(desc(transactions.createdAt));
@@ -287,9 +287,9 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(aiInteractions);
     
     if (campaignId) {
-      query = query.where(and(eq(aiInteractions.userId, userId), eq(aiInteractions.campaignId, campaignId)));
+      query = query.where(and(eq(aiInteractions.userId, userId), eq(aiInteractions.campaignId, campaignId))) as any;
     } else {
-      query = query.where(eq(aiInteractions.userId, userId));
+      query = query.where(eq(aiInteractions.userId, userId)) as any;
     }
 
     return await query.orderBy(desc(aiInteractions.createdAt));
