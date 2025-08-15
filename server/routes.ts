@@ -187,6 +187,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get transactions by campaign ID
+  app.get('/api/transactions/:campaignId', async (req, res) => {
+    try {
+      const { campaignId } = req.params;
+      const transactions = await storage.getTransactions({ campaignId });
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching campaign transactions:", error);
+      res.status(500).json({ message: "Failed to fetch campaign transactions" });
+    }
+  });
+
+  // Get contributions by campaign ID
+  app.get('/api/contributions/:campaignId', async (req, res) => {
+    try {
+      const { campaignId } = req.params;
+      const contributions = await storage.getContributions({ campaignId });
+      res.json(contributions);
+    } catch (error) {
+      console.error("Error fetching campaign contributions:", error);
+      res.status(500).json({ message: "Failed to fetch campaign contributions" });
+    }
+  });
+
   // AI Assistant routes
   app.post('/api/ai/optimize-title', isAuthenticated, async (req: any, res) => {
     try {
