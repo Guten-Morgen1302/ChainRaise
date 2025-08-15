@@ -89,7 +89,7 @@ export default function KYCForm({ onSubmitSuccess }: KYCFormProps) {
         title: "KYC Application Submitted",
         description: "Your verification documents have been submitted for review. You'll be notified within 1-3 business days.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/kyc/status"] });
       onSubmitSuccess();
     },

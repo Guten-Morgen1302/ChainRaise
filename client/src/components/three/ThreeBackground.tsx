@@ -57,7 +57,7 @@ export function ThreeBackground({ className = "" }: ThreeBackgroundProps) {
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('particleColor', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
     const material = new THREE.ShaderMaterial({
@@ -66,12 +66,12 @@ export function ThreeBackground({ className = "" }: ThreeBackgroundProps) {
       },
       vertexShader: `
         attribute float size;
-        attribute vec3 color;
+        attribute vec3 particleColor;
         varying vec3 vColor;
         uniform float time;
 
         void main() {
-          vColor = color;
+          vColor = particleColor;
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           
           // Add some movement

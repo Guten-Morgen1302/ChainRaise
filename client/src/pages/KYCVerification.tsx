@@ -80,7 +80,7 @@ export default function KYCVerification() {
         title: "KYC Submitted Successfully",
         description: "Your documents are being reviewed. You'll receive an update within 2-3 business days.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: Error) => {
       toast({
