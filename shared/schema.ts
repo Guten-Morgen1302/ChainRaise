@@ -110,6 +110,22 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Avalanche wallet transactions table
+export const avalancheTransactions = pgTable("avalanche_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  campaignId: varchar("campaign_id").references(() => campaigns.id).notNull(),
+  transactionHash: varchar("transaction_hash").unique().notNull(),
+  amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
+  walletAddress: varchar("wallet_address").notNull(),
+  status: varchar("status").default("completed"), // pending, completed, failed
+  blockNumber: varchar("block_number"),
+  gasUsed: varchar("gas_used"),
+  gasPrice: varchar("gas_price"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // KYC Applications table
 export const kycApplications = pgTable("kyc_applications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -257,6 +273,16 @@ export const insertUserNotificationSchema = createInsertSchema(userNotifications
   isRead: true,
   createdAt: true,
 });
+
+export const insertAvalancheTransactionSchema = createInsertSchema(avalancheTransactions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Type exports
+export type AvalancheTransaction = typeof avalancheTransactions.$inferSelect;
+export type InsertAvalancheTransaction = typeof insertAvalancheTransactionSchema._type;
 
 // Type exports
 export type User = typeof users.$inferSelect;

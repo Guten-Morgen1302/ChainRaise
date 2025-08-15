@@ -71,12 +71,13 @@ export default function Navbar() {
                   variant="outline"
                   size="sm"
                   className="glass-morphism border-white/20 hover:bg-white/20"
+                  onClick={() => window.location.href = '/profile'}
                 >
                   <Wallet className="w-4 h-4 mr-2" />
                   <span className="font-mono text-sm">
                     {user?.walletAddress 
                       ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`
-                      : "0x1a2b...c3d4"
+                      : "Profile"
                     }
                   </span>
                 </Button>

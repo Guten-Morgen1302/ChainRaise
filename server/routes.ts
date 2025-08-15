@@ -8,7 +8,7 @@ import {
   analyzeCampaignCredibility,
   predictFundingSuccess 
 } from "./openai";
-import { insertCampaignSchema, insertContributionSchema, insertTransactionSchema, insertKycApplicationSchema, insertReinstatementRequestSchema, insertUserNotificationSchema } from "@shared/schema";
+import { insertCampaignSchema, insertContributionSchema, insertTransactionSchema, insertKycApplicationSchema, insertReinstatementRequestSchema, insertUserNotificationSchema, insertAvalancheTransactionSchema } from "@shared/schema";
 import { getWebSocketManager } from "./websocket";
 import { JsonRpcProvider, WebSocketProvider, Contract, formatEther } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@shared/contract";
@@ -117,6 +117,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       contractWs.off('MilestoneCompleted', onMilestone);
       res.end();
     });
+  });
+
+  // Avalanche wallet transaction endpoints
+  app.post('/api/transactions/avalanche', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const transactionData = insertAvalancheTransactionSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const transaction = await storage.createAvalancheTransaction(transactionData);
+      
+      // Update campaign funding if transaction is for a campaign
+      if (transactionData.campaignId) {
+        await storage.updateCampaignFunding(transactionData.campaignId, transactionData.amount);
+      }
+
+      // Broadcast real-time update to admin clients
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.transactionCreated(transaction);
+      }
+
+      res.status(201).json(transaction);
+    } catch (error) {
+      console.error("Error creating Avalanche transaction:", error);
+      res.status(400).json({ message: (error as Error).message || "Failed to create transaction" });
+    }
+  });
+
+  app.get('/api/transactions/avalanche', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const transactions = await storage.getAvalancheTransactionsByUser(userId);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching Avalanche transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  app.get('/api/admin/transactions/avalanche', requireAdmin, async (req, res) => {
+    try {
+      const { userId, campaignId, startDate, endDate, limit, offset } = req.query;
+      const transactions = await storage.getAllAvalancheTransactions({
+        userId: userId as string,
+        campaignId: campaignId as string,
+        startDate: startDate as string,
+        endDate: endDate as string,
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined,
+      });
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching admin Avalanche transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // Update user wallet address
+  app.put('/api/user/wallet', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { walletAddress } = req.body;
+      
+      if (!walletAddress) {
+        return res.status(400).json({ message: "Wallet address is required" });
+      }
+
+      await storage.updateUserWallet(userId, walletAddress);
+      res.json({ success: true, walletAddress });
+    } catch (error) {
+      console.error("Error updating wallet:", error);
+      res.status(500).json({ message: "Failed to update wallet" });
+    }
   });
 
   // Removed duplicate auth route - using the one in auth.ts instead

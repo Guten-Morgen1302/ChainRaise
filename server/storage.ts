@@ -3,6 +3,7 @@ import {
   campaigns,
   contributions,
   transactions,
+  avalancheTransactions,
   aiInteractions,
   kycApplications,
   adminUsers,
@@ -16,12 +17,10 @@ import {
   type InsertContribution,
   type Transaction,
   type InsertTransaction,
-  type AiInteraction,
-  type InsertAiInteraction,
+  type AvalancheTransaction,
+  type InsertAvalancheTransaction,
   type KycApplication,
   type InsertKycApplication,
-  type AdminUser,
-  type InsertAdminUser,
   type ReinstatementRequest,
   type InsertReinstatementRequest,
   type UserNotification,
@@ -117,9 +116,22 @@ export interface IStorage {
   markAllNotificationsAsRead(userId: string): Promise<void>;
   
   // Campaign management enhancements
-  getUserCampaigns(userId: string): Promise<Campaign[]>;
   canUserCreateCampaign(userId: string): Promise<{ canCreate: boolean; reason?: string }>;
   updateCampaignWithEditTracking(id: string, updates: Partial<Campaign>, editorId: string): Promise<Campaign>;
+  
+  // Avalanche transaction operations
+  createAvalancheTransaction(transaction: InsertAvalancheTransaction): Promise<AvalancheTransaction>;
+  getAvalancheTransactionsByUser(userId: string): Promise<AvalancheTransaction[]>;
+  getAllAvalancheTransactions(filters?: {
+    userId?: string;
+    campaignId?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<AvalancheTransaction[]>;
+  updateCampaignFunding(campaignId: string, amount: string): Promise<void>;
+  updateUserWallet(userId: string, walletAddress: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -719,6 +731,90 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedCampaign;
+  }
+
+  // Avalanche transaction operations
+  async createAvalancheTransaction(transaction: InsertAvalancheTransaction): Promise<AvalancheTransaction> {
+    const [created] = await db
+      .insert(avalancheTransactions)
+      .values(transaction)
+      .returning();
+    return created;
+  }
+
+  async getAvalancheTransactionsByUser(userId: string): Promise<AvalancheTransaction[]> {
+    return await db
+      .select()
+      .from(avalancheTransactions)
+      .where(eq(avalancheTransactions.userId, userId))
+      .orderBy(desc(avalancheTransactions.createdAt));
+  }
+
+  async getAllAvalancheTransactions(filters?: {
+    userId?: string;
+    campaignId?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<AvalancheTransaction[]> {
+    let query = db.select().from(avalancheTransactions);
+    
+    const conditions: any[] = [];
+    
+    if (filters?.userId) {
+      conditions.push(eq(avalancheTransactions.userId, filters.userId));
+    }
+    
+    if (filters?.campaignId) {
+      conditions.push(eq(avalancheTransactions.campaignId, filters.campaignId));
+    }
+    
+    if (filters?.startDate) {
+      conditions.push(sql`${avalancheTransactions.createdAt} >= ${filters.startDate}`);
+    }
+    
+    if (filters?.endDate) {
+      conditions.push(sql`${avalancheTransactions.createdAt} <= ${filters.endDate}`);
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    query = query.orderBy(desc(avalancheTransactions.createdAt));
+    
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+    
+    if (filters?.offset) {
+      query = query.offset(filters.offset);
+    }
+
+    return await query;
+  }
+
+  async updateCampaignFunding(campaignId: string, amount: string): Promise<void> {
+    const campaign = await this.getCampaign(campaignId);
+    if (campaign) {
+      const currentAmount = parseFloat(campaign.currentAmount || '0');
+      const newAmount = currentAmount + parseFloat(amount);
+      await db
+        .update(campaigns)
+        .set({ 
+          currentAmount: newAmount.toString(),
+          backerCount: campaign.backerCount + 1
+        })
+        .where(eq(campaigns.id, campaignId));
+    }
+  }
+
+  async updateUserWallet(userId: string, walletAddress: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ walletAddress })
+      .where(eq(users.id, userId));
   }
 }
 

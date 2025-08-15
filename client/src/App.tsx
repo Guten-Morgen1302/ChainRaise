@@ -13,9 +13,11 @@ import KYCVerification from "@/pages/KYCVerification";
 import FeatureShowcase from "@/pages/FeatureShowcase";
 import AccessGuide from "@/pages/AccessGuide";
 import Dashboard from "@/pages/dashboard";
+import Profile from "@/pages/profile";
 import KYC from "@/pages/kyc";
 import Explorer from "@/pages/explorer";
 import AdminPage from "@/pages/admin";
+import AvalancheTransactionsPage from "@/pages/admin/avalanche-transactions";
 import AuthPage from "@/pages/auth-page";
 import ContractDemo from "@/pages/contract-demo";
 import NotFound from "@/pages/not-found";
@@ -30,7 +32,9 @@ function Router() {
       <Route path="/campaigns/:id" component={CampaignDetail} />
       <Route path="/create" component={CreateCampaign} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/profile" component={Profile} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/admin/avalanche-transactions" component={AvalancheTransactionsPage} />
       <Route path="/kyc" component={KYC} />
       <Route path="/kyc-verification" component={KYCVerification} />
       <Route path="/features" component={FeatureShowcase} />

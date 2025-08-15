@@ -128,6 +128,10 @@ class AdminWebSocketManager {
   public kycStatusChanged(application: any) {
     this.broadcastToAdmins('kyc_status_changed', application);
   }
+
+  public transactionCreated(transaction: any) {
+    this.broadcastToAdmins('transaction_created', transaction);
+  }
 }
 
 let adminWSManager: AdminWebSocketManager | null = null;

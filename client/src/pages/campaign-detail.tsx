@@ -11,8 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { PaymentModal } from "@/components/PaymentModal";
+import { WalletConnection } from "@/components/WalletConnection";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useWallet } from "@/hooks/useWallet";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import Navbar from "@/components/layout/navbar";
@@ -44,11 +47,65 @@ export default function CampaignDetail() {
   const [contributionAmount, setContributionAmount] = useState("");
   const [contributionMessage, setContributionMessage] = useState("");
   const [activeTab, setActiveTab] = useState("story");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  
+  const { isConnected } = useWallet();
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["/api/campaigns", id],
     retry: false,
   });
+
+  // Handle case when campaign data is loading or not found
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyber-blue mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading campaign...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!campaign) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Campaign Not Found</h2>
+            <p className="text-muted-foreground">The campaign you're looking for doesn't exist.</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Ensure campaign has required properties with defaults
+  const campaignData = {
+    id: campaign.id || '',
+    title: campaign.title || 'Untitled Campaign',
+    description: campaign.description || 'No description available',
+    imageUrl: campaign.imageUrl || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=600",
+    category: campaign.category || 'General',
+    currentAmount: parseFloat(campaign.currentAmount || '0'),
+    goalAmount: parseFloat(campaign.goalAmount || '1000'),
+    currency: campaign.currency || 'ETH',
+    backerCount: parseInt(campaign.backerCount || '0'),
+    deadline: campaign.deadline || new Date().toISOString(),
+    status: campaign.status || 'active',
+    creatorId: campaign.creatorId || '',
+    credibilityScore: parseFloat(campaign.credibilityScore || '0'),
+    smartContractAddress: campaign.smartContractAddress || '',
+    updates: campaign.updates || [],
+    ...campaign
+  };
 
   const { data: contributions = [] } = useQuery({
     queryKey: ["/api/contributions", id],
@@ -59,6 +116,13 @@ export default function CampaignDetail() {
     queryKey: ["/api/transactions", id],
     retry: false,
   });
+
+  const progress = (campaignData.currentAmount / campaignData.goalAmount) * 100;
+  const deadline = new Date(campaignData.deadline);
+  const now = new Date();
+  const daysLeft = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  const isCompleted = campaignData.status === 'completed' || daysLeft === 0;
+  const isOwner = user?.id === campaignData.creatorId;
 
   const contributeMutation = useMutation({
     mutationFn: async (data: {
@@ -99,46 +163,7 @@ export default function CampaignDetail() {
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="pt-16 flex justify-center items-center min-h-screen">
-          <div className="text-center">
-            <div className="w-8 h-8 animate-spin border-2 border-cyber-blue border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading campaign...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!campaign) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="pt-16 flex justify-center items-center min-h-screen">
-          <Card className="glass-morphism max-w-md">
-            <CardContent className="p-8 text-center">
-              <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Campaign not found</h3>
-              <p className="text-muted-foreground mb-4">
-                The campaign you're looking for doesn't exist or has been removed.
-              </p>
-              <Link href="/campaigns">
-                <Button>Browse Campaigns</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  const progress = (parseFloat(campaign.currentAmount) / parseFloat(campaign.goalAmount)) * 100;
-  const daysLeft = Math.max(0, Math.ceil((new Date(campaign.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-  const isCompleted = campaign.status === "completed";
-  const isOwner = user?.id === campaign.creatorId;
+  // Remove duplicate definitions since they're already defined above
 
   const handleContribute = () => {
     if (!isAuthenticated) {
@@ -160,7 +185,7 @@ export default function CampaignDetail() {
     }
 
     contributeMutation.mutate({
-      campaignId: campaign.id,
+      campaignId: campaignData.id,
       amount: contributionAmount,
       message: contributionMessage,
       paymentMethod: "crypto",
@@ -186,13 +211,13 @@ export default function CampaignDetail() {
                   {/* Campaign Image */}
                   <div className="relative rounded-2xl overflow-hidden mb-6 h-80">
                     <img 
-                      src={campaign.imageUrl || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=600"} 
-                      alt={campaign.title}
+                      src={campaignData.imageUrl} 
+                      alt={campaignData.title}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-4 left-4">
                       <Badge className={`bg-cyber-green/90 px-3 py-1 text-sm font-medium`}>
-                        {campaign.category}
+                        {campaignData.category}
                       </Badge>
                     </div>
                     <div className="absolute top-4 right-4 flex gap-2">
@@ -211,10 +236,10 @@ export default function CampaignDetail() {
                   {/* Campaign Title and Meta */}
                   <div className="mb-6">
                     <h1 className="text-3xl md:text-4xl font-black mb-4 gradient-text">
-                      {campaign.title}
+                      {campaignData.title}
                     </h1>
                     <p className="text-lg text-muted-foreground">
-                      {campaign.description}
+                      {campaignData.description}
                     </p>
                   </div>
                 </motion.div>
@@ -234,7 +259,7 @@ export default function CampaignDetail() {
                       <div className="mb-6">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-2xl font-bold">
-                            {campaign.currentAmount} {campaign.currency}
+                            {campaignData.currentAmount} {campaignData.currency}
                           </span>
                           <Badge variant="secondary" className="font-mono">
                             {Math.round(progress)}%
@@ -242,7 +267,7 @@ export default function CampaignDetail() {
                         </div>
                         <Progress value={progress} className="h-3 mb-2 progress-glow" />
                         <div className="text-sm text-muted-foreground">
-                          raised of {campaign.goalAmount} {campaign.currency} goal
+                          raised of {campaignData.goalAmount} {campaignData.currency} goal
                         </div>
                       </div>
 
@@ -250,7 +275,7 @@ export default function CampaignDetail() {
                       <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-cyber-blue">
-                            {campaign.backerCount}
+                            {campaignData.backerCount}
                           </div>
                           <div className="text-sm text-muted-foreground">Backers</div>
                         </div>
@@ -312,6 +337,36 @@ export default function CampaignDetail() {
                               </>
                             )}
                           </Button>
+                          
+                          {/* Avalanche Payment Section */}
+                          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Wallet className="h-5 w-5 text-blue-600" />
+                              <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                                Pay with Avalanche
+                              </h4>
+                              <Badge variant="secondary" className="text-xs">
+                                Instant & Secure
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                              Pay instantly with AVAX from your connected wallet
+                            </p>
+                            
+                            {isConnected && (
+                              <WalletConnection compact={true} />
+                            )}
+                            
+                            <Button
+                              onClick={() => setShowPaymentModal(true)}
+                              disabled={!isAuthenticated}
+                              className="w-full mt-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                              data-testid="button-avalanche-pay"
+                            >
+                              <Wallet className="h-4 w-4 mr-2" />
+                              {isConnected ? 'Pay with AVAX' : 'Connect Wallet to Pay'}
+                            </Button>
+                          </div>
                         </div>
                       )}
 
@@ -330,12 +385,12 @@ export default function CampaignDetail() {
                       )}
 
                       {/* Credibility Score */}
-                      {parseFloat(campaign.credibilityScore) > 0 && (
+                      {campaignData.credibilityScore > 0 && (
                         <div className="mt-6 pt-4 border-t border-muted">
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-muted-foreground">Credibility Score</span>
                             <Badge className="bg-cyber-green/20 text-cyber-green">
-                              {campaign.credibilityScore}/10
+                              {campaignData.credibilityScore}/10
                             </Badge>
                           </div>
                         </div>
@@ -366,7 +421,7 @@ export default function CampaignDetail() {
                     <h3 className="text-2xl font-bold mb-6">About This Project</h3>
                     <div className="prose prose-invert max-w-none">
                       <p className="text-muted-foreground leading-relaxed">
-                        {campaign.description}
+                        {campaignData.description}
                       </p>
                       
                       {/* Sample story content */}
@@ -381,7 +436,7 @@ export default function CampaignDetail() {
                         <div>
                           <h4 className="text-xl font-semibold mb-3">Our Solution</h4>
                           <p className="text-muted-foreground">
-                            This project represents the next evolution in {campaign.category.toLowerCase()} technology, 
+                            This project represents the next evolution in {campaignData.category.toLowerCase()} technology, 
                             combining cutting-edge features with user-friendly design.
                           </p>
                         </div>
@@ -405,9 +460,9 @@ export default function CampaignDetail() {
                 <Card className="glass-morphism">
                   <CardContent className="p-8">
                     <h3 className="text-2xl font-bold mb-6">Project Updates</h3>
-                    {campaign.updates && campaign.updates.length > 0 ? (
+                    {campaignData.updates && campaignData.updates.length > 0 ? (
                       <div className="space-y-6">
-                        {campaign.updates.map((update, index) => (
+                        {campaignData.updates.map((update: any, index: number) => (
                           <div key={index} className="border-l-2 border-cyber-blue pl-4">
                             <div className="flex items-center gap-2 mb-2">
                               <Clock className="w-4 h-4 text-cyber-blue" />
@@ -433,10 +488,10 @@ export default function CampaignDetail() {
               <TabsContent value="backers">
                 <Card className="glass-morphism">
                   <CardContent className="p-8">
-                    <h3 className="text-2xl font-bold mb-6">Backers ({contributions.length})</h3>
-                    {contributions.length > 0 ? (
+                    <h3 className="text-2xl font-bold mb-6">Backers ({Array.isArray(contributions) ? contributions.length : 0})</h3>
+                    {Array.isArray(contributions) && contributions.length > 0 ? (
                       <div className="space-y-4">
-                        {contributions.map((contribution) => (
+                        {contributions.map((contribution: any) => (
                           <div key={contribution.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
                             <div className="flex items-center gap-3">
                               <Avatar>
@@ -500,9 +555,9 @@ export default function CampaignDetail() {
                           <label className="text-sm text-muted-foreground">Contract Address</label>
                           <div className="flex items-center gap-2 mt-1">
                             <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
-                              {campaign.smartContractAddress || "Not deployed"}
+                              {campaignData.smartContractAddress || "Not deployed"}
                             </code>
-                            {campaign.smartContractAddress && (
+                            {campaignData.smartContractAddress && (
                               <Button variant="ghost" size="sm">
                                 <ExternalLink className="w-4 h-4" />
                               </Button>
@@ -571,6 +626,16 @@ export default function CampaignDetail() {
       </div>
 
       <Footer />
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        campaignId={campaignData.id}
+        campaignTitle={campaignData.title}
+        minAmount={0.001}
+        maxAmount={10}
+      />
     </div>
   );
 }
