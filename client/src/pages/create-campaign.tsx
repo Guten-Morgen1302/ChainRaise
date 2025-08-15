@@ -93,7 +93,7 @@ export default function CreateCampaign() {
       return await apiRequest("POST", "/api/campaigns", {
         ...campaignData,
         tags: tagsArray,
-        deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       });
     },
     onSuccess: (data) => {
@@ -127,13 +127,7 @@ export default function CreateCampaign() {
     console.log("Form submission triggered:", data);
     console.log("Form errors:", form.formState.errors);
     
-    // Ensure required fields are present
-    const submissionData = {
-      ...data,
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    };
-    
-    createCampaignMutation.mutate(submissionData);
+    createCampaignMutation.mutate(data);
   };
 
   const categories = [
