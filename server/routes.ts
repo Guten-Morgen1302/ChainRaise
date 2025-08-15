@@ -107,9 +107,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (campaign.creatorId !== userId) {
         return res.status(403).json({ message: "Unauthorized to update this campaign" });
       }
+      
+      // Check if campaign is pending re-approval after edits
+      if (campaign.isEditedAfterApproval && campaign.status === "pending_approval") {
+        return res.status(403).json({ 
+          message: "Cannot edit campaign while pending admin re-approval",
+          requiresReview: true 
+        });
+      }
+      
+      // Can't edit rejected campaigns
+      if (campaign.status === "rejected") {
+        return res.status(403).json({ message: "Cannot edit rejected campaigns" });
+      }
+      
+      // Determine if this is a critical edit that requires re-approval
+      const criticalFields = ['title', 'description', 'goalAmount', 'deadline', 'fundingType', 'category'];
+      const isCriticalEdit = criticalFields.some(field => 
+        req.body[field] !== undefined && req.body[field] !== campaign[field as keyof typeof campaign]
+      );
+      
+      let updateData = { ...req.body };
+      
+      // If this is a critical edit to an approved campaign, mark for re-approval
+      if (isCriticalEdit && campaign.status === "active" && campaign.originalApprovalDate) {
+        updateData = {
+          ...updateData,
+          status: "pending_approval",
+          isEditedAfterApproval: true,
+          editCount: (campaign.editCount || 0) + 1,
+          lastEditedAt: new Date(),
+          adminComments: null, // Clear previous admin comments
+          reviewedBy: null,
+          reviewedAt: null,
+        };
+        
+        // Create notification for user
+        await storage.createUserNotification({
+          userId,
+          title: "Campaign Under Review",
+          message: `Your campaign "${campaign.title}" has been submitted for admin review due to significant changes. The campaign is temporarily paused until approval.`,
+          type: "warning",
+          relatedCampaignId: campaign.id,
+        });
+      } else if (!isCriticalEdit) {
+        // Minor edit - just update last edited time
+        updateData.lastEditedAt = new Date();
+      }
 
-      const updatedCampaign = await storage.updateCampaignWithEditTracking(req.params.id, req.body, userId);
-      res.json(updatedCampaign);
+      const updatedCampaign = await storage.updateCampaignWithEditTracking(req.params.id, updateData, userId);
+      
+      res.json({
+        ...updatedCampaign,
+        requiresReview: isCriticalEdit && campaign.status === "active" && campaign.originalApprovalDate,
+        editType: isCriticalEdit ? "critical" : "minor"
+      });
     } catch (error) {
       console.error("Error updating campaign:", error);
       res.status(400).json({ message: (error as Error).message || "Failed to update campaign" });
@@ -938,6 +990,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to check campaign creation eligibility" });
     }
   });
+
+
+  // Campaign edit eligibility check
+  app.get('/api/campaigns/:id/can-edit', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (user?.isFlagged) {
+        return res.json({ 
+          canEdit: false, 
+          reason: "Cannot edit campaigns while account is flagged" 
+        });
+      }
+      
+      const campaign = await storage.getCampaign(req.params.id);
+      
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+      
+      if (campaign.creatorId !== userId) {
+        return res.json({ 
+          canEdit: false, 
+          reason: "You can only edit your own campaigns" 
+        });
+      }
+      
+      // Check if campaign is pending re-approval after edits
+      if (campaign.isEditedAfterApproval && campaign.status === "pending_approval") {
+        return res.json({ 
+          canEdit: false, 
+          reason: "Cannot edit campaign while pending admin re-approval",
+          requiresReview: true 
+        });
+      }
+      
+      // Can't edit rejected campaigns
+      if (campaign.status === "rejected") {
+        return res.json({ 
+          canEdit: false, 
+          reason: "Cannot edit rejected campaigns" 
+        });
+      }
+      
+      res.json({ canEdit: true });
+    } catch (error) {
+      console.error("Error checking campaign edit eligibility:", error);
+      res.status(500).json({ message: "Failed to check campaign edit eligibility" });
+    }
+  });
+
+  // User profile completion status
+  app.get('/api/user/profile-completion', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      let completionScore = 0;
+      const completionItems = [
+        { field: 'firstName', label: 'First Name', completed: !!user.firstName },
+        { field: 'lastName', label: 'Last Name', completed: !!user.lastName },
+        { field: 'email', label: 'Email Address', completed: !!user.email },
+        { field: 'profileImageUrl', label: 'Profile Picture', completed: !!user.profileImageUrl },
+        { field: 'walletAddress', label: 'Wallet Address', completed: !!user.walletAddress },
+        { field: 'kycStatus', label: 'KYC Verification', completed: user.kycStatus === 'approved' }
+      ];
+      
+      completionScore = Math.round((completionItems.filter(item => item.completed).length / completionItems.length) * 100);
+      
+      res.json({
+        completionScore,
+        completionItems,
+        isProfileComplete: completionScore >= 80
+      });
+    } catch (error) {
+      console.error("Error fetching profile completion:", error);
+      res.status(500).json({ message: "Failed to fetch profile completion" });
+    }
+  });
+
+  // User financial overview
+  app.get('/api/user/financial-overview', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const [campaigns, contributions] = await Promise.all([
+        storage.getUserCampaigns(userId),
+        storage.getUserContributions(userId)
+      ]);
+      
+      const totalRaised = campaigns.reduce((sum, campaign) => sum + parseFloat(campaign.currentAmount || "0"), 0);
+      const totalContributed = contributions.reduce((sum, contribution) => sum + parseFloat(contribution.amount || "0"), 0);
+      const totalGoalAmount = campaigns.reduce((sum, campaign) => sum + parseFloat(campaign.goalAmount || "0"), 0);
+      
+      const activeCampaigns = campaigns.filter(c => c.status === "active");
+      const pendingCampaigns = campaigns.filter(c => c.status === "pending_approval");
+      const completedCampaigns = campaigns.filter(c => c.status === "completed");
+      const rejectedCampaigns = campaigns.filter(c => c.status === "rejected");
+      
+      const averageFunding = campaigns.length > 0 ? totalRaised / campaigns.length : 0;
+      const fundingGoalProgress = totalGoalAmount > 0 ? (totalRaised / totalGoalAmount) * 100 : 0;
+      
+      res.json({
+        totalRaised: totalRaised.toFixed(4),
+        totalContributed: totalContributed.toFixed(4),
+        totalGoalAmount: totalGoalAmount.toFixed(4),
+        averageFunding: averageFunding.toFixed(4),
+        fundingGoalProgress: Math.round(fundingGoalProgress),
+        campaignStats: {
+          total: campaigns.length,
+          active: activeCampaigns.length,
+          pending: pendingCampaigns.length,
+          completed: completedCampaigns.length,
+          rejected: rejectedCampaigns.length
+        },
+        contributionStats: {
+          totalContributions: contributions.length,
+          averageContribution: contributions.length > 0 ? totalContributed / contributions.length : 0
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching financial overview:", error);
+      res.status(500).json({ message: "Failed to fetch financial overview" });
+    }
+  });
+
+  // User notifications
+  app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const notifications = await storage.getUserNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  // Mark notification as read
+  app.put('/api/notifications/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const notification = await storage.markNotificationAsRead(id);
+      res.json(notification);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // Mark all notifications as read
+  app.put('/api/notifications/mark-all-read', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
 
   // Handle API 404s properly
   app.all('/api/*', (req, res) => {

@@ -29,7 +29,12 @@ import {
   MessageCircle,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  XCircle,
+  Lock,
+  Settings,
+  History,
+  ExternalLink
 } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -41,7 +46,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const { data: userCampaigns = [] } = useQuery<Campaign[]>({
-    queryKey: ["/api/campaigns"],
+    queryKey: ["/api/user/campaigns"],
     retry: false,
   });
 
@@ -55,7 +60,7 @@ export default function Dashboard() {
     retry: false,
   });
 
-  const { data: userNotifications = [] } = useQuery<{id: string, message: string, isRead: boolean, createdAt: string}[]>({
+  const { data: userNotifications = [] } = useQuery<{id: string, title: string, message: string, type: string, isRead: boolean, createdAt: string}[]>({
     queryKey: ["/api/notifications"],
     retry: false,
   });
@@ -70,6 +75,37 @@ export default function Dashboard() {
     queryKey: ["/api/user/can-create-campaign"],
     retry: false,
     enabled: !!user && !user.isFlagged,
+  });
+
+  const { data: profileCompletion } = useQuery<{
+    completionScore: number;
+    completionItems: Array<{field: string, label: string, completed: boolean}>;
+    isProfileComplete: boolean;
+  }>({
+    queryKey: ["/api/user/profile-completion"],
+    retry: false,
+  });
+
+  const { data: financialOverview } = useQuery<{
+    totalRaised: string;
+    totalContributed: string;
+    totalGoalAmount: string;
+    averageFunding: string;
+    fundingGoalProgress: number;
+    campaignStats: {
+      total: number;
+      active: number;
+      pending: number;
+      completed: number;
+      rejected: number;
+    };
+    contributionStats: {
+      totalContributions: number;
+      averageContribution: number;
+    };
+  }>({
+    queryKey: ["/api/user/financial-overview"],
+    retry: false,
   });
 
   useEffect(() => {
@@ -355,7 +391,7 @@ export default function Dashboard() {
               </TabsList>
 
               <TabsContent value="overview">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Recent Activity */}
                   <Card className="glass-morphism">
                     <CardHeader>
@@ -368,24 +404,24 @@ export default function Dashboard() {
                             <div className="flex items-center gap-3">
                               <div className="w-2 h-2 bg-cyber-blue rounded-full"></div>
                               <div>
-                                <div className="font-medium">{campaign.title}</div>
-                                <div className="text-sm text-muted-foreground">
+                                <div className="font-medium text-sm">{campaign.title.length > 20 ? campaign.title.substring(0, 20) + '...' : campaign.title}</div>
+                                <div className="text-xs text-muted-foreground">
                                   {formatDistanceToNow(new Date(campaign.createdAt || ""), { addSuffix: true })}
                                 </div>
                               </div>
                             </div>
-                            <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
-                              {campaign.status}
+                            <Badge variant={campaign.status === "active" ? "default" : "secondary"} className="text-xs">
+                              {campaign.status === "pending_approval" ? "Review" : campaign.status}
                             </Badge>
                           </div>
                         ))}
                         
                         {myCampaigns.length === 0 && (
                           <div className="text-center py-8">
-                            <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                            <p className="text-muted-foreground">No campaigns yet</p>
+                            <TrendingUp className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-sm text-muted-foreground">No campaigns yet</p>
                             <Link href="/create">
-                              <Button className="mt-4">Create Your First Campaign</Button>
+                              <Button className="mt-4 text-sm">Create Your First Campaign</Button>
                             </Link>
                           </div>
                         )}
@@ -393,43 +429,103 @@ export default function Dashboard() {
                     </CardContent>
                   </Card>
 
-                  {/* Performance Summary */}
+                  {/* Financial Overview */}
                   <Card className="glass-morphism">
                     <CardHeader>
-                      <CardTitle>Performance Summary</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5" />
+                        Financial Overview
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         <div>
                           <div className="flex justify-between text-sm mb-2">
-                            <span className="text-muted-foreground">Active Campaigns</span>
-                            <span className="font-mono">{activeCampaigns}</span>
+                            <span className="text-muted-foreground">Total Raised</span>
+                            <span className="font-mono">{financialOverview?.totalRaised || "0.0000"} ETH</span>
                           </div>
-                          <Progress value={(activeCampaigns / Math.max(myCampaigns.length, 1)) * 100} className="h-2" />
+                          <div className="flex justify-between text-sm mb-2">
+                            <span className="text-muted-foreground">Goal Progress</span>
+                            <span className="font-mono">{financialOverview?.fundingGoalProgress || 0}%</span>
+                          </div>
+                          <Progress value={financialOverview?.fundingGoalProgress || 0} className="h-2" />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <div className="text-muted-foreground">Active</div>
+                            <div className="font-mono text-green-400">{financialOverview?.campaignStats.active || 0}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Pending</div>
+                            <div className="font-mono text-yellow-400">{financialOverview?.campaignStats.pending || 0}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Completed</div>
+                            <div className="font-mono text-blue-400">{financialOverview?.campaignStats.completed || 0}</div>
+                          </div>
+                          <div>
+                            <div className="text-muted-foreground">Rejected</div>
+                            <div className="font-mono text-red-400">{financialOverview?.campaignStats.rejected || 0}</div>
+                          </div>
                         </div>
                         
                         <div>
-                          <div className="flex justify-between text-sm mb-2">
-                            <span className="text-muted-foreground">Average Funding</span>
-                            <span className="font-mono">
-                              {myCampaigns.length > 0 ? (totalRaised / myCampaigns.length).toFixed(2) : "0.00"} ETH
-                            </span>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-muted-foreground">Avg Funding</span>
+                            <span className="font-mono">{financialOverview?.averageFunding || "0.0000"} ETH</span>
                           </div>
-                          <Progress value={75} className="h-2" />
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Contributions</span>
+                            <span className="font-mono">{financialOverview?.contributionStats.totalContributions || 0}</span>
+                          </div>
                         </div>
-                        
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Profile Completion */}
+                  <Card className="glass-morphism">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Settings className="w-5 h-5" />
+                        Profile Completion
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
                         <div>
                           <div className="flex justify-between text-sm mb-2">
-                            <span className="text-muted-foreground">Success Rate</span>
-                            <span className="font-mono">
-                              {myCampaigns.length > 0 
-                                ? Math.round((myCampaigns.filter((c: Campaign) => c.status === "completed").length / myCampaigns.length) * 100)
-                                : 0
-                              }%
-                            </span>
+                            <span className="text-muted-foreground">Profile Complete</span>
+                            <span className="font-mono">{profileCompletion?.completionScore || 0}%</span>
                           </div>
-                          <Progress value={85} className="h-2" />
+                          <Progress value={profileCompletion?.completionScore || 0} className="h-2" />
                         </div>
+                        
+                        {profileCompletion && profileCompletion.completionScore < 100 && (
+                          <div className="space-y-2">
+                            <p className="text-sm text-muted-foreground">Missing items:</p>
+                            {profileCompletion.completionItems
+                              .filter(item => !item.completed)
+                              .slice(0, 3)
+                              .map((item, index) => (
+                              <div key={index} className="flex items-center gap-2 text-sm">
+                                <XCircle className="w-3 h-3 text-red-400" />
+                                <span>{item.label}</span>
+                              </div>
+                            ))}
+                            {profileCompletion.completionItems.filter(item => !item.completed).length > 3 && (
+                              <p className="text-xs text-muted-foreground">+{profileCompletion.completionItems.filter(item => !item.completed).length - 3} more...</p>
+                            )}
+                          </div>
+                        )}
+                        
+                        {profileCompletion?.isProfileComplete && (
+                          <div className="flex items-center gap-2 text-sm text-green-400">
+                            <CheckCircle className="w-3 h-3" />
+                            <span>Profile Complete!</span>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -480,9 +576,16 @@ export default function Dashboard() {
                                        campaign.status === "rejected" ? "Rejected" : 
                                        campaign.status?.replace('_', ' ').toUpperCase()}
                                     </Badge>
-                                    {campaign.isEditedAfterApproval && (
+                                    {campaign.isEditedAfterApproval && campaign.status === "pending_approval" && (
                                       <Badge variant="outline" className="text-orange-600 border-orange-300">
-                                        Re-review Required
+                                        <Clock className="w-3 h-3 mr-1" />
+                                        Pending Re-approval
+                                      </Badge>
+                                    )}
+                                    {campaign.status === "rejected" && (
+                                      <Badge variant="destructive">
+                                        <XCircle className="w-3 h-3 mr-1" />
+                                        Rejected
                                       </Badge>
                                     )}
                                   </div>
