@@ -18,6 +18,7 @@ export default function Navbar() {
     { href: "/explorer", label: "Explorer" },
     { href: "/dashboard", label: "Dashboard" },
     { href: "/kyc", label: "KYC" },
+    { href: "/switch-user", label: "Switch User" },
   ] : [
     { href: "#home", label: "Home" },
     { href: "/features", label: "Features" },

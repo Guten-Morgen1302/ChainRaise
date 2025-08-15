@@ -50,6 +50,7 @@ export function setupAuth(app: Express) {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
+    name: 'cryptofund.session', // Custom session name to avoid conflicts
   };
 
   app.set("trust proxy", 1);
