@@ -21,6 +21,7 @@ export async function seedDatabase() {
         password: "$scrypt$N=16384,r=8,p=1$8f8c4e6a9b8d7c5e$a8f5f167f44f4964e6c998dee827110c",
         firstName: "John",
         lastName: "Tech",
+        role: "admin" as const, // Make first user admin
         kycStatus: "approved" as const,
         profileImageUrl: null,
         walletAddress: "0x742d35Cc6e1B5b5e8b8E2Be2B8D8B8B8B8B8B8B8",
@@ -35,6 +36,18 @@ export async function seedDatabase() {
         kycStatus: "approved" as const,
         profileImageUrl: null,
         walletAddress: "0x1234567890123456789012345678901234567890",
+        kycDocuments: null,
+      },
+      {
+        username: "admin",
+        email: "admin@cryptofund.com",
+        password: "$scrypt$N=16384,r=8,p=1$8f8c4e6a9b8d7c5e$a8f5f167f44f4964e6c998dee827110c",
+        firstName: "Admin",
+        lastName: "User",
+        role: "admin" as const,
+        kycStatus: "approved" as const,
+        profileImageUrl: null,
+        walletAddress: null,
         kycDocuments: null,
       },
     ];
