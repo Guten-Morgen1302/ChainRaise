@@ -15,6 +15,7 @@ CryptoFund is a full-stack Web3 crowdfunding platform that combines the features
 - Enhanced KYC document upload system with proper file handling
 - Improved admin KYC review system with document preview and approval workflow
 - Fixed authentication route consistency (/api/user vs /api/auth/user)
+- Fixed file upload payload size limits (increased server limit to 10MB, added 5MB client validation)
 
 ## KYC System Enhancement (August 14, 2025)
 **COMPLETED** - Comprehensive KYC verification system integrated
