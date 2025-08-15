@@ -167,6 +167,10 @@ export const insertCampaignSchema = createInsertSchema(campaigns).omit({
   credibilityScore: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  deadline: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 export const insertKycApplicationSchema = createInsertSchema(kycApplications).omit({
