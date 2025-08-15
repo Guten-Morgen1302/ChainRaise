@@ -29,7 +29,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = queryKey.join("/") as string;
+    
+    // Ensure we're only making requests to API endpoints
+    if (!url.startsWith('/api/')) {
+      throw new Error(`Invalid API endpoint: ${url}. Query keys must start with '/api/'`);
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 

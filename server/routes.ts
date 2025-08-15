@@ -447,6 +447,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Handle API 404s properly
+  app.all('/api/*', (req, res) => {
+    res.status(404).json({ 
+      error: 'API endpoint not found',
+      path: req.path,
+      method: req.method 
+    });
+  });
+
+  // Error handling middleware for API routes
+  app.use('/api/*', (err: any, req: any, res: any, next: any) => {
+    console.error('API Error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: err.message 
+    });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
