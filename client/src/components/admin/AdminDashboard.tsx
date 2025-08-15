@@ -27,7 +27,9 @@ import {
   RefreshCw,
   Download,
   Search,
-  Filter
+  Filter,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import type { User, Campaign, ReinstatementRequest } from "@shared/schema";
 import {
@@ -40,6 +42,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/navigation/BackButton";
+import { useAdminWebSocket } from "@/hooks/useAdminWebSocket";
 
 // Component to display user's campaigns
 function UserCampaignsView({ userId }: { userId: string }) {
@@ -113,6 +116,9 @@ export function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("overview");
+  
+  // WebSocket connection for real-time updates
+  const { isConnected, lastUpdate } = useAdminWebSocket();
   const [userFilter, setUserFilter] = useState("");
   const [flaggedFilter, setFlaggedFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -327,7 +333,22 @@ export function AdminDashboard() {
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           <p className="text-muted-foreground">Manage users, campaigns, and platform settings</p>
         </div>
-        <BackButton to="/dashboard" label="Back to Dashboard" />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border">
+            {isConnected ? (
+              <>
+                <Wifi className="h-4 w-4 text-green-500" />
+                <span className="text-sm text-green-600 font-medium">Live Updates</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-4 w-4 text-red-500" />
+                <span className="text-sm text-red-600 font-medium">Offline</span>
+              </>
+            )}
+          </div>
+          <BackButton to="/dashboard" label="Back to Dashboard" />
+        </div>
       </div>
 
       {/* Overview Stats */}

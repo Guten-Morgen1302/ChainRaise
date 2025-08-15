@@ -9,6 +9,7 @@ import {
   predictFundingSuccess 
 } from "./openai";
 import { insertCampaignSchema, insertContributionSchema, insertTransactionSchema, insertKycApplicationSchema, insertReinstatementRequestSchema, insertUserNotificationSchema } from "@shared/schema";
+import { getWebSocketManager } from "./websocket";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -82,6 +83,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const campaign = await storage.createCampaign(campaignData);
+      
+      // Broadcast real-time update to admin clients
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.campaignCreated(campaign);
+      }
+
       res.status(201).json(campaign);
     } catch (error) {
       console.error("Error creating campaign:", error);
@@ -407,6 +415,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user's KYC status to pending
       await storage.updateUser(userId, { kycStatus: 'pending' });
 
+      // Broadcast real-time update to admin clients
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.kycSubmitted(kycApplication);
+      }
+
       res.json(kycApplication);
     } catch (error) {
       console.error("Error submitting KYC:", error);
@@ -481,7 +495,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Update user's KYC status
-      await storage.updateUser(application.userId, { kycStatus: status });
+      const updatedUser = await storage.updateUser(application.userId, { kycStatus: status });
+
+      // Broadcast real-time updates to admin clients
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.kycStatusChanged(updatedApplication);
+        wsManager.userUpdated(updatedUser);
+      }
 
       res.json(updatedApplication);
     } catch (error) {
@@ -550,6 +571,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Broadcast real-time updates to admin clients
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.campaignStatusChanged(updatedCampaign);
+      }
+
       res.json(updatedCampaign);
     } catch (error) {
       console.error("Error updating campaign status:", error);
@@ -579,6 +606,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       await storage.deleteUser(id);
       
+      // Broadcast real-time update to admin clients
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.userDeleted(id);
+      }
+
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -708,6 +741,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error sending notification:", error);
       res.status(500).json({ message: "Failed to send notification" });
+    }
+  });
+
+  // Flag/Unflag user endpoints
+  app.put('/api/admin/users/:id/flag', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({ message: "Reason is required for flagging a user" });
+      }
+
+      const user = await storage.updateUser(id, {
+        isFlagged: true,
+        flaggedReason: reason,
+        flaggedBy: req.user.username,
+        flaggedAt: new Date(),
+      });
+
+      // Broadcast real-time update to admin clients
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.userFlagged(user);
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error flagging user:", error);
+      res.status(500).json({ message: "Failed to flag user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/unflag', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      const user = await storage.updateUser(id, {
+        isFlagged: false,
+        flaggedReason: null,
+        flaggedBy: null,
+        flaggedAt: null,
+      });
+
+      // Broadcast real-time update to admin clients
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.userUnflagged(user);
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error unflagging user:", error);
+      res.status(500).json({ message: "Failed to unflag user" });
     }
   });
 
