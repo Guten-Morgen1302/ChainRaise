@@ -18,7 +18,7 @@ import Explorer from "@/pages/explorer";
 import AdminPage from "@/pages/admin";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
-import { UserSwitcher } from "@/components/auth/UserSwitcher";
+
 
 function Router() {
   return (
@@ -37,25 +37,7 @@ function Router() {
       <Route path="/explorer" component={Explorer} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/landing" component={Landing} />
-      <Route path="/switch-user">
-        {() => (
-          <div className="min-h-screen bg-background p-8">
-            <div className="max-w-4xl mx-auto">
-              <h1 className="text-3xl font-bold mb-8 text-center">Account Switcher</h1>
-              <UserSwitcher />
-              <div className="mt-8 p-4 bg-muted rounded-lg">
-                <h2 className="font-semibold mb-2">How to Test Both Admin and Regular User:</h2>
-                <ol className="list-decimal list-inside space-y-2 text-sm">
-                  <li>Use this page to quickly switch between admin and regular user accounts</li>
-                  <li>OR open a new incognito/private window and login as different user</li>
-                  <li>Admin accounts can access /admin and perform all management functions</li>
-                  <li>Regular users get limited access and will see 403 errors for admin functions</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        )}
-      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );

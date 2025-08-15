@@ -18,7 +18,8 @@ export function useAuth() {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
-      window.location.href = "/auth";
+      queryClient.clear();
+      window.location.replace("/auth");
     },
   });
 
