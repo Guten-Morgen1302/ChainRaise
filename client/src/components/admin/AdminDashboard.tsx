@@ -44,6 +44,100 @@ import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/navigation/BackButton";
 import { useAdminWebSocket } from "@/hooks/useAdminWebSocket";
 
+// Real-time Status Component
+function LiveStatusIndicator() {
+  const { isConnected, connectionStatus, lastUpdate, refreshData, reconnect } = useAdminWebSocket();
+  
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'connected': return 'text-green-500';
+      case 'connecting': return 'text-yellow-500 animate-pulse';
+      case 'disconnected': return 'text-gray-500';
+      case 'error': return 'text-red-500';
+      default: return 'text-gray-500';
+    }
+  };
+  
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'connected': return <Wifi className="h-4 w-4" />;
+      case 'connecting': return <RefreshCw className="h-4 w-4 animate-spin" />;
+      case 'disconnected': 
+      case 'error': 
+      default: return <WifiOff className="h-4 w-4" />;
+    }
+  };
+
+  const formatTime = (timestamp: string) => {
+    if (!timestamp) return 'Never';
+    return new Date(timestamp).toLocaleTimeString('en-US', { 
+      hour12: false, 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  return (
+    <Card className="mb-6">
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className={`flex items-center space-x-2 ${getStatusColor(connectionStatus)}`}>
+              {getStatusIcon(connectionStatus)}
+              <span className="font-medium capitalize">
+                {connectionStatus === 'connected' ? 'Live' : connectionStatus}
+              </span>
+            </div>
+            
+            <div className="h-4 border-l border-gray-300"></div>
+            
+            <div className="text-sm text-muted-foreground">
+              Last update: {formatTime(lastUpdate)}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshData}
+              className="flex items-center space-x-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>Refresh</span>
+            </Button>
+            
+            {!isConnected && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={reconnect}
+                className="flex items-center space-x-2 text-orange-600"
+              >
+                <Wifi className="h-4 w-4" />
+                <span>Reconnect</span>
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        {isConnected && (
+          <div className="mt-3 px-3 py-1 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+            🟢 Real-time updates active - Changes will appear instantly
+          </div>
+        )}
+        
+        {!isConnected && (
+          <div className="mt-3 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
+            ⚠️ Real-time updates paused - Click refresh to update manually
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // Component to display user's campaigns
 function UserCampaignsView({ userId }: { userId: string }) {
   const { data: userCampaigns = [] } = useQuery<any[]>({
@@ -117,8 +211,7 @@ export function AdminDashboard() {
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("overview");
   
-  // WebSocket connection for real-time updates
-  const { isConnected, lastUpdate } = useAdminWebSocket();
+  // WebSocket connection is handled by LiveStatusIndicator component
   const [userFilter, setUserFilter] = useState("");
   const [flaggedFilter, setFlaggedFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -334,22 +427,12 @@ export function AdminDashboard() {
           <p className="text-muted-foreground">Manage users, campaigns, and platform settings</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border">
-            {isConnected ? (
-              <>
-                <Wifi className="h-4 w-4 text-green-500" />
-                <span className="text-sm text-green-600 font-medium">Live Updates</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="h-4 w-4 text-red-500" />
-                <span className="text-sm text-red-600 font-medium">Offline</span>
-              </>
-            )}
-          </div>
           <BackButton to="/dashboard" label="Back to Dashboard" />
         </div>
       </div>
+
+      {/* Real-time Status Indicator */}
+      <LiveStatusIndicator />
 
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">

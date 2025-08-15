@@ -10,13 +10,15 @@ interface WebSocketMessage {
 
 export function useAdminWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const queryClient = useQueryClient();
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-  const [lastUpdate, setLastUpdate] = useState<string>('');
 
   const connect = () => {
     try {
+      setConnectionStatus('connecting');
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws/admin`;
       
@@ -25,6 +27,7 @@ export function useAdminWebSocket() {
       wsRef.current.onopen = () => {
         console.log('Admin WebSocket connected');
         setIsConnected(true);
+        setConnectionStatus('connected');
         
         // Authenticate as admin
         wsRef.current?.send(JSON.stringify({
@@ -51,6 +54,7 @@ export function useAdminWebSocket() {
       wsRef.current.onclose = () => {
         console.log('Admin WebSocket disconnected');
         setIsConnected(false);
+        setConnectionStatus('disconnected');
         
         // Attempt to reconnect after 3 seconds
         reconnectTimeoutRef.current = setTimeout(() => {
@@ -61,6 +65,7 @@ export function useAdminWebSocket() {
       wsRef.current.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
+        setConnectionStatus('error');
       };
 
     } catch (error) {
@@ -165,10 +170,23 @@ export function useAdminWebSocket() {
     }
   };
 
+  const refreshData = () => {
+    // Invalidate all admin-related queries to force refresh
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/campaigns'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/kyc/applications'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/reinstatement-requests'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+    
+    setLastUpdate(new Date().toISOString());
+  };
+
   return {
     isConnected,
     lastUpdate,
+    connectionStatus,
     sendMessage,
     reconnect: connect,
+    refreshData,
   };
 }
