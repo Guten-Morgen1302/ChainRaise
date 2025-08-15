@@ -88,12 +88,30 @@ export async function setupAuth(app: Express) {
       verified: passport.AuthenticateCallback
     ) => {
       const userClaims = tokens.claims();
+      if (!userClaims) {
+        return verified(new Error("No user claims found"));
+      }
+      
       const user = {
-        id: userClaims.sub,
-        email: userClaims.email,
-        firstName: userClaims.first_name,
-        lastName: userClaims.last_name,
-        profileImageUrl: userClaims.profile_image_url,
+        id: userClaims.sub as string,
+        username: userClaims.preferred_username as string || userClaims.sub as string,
+        email: userClaims.email as string,
+        password: "", // Not used for OIDC
+        firstName: (userClaims.first_name as string) || null,
+        lastName: (userClaims.last_name as string) || null,
+        profileImageUrl: (userClaims.profile_image_url as string) || null,
+        walletAddress: null,
+        kycStatus: "pending",
+        kycDocuments: null,
+        role: "user",
+        isFlagged: false,
+        flaggedReason: null,
+        flaggedBy: null,
+        flaggedAt: null,
+        profileCompletion: 0,
+        joinDate: new Date(),
+        createdAt: new Date(),
+        updatedAt: null,
       };
       updateUserSession(user, tokens);
       await upsertUser(userClaims);

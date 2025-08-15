@@ -14,22 +14,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   setupAuth(app);
 
-  // Add auth-specific routes that might be missing
-  app.get('/api/auth/user', isAuthenticated, (req: any, res) => {
-    const user = req.user;
-    res.json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      kycStatus: user.kycStatus,
-      profileImageUrl: user.profileImageUrl,
-      walletAddress: user.walletAddress,
-      role: user.role,
-      isFlagged: user.isFlagged,
-    });
-  });
+  // Removed duplicate auth route - using the one in auth.ts instead
 
   // Campaign routes
   app.get('/api/campaigns', async (req, res) => {
