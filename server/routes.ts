@@ -425,12 +425,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       
-      // Check if user has verified KYC
+      // Check if user has approved KYC
       const user = await storage.getUser(userId);
-      if (user?.kycStatus !== 'verified') {
+      if (user?.kycStatus !== 'approved') {
         return res.status(403).json({ 
           message: "KYC verification required to create campaigns",
-          kycStatus: user?.kycStatus || 'not_submitted'
+          kycStatus: user?.kycStatus || 'pending'
         });
       }
 

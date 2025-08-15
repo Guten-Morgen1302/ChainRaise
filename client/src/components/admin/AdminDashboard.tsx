@@ -91,7 +91,7 @@ export function AdminDashboard() {
     queryKey: ["/api/campaigns"],
   });
 
-  const handleKycUpdate = async (userId: string, status: "verified" | "rejected") => {
+  const handleKycUpdate = async (userId: string, status: "approved" | "rejected") => {
     try {
       await apiRequest("PUT", `/api/admin/kyc/${userId}`, { status });
       toast({

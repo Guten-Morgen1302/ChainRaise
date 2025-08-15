@@ -34,7 +34,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   walletAddress: varchar("wallet_address"),
-  kycStatus: varchar("kyc_status").default("pending"), // pending, verified, rejected
+  kycStatus: varchar("kyc_status").default("pending"), // pending, approved, rejected
   kycDocuments: jsonb("kyc_documents"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

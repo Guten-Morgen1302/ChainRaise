@@ -31,7 +31,7 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case "verified":
+      case "approved":
         return {
           icon: CheckCircle,
           color: "text-cyber-green",
@@ -94,21 +94,21 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
       id: "identity_verification",
       title: "Identity Verification",
       icon: CreditCard,
-      completed: user.kycStatus === "verified" || user.kycStatus === "pending",
+      completed: user.kycStatus === "approved" || user.kycStatus === "pending",
       description: "Government-issued ID",
     },
     {
       id: "address_verification",
       title: "Address Verification",
       icon: Building,
-      completed: user.kycStatus === "verified" || user.kycStatus === "pending",
+      completed: user.kycStatus === "approved" || user.kycStatus === "pending",
       description: "Proof of address document",
     },
     {
       id: "selfie_verification",
       title: "Selfie Verification",
       icon: Camera,
-      completed: user.kycStatus === "verified" || user.kycStatus === "pending",
+      completed: user.kycStatus === "approved" || user.kycStatus === "pending",
       description: "Photo with ID document",
     },
   ];
@@ -215,7 +215,7 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
           {/* Action Button */}
           <div className="flex justify-between items-center pt-4 border-t border-muted">
             <div className="text-xs text-muted-foreground">
-              {user.kycStatus === "verified" && (
+              {user.kycStatus === "approved" && (
                 "All features unlocked"
               )}
               {user.kycStatus === "pending" && (

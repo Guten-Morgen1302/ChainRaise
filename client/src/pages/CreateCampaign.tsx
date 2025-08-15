@@ -171,7 +171,7 @@ export default function CreateCampaign() {
     return <div className="container mx-auto px-4 py-8">Loading...</div>;
   }
 
-  if (user.kycStatus !== "verified") {
+  if (user.kycStatus !== "approved") {
     return (
       <div className="container mx-auto px-4 py-8">
         <Alert className="max-w-2xl mx-auto">

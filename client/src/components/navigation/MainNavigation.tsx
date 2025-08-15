@@ -87,8 +87,8 @@ export function MainNavigation() {
                     {user.email}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge variant={user.kycStatus === "verified" ? "default" : "secondary"}>
-                      {user.kycStatus === "verified" ? (
+                    <Badge variant={user.kycStatus === "approved" ? "default" : "secondary"}>
+                      {user.kycStatus === "approved" ? (
                         <>
                           <Shield className="h-3 w-3 mr-1" />
                           Verified
