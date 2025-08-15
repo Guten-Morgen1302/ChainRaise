@@ -203,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/contributions/:campaignId', async (req, res) => {
     try {
       const { campaignId } = req.params;
-      const contributions = await storage.getContributions({ campaignId });
+      const contributions = await storage.getContributions(campaignId);
       res.json(contributions);
     } catch (error) {
       console.error("Error fetching campaign contributions:", error);
