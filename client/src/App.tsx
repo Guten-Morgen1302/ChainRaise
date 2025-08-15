@@ -42,7 +42,7 @@ function Router() {
       <Route path="/features" component={FeatureShowcase} />
       <Route path="/access-guide" component={AccessGuide} />
       <Route path="/explorer" component={Explorer} />
-      <Route path="/live-transactions" element={<LiveTransactions />} />
+      <Route path="/live-transactions" component={LiveTransactions} />
       <Route path="/contract-demo" component={ContractDemo} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/landing" component={Landing} />
