@@ -32,6 +32,7 @@ export function MainNavigation() {
     { href: "/create", icon: PlusCircle, label: "Create" },
     { href: "/dashboard", icon: TrendingUp, label: "Dashboard" },
     { href: "/explorer", icon: Brain, label: "AI Explorer" },
+    { href: "/contract-demo", icon: Shield, label: "Blockchain Demo" },
   ];
 
   return (

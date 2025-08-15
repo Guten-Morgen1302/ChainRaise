@@ -17,6 +17,7 @@ import KYC from "@/pages/kyc";
 import Explorer from "@/pages/explorer";
 import AdminPage from "@/pages/admin";
 import AuthPage from "@/pages/auth-page";
+import ContractDemo from "@/pages/contract-demo";
 import NotFound from "@/pages/not-found";
 
 
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/features" component={FeatureShowcase} />
       <Route path="/access-guide" component={AccessGuide} />
       <Route path="/explorer" component={Explorer} />
+      <Route path="/contract-demo" component={ContractDemo} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/landing" component={Landing} />
 

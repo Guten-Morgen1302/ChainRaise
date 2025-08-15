@@ -10,10 +10,114 @@ import {
 } from "./openai";
 import { insertCampaignSchema, insertContributionSchema, insertTransactionSchema, insertKycApplicationSchema, insertReinstatementRequestSchema, insertUserNotificationSchema } from "@shared/schema";
 import { getWebSocketManager } from "./websocket";
+import { JsonRpcProvider, WebSocketProvider, Contract, formatEther } from 'ethers';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@shared/contract";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   setupAuth(app);
+
+  // Avalanche Fuji testnet configuration
+  const RPC_HTTP_URL = "https://api.avax-test.network/ext/bc/C/rpc";
+  const RPC_WS_URL = "wss://api.avax-test.network/ext/bc/C/ws";
+
+  const httpProvider = new JsonRpcProvider(RPC_HTTP_URL);
+  const wsProvider = new WebSocketProvider(RPC_WS_URL);
+
+  const contractHttp = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, httpProvider);
+  const contractWs = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wsProvider);
+
+  // Blockchain contract endpoints
+  app.get('/api/contract/state', async (_req, res) => {
+    try {
+      const [
+        creator,
+        deadline,
+        fundingGoal,
+        totalFunded,
+        goalReached,
+        milestoneCount,
+        milestonesCompleted,
+        contractBalance,
+      ] = await Promise.all([
+        contractHttp.creator(),
+        contractHttp.deadline(),
+        contractHttp.fundingGoal(),
+        contractHttp.totalFunded(),
+        contractHttp.goalReached(),
+        contractHttp.milestoneCount(),
+        contractHttp.milestonesCompleted(),
+        contractHttp.getContractBalance(),
+      ]);
+
+      res.json({
+        creator,
+        deadline: Number(deadline),
+        fundingGoal: fundingGoal.toString(),
+        totalFunded: totalFunded.toString(),
+        contractBalance: contractBalance.toString(),
+        goalReached,
+        milestoneCount: Number(milestoneCount),
+        milestonesCompleted: Number(milestonesCompleted),
+      });
+    } catch (e: any) {
+      console.error("Contract state error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Get per-backer contribution
+  app.get('/api/contract/backers/:address', async (req, res) => {
+    try {
+      const amount = await contractHttp.backers(req.params.address);
+      res.json({ address: req.params.address, amount: amount.toString() });
+    } catch (e: any) {
+      console.error("Backer query error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Stream contract events via Server-Sent Events (SSE)
+  app.get('/api/contract/events', (req, res) => {
+    res.set({
+      'Cache-Control': 'no-cache',
+      'Content-Type': 'text/event-stream',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control',
+    });
+    res.flushHeaders();
+
+    const send = (type: string, data: any) => {
+      res.write(`event: ${type}\n`);
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    const onFunded = (backer: string, amount: bigint) => {
+      send('Funded', { backer, amount: amount.toString(), amountEth: formatEther(amount) });
+    };
+    const onRefunded = (backer: string, amount: bigint) => {
+      send('Refunded', { backer, amount: amount.toString(), amountEth: formatEther(amount) });
+    };
+    const onMilestone = (milestoneIndex: bigint, payout: bigint) => {
+      send('MilestoneCompleted', {
+        milestoneIndex: Number(milestoneIndex),
+        payout: payout.toString(),
+        payoutEth: formatEther(payout),
+      });
+    };
+
+    contractWs.on('Funded', onFunded);
+    contractWs.on('Refunded', onRefunded);
+    contractWs.on('MilestoneCompleted', onMilestone);
+
+    req.on('close', () => {
+      contractWs.off('Funded', onFunded);
+      contractWs.off('Refunded', onRefunded);
+      contractWs.off('MilestoneCompleted', onMilestone);
+      res.end();
+    });
+  });
 
   // Removed duplicate auth route - using the one in auth.ts instead
 

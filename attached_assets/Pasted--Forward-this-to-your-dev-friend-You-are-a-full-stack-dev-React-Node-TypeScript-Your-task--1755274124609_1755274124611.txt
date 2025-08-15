@@ -1,0 +1,597 @@
+📩 Forward this to your dev friend
+
+You are a full-stack dev (React + Node + TypeScript). Your task: wire a dApp to an already-deployed smart contract.
+
+🔑 Contract details (use these exactly)
+
+Network (default): Avalanche Fuji Testnet (C-Chain)
+
+RPC (HTTP): https://api.avax-test.network/ext/bc/C/rpc
+
+RPC (WebSocket): wss://api.avax-test.network/ext/bc/C/ws
+
+Chain ID: 43113
+
+Contract address: 0xd98bCbD04e6653960c29b8FEACDB30Da91122999
+
+ABI:
+
+[
+  {"inputs":[],"name":"completeMilestone","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"fund","outputs":[],"stateMutability":"payable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_goal","type":"uint256"},{"internalType":"uint256","name":"_durationInDays","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"backer","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Funded","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"milestoneIndex","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"payout","type":"uint256"}],"name":"MilestoneCompleted","type":"event"},
+  {"inputs":[],"name":"refund","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"backer","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Refunded","type":"event"},
+  {"stateMutability":"payable","type":"receive"},
+  {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"backers","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"creator","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"deadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"fundingGoal","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getContractBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getMilestonesCompleted","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"goalReached","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"milestoneCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"milestonesCompleted","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"totalFunded","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+]
+
+🧱 Project structure (monorepo style)
+crowdfund-dapp/
+  shared/
+    contract.ts
+  server/
+    src/index.ts
+    package.json
+    tsconfig.json
+    .env.example
+  client/
+    src/App.tsx
+    src/lib/contract.ts
+    src/main.tsx
+    index.html
+    package.json
+    tsconfig.json
+    vite.config.ts
+
+1) Shared: contract constants
+
+Create shared/contract.ts (imported by both server & client):
+
+// shared/contract.ts
+export const CONTRACT_ADDRESS = "0xd98bCbD04e6653960c29b8FEACDB30Da91122999";
+
+export const CONTRACT_ABI = [
+  {"inputs":[],"name":"completeMilestone","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"fund","outputs":[],"stateMutability":"payable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_goal","type":"uint256"},{"internalType":"uint256","name":"_durationInDays","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"backer","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Funded","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"milestoneIndex","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"payout","type":"uint256"}],"name":"MilestoneCompleted","type":"event"},
+  {"inputs":[],"name":"refund","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"backer","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Refunded","type":"event"},
+  {"stateMutability":"payable","type":"receive"},
+  {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"backers","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"creator","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"deadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"fundingGoal","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getContractBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getMilestonesCompleted","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"goalReached","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"milestoneCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"milestonesCompleted","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"totalFunded","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+] as const;
+
+export const DEFAULT_NETWORK = {
+  name: "Avalanche Fuji",
+  chainId: 43113,
+  rpcHttpUrl: "https://api.avax-test.network/ext/bc/C/rpc",
+  rpcWsUrl: "wss://api.avax-test.network/ext/bc/C/ws",
+};
+
+2) Backend (Node + Express + ethers v6)
+
+server/package.json:
+
+{
+  "name": "crowdfund-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.4"
+  }
+}
+
+
+server/tsconfig.json:
+
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "resolveJsonModule": true
+  },
+  "include": ["src"]
+}
+
+
+server/.env.example:
+
+RPC_HTTP_URL=https://api.avax-test.network/ext/bc/C/rpc
+RPC_WS_URL=wss://api.avax-test.network/ext/bc/C/ws
+PORT=4000
+
+
+server/src/index.ts:
+
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { JsonRpcProvider, WebSocketProvider, Contract, formatEther } from 'ethers';
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../../shared/contract.js';
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const RPC_HTTP_URL = process.env.RPC_HTTP_URL!;
+const RPC_WS_URL = process.env.RPC_WS_URL!;
+
+const httpProvider = new JsonRpcProvider(RPC_HTTP_URL);
+const wsProvider = new WebSocketProvider(RPC_WS_URL);
+
+const contractHttp = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, httpProvider);
+const contractWs = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wsProvider);
+
+// Simple health
+app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// Read endpoints (no private key required)
+app.get('/state', async (_req, res) => {
+  try {
+    const [
+      creator,
+      deadline,
+      fundingGoal,
+      totalFunded,
+      goalReached,
+      milestoneCount,
+      milestonesCompleted,
+      contractBalance,
+    ] = await Promise.all([
+      contractHttp.creator(),
+      contractHttp.deadline(),
+      contractHttp.fundingGoal(),
+      contractHttp.totalFunded(),
+      contractHttp.goalReached(),
+      contractHttp.milestoneCount(),
+      contractHttp.milestonesCompleted(),
+      contractHttp.getContractBalance(),
+    ]);
+
+    res.json({
+      creator,
+      deadline: Number(deadline),
+      fundingGoal: fundingGoal.toString(),
+      totalFunded: totalFunded.toString(),
+      contractBalance: contractBalance.toString(),
+      goalReached,
+      milestoneCount: Number(milestoneCount),
+      milestonesCompleted: Number(milestonesCompleted),
+    });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Optional: per-backer contribution
+app.get('/backers/:address', async (req, res) => {
+  try {
+    const amount = await contractHttp.backers(req.params.address);
+    res.json({ address: req.params.address, amount: amount.toString() });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Stream events to frontend via Server-Sent Events (SSE)
+app.get('/events', (req, res) => {
+  res.set({
+    'Cache-Control': 'no-cache',
+    'Content-Type': 'text/event-stream',
+    Connection: 'keep-alive',
+  });
+  res.flushHeaders();
+
+  const send = (type: string, data: any) => {
+    res.write(event: ${type}\n);
+    res.write(data: ${JSON.stringify(data)}\n\n);
+  };
+
+  const onFunded = (backer: string, amount: bigint) => {
+    send('Funded', { backer, amount: amount.toString(), amountEth: formatEther(amount) });
+  };
+  const onRefunded = (backer: string, amount: bigint) => {
+    send('Refunded', { backer, amount: amount.toString(), amountEth: formatEther(amount) });
+  };
+  const onMilestone = (milestoneIndex: bigint, payout: bigint) => {
+    send('MilestoneCompleted', {
+      milestoneIndex: Number(milestoneIndex),
+      payout: payout.toString(),
+      payoutEth: formatEther(payout),
+    });
+  };
+
+  contractWs.on('Funded', onFunded);
+  contractWs.on('Refunded', onRefunded);
+  contractWs.on('MilestoneCompleted', onMilestone);
+
+  req.on('close', () => {
+    contractWs.off('Funded', onFunded);
+    contractWs.off('Refunded', onRefunded);
+    contractWs.off('MilestoneCompleted', onMilestone);
+    res.end();
+  });
+});
+
+const PORT = Number(process.env.PORT || 4000);
+app.listen(PORT, () => {
+  console.log(Server running on http://localhost:${PORT});
+});
+
+
+Run the server
+
+cd server
+cp .env.example .env  # or set your own RPCs
+npm i
+npm run dev
+
+3) Frontend (React + Vite + TS + ethers v6)
+
+client/package.json:
+
+{
+  "name": "crowdfund-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5174"
+  },
+  "dependencies": {
+    "ethers": "^6.13.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0"
+  }
+}
+
+
+client/tsconfig.json:
+
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM"],
+    "module": "ES2022",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true
+  },
+  "include": ["src"]
+}
+
+
+client/vite.config.ts:
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+// @ts-ignore - if not installed, remove plugin-react or install it
+export default defineConfig({
+  plugins: [react()],
+  server: { port: 5173 }
+})
+
+
+If you don’t want React plugin, remove the plugin lines and install @vitejs/plugin-react when needed.
+
+client/index.html:
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Crowdfund dApp</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+client/src/main.tsx:
+
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App'
+
+createRoot(document.getElementById('root')!).render(<App />)
+
+
+client/src/lib/contract.ts:
+
+import { BrowserProvider, Contract, parseEther } from 'ethers';
+import { CONTRACT_ADDRESS, CONTRACT_ABI, DEFAULT_NETWORK } from '../../../shared/contract';
+
+declare global {
+  interface Window { ethereum?: any }
+}
+
+export async function getProviderAndSigner() {
+  if (!window.ethereum) throw new Error('MetaMask not found');
+  const provider = new BrowserProvider(window.ethereum);
+
+  // Ensure we are on Fuji (43113)
+  const network = await provider.getNetwork();
+  if (Number(network.chainId) !== DEFAULT_NETWORK.chainId) {
+    // attempt to switch
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0xa869' }], // 43113 hex
+    }).catch(async (e: any) => {
+      // add then switch
+      if (e.code === 4902) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0xa869',
+            chainName: DEFAULT_NETWORK.name,
+            nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
+            rpcUrls: [DEFAULT_NETWORK.rpcHttpUrl],
+            blockExplorerUrls: ['https://testnet.snowtrace.io/']
+          }]
+        });
+      } else {
+        throw e;
+      }
+    });
+  }
+
+  await provider.send('eth_requestAccounts', []);
+  const signer = await provider.getSigner();
+  return { provider, signer };
+}
+
+export async function getReadOnlyContract() {
+  // Read via your backend (recommended) OR direct RPC:
+  const provider = new BrowserProvider(window.ethereum ?? null);
+  return new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+}
+
+export async function getWriteContract() {
+  const { signer } = await getProviderAndSigner();
+  return new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+}
+
+// Actions
+export async function fund(amountEth: string) {
+  const c = await getWriteContract();
+  const tx = await c.fund({ value: parseEther(amountEth) });
+  return await tx.wait();
+}
+
+export async function completeMilestone() {
+  const c = await getWriteContract();
+  const tx = await c.completeMilestone();
+  return await tx.wait();
+}
+
+export async function refund() {
+  const c = await getWriteContract();
+  const tx = await c.refund();
+  return await tx.wait();
+}
+
+// Views
+export async function fetchStateFromServer() {
+  const res = await fetch('http://localhost:4000/state');
+  if (!res.ok) throw new Error('Server state fetch failed');
+  return res.json();
+}
+
+export async function getBackerAmount(addr: string) {
+  const res = await fetch(http://localhost:4000/backers/${addr});
+  if (!res.ok) throw new Error('Backer fetch failed');
+  return res.json();
+}
+
+// Live events via SSE
+export function subscribeEvents(onEvent: (type: string, payload: any) => void) {
+  const es = new EventSource('http://localhost:4000/events');
+  es.addEventListener('Funded', (e: MessageEvent) => onEvent('Funded', JSON.parse(e.data)));
+  es.addEventListener('Refunded', (e: MessageEvent) => onEvent('Refunded', JSON.parse(e.data)));
+  es.addEventListener('MilestoneCompleted', (e: MessageEvent) => onEvent('MilestoneCompleted', JSON.parse(e.data)));
+  return () => es.close();
+}
+
+
+client/src/App.tsx:
+
+import React, { useEffect, useMemo, useState } from 'react';
+import { fetchStateFromServer, fund, refund, completeMilestone, subscribeEvents, getBackerAmount } from './lib/contract';
+import { getProviderAndSigner } from './lib/contract';
+
+function weiToEth(wei: string) {
+  return (Number(wei) / 1e18).toString();
+}
+
+export default function App() {
+  const [account, setAccount] = useState<string>('');
+  const [state, setState] = useState<any>(null);
+  const [amount, setAmount] = useState<string>('0.01');
+  const [log, setLog] = useState<string[]>([]);
+  const [myContribution, setMyContribution] = useState<string>('0');
+
+  useEffect(() => {
+    const load = async () => {
+      const s = await fetchStateFromServer();
+      setState(s);
+    };
+    load();
+
+    const unsub = subscribeEvents((type, p) => {
+      setLog(prev => [${new Date().toLocaleTimeString()}: ${type} ${JSON.stringify(p)}, ...prev].slice(0, 10));
+      // refresh on any event
+      fetchStateFromServer().then(setState).catch(()=>{});
+      if (account) getBackerAmount(account).then((x)=>setMyContribution(x.amount)).catch(()=>{});
+    });
+    return unsub;
+  }, [account]);
+
+  const goalEth = useMemo(() => state ? weiToEth(state.fundingGoal) : '0', [state]);
+  const totalEth = useMemo(() => state ? weiToEth(state.totalFunded) : '0', [state]);
+  const balEth = useMemo(() => state ? weiToEth(state.contractBalance) : '0', [state]);
+
+  const connect = async () => {
+    const { signer } = await getProviderAndSigner();
+    const addr = await signer.getAddress();
+    setAccount(addr);
+    const b = await getBackerAmount(addr);
+    setMyContribution(b.amount);
+  };
+
+  return (
+    <div style={{ maxWidth: 840, margin: '40px auto', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <h1>Crowdfund dApp</h1>
+      <button onClick={connect} disabled={!!account}>
+        {account ? Connected: ${account.slice(0,6)}…${account.slice(-4)} : 'Connect Wallet'}
+      </button>
+
+      <section style={{ marginTop: 20, padding: 16, border: '1px solid #ddd', borderRadius: 12 }}>
+        <h2>Campaign State</h2>
+        {!state ? <p>Loading…</p> : (
+          <ul>
+            <li><b>Creator:</b> {state.creator}</li>
+            <li><b>Deadline (unix):</b> {state.deadline}</li>
+            <li><b>Funding Goal:</b> {goalEth} AVAX</li>
+            <li><b>Total Funded:</b> {totalEth} AVAX</li>
+            <li><b>Contract Balance:</b> {balEth} AVAX</li>
+            <li><b>Goal Reached:</b> {String(state.goalReached)}</li>
+            <li><b>Milestones:</b> {state.milestonesCompleted}/{state.milestoneCount}</li>
+          </ul>
+        )}
+        {!!account && (
+          <p><b>Your contribution:</b> {weiToEth(myContribution)} AVAX</p>
+        )}
+      </section>
+
+      <section style={{ marginTop: 20, padding: 16, border: '1px solid #ddd', borderRadius: 12 }}>
+        <h2>Actions</h2>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.01" />
+          <button onClick={() => fund(amount).catch(e=>alert(e.message))}>Fund</button>
+          <button onClick={() => completeMilestone().catch(e=>alert(e.message))}>Complete Milestone</button>
+          <button onClick={() => refund().catch(e=>alert(e.message))}>Refund</button>
+        </div>
+        <p style={{ fontSize: 12, opacity: 0.7 }}>Note: completeMilestone/refund permissions depend on contract logic (creator, goal reached, deadline, etc.).</p>
+      </section>
+
+      <section style={{ marginTop: 20, padding: 16, border: '1px solid #ddd', borderRadius: 12 }}>
+        <h2>Live Events</h2>
+        <ul>
+          {log.map((l, i) => <li key={i}>{l}</li>)}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+
+Run the client
+
+cd client
+npm i
+npm run dev
+
+🧭 How it works / what to change
+
+Wallet & network: Frontend uses MetaMask (BrowserProvider) and will auto-switch to Fuji (43113).
+
+Reads: Fast, no-key reads via your Express server (/state, /backers/:address) using HTTP RPC.
+
+Writes: User-initiated writes from the browser (fund, refund, completeMilestone) with MetaMask popups.
+
+Events: Backend listens over WebSocket RPC and streams to the UI via SSE (no Socket.IO needed).
+
+Production: Point RPC_HTTP_URL/RPC_WS_URL at your provider (e.g., Ankr, QuickNode, Alchemy if supported) and host both apps; update CORS accordingly.
+
+✅ Quick checklist
+
+Install MetaMask and get Fuji test AVAX.
+
+Start backend: cd server && cp .env.example .env && npm i && npm run dev
+
+Start frontend: cd client && npm i && npm run dev
+
+Open http://localhost:5173, connect wallet, try Fund (e.g., 0.01 AVAX).
+
+Watch Live Events update in real time.
+
+🛠 Common tweaks
+
+To use mainnet Avalanche: change chainId 43114, RPCs:
+
+HTTP: https://api.avax.network/ext/bc/C/rpc
+
+WS: wss://api.avax.network/ext/bc/C/ws
+
+Explorer: https://snowtrace.io/
+
+If you want pure frontend only (no server), you can remove the server and do reads with a JsonRpcProvider on the client — but WS events are more reliable via the server.
+
+🧪 Minimal test calls (from browser console)
+// after connecting in UI
+await window.ethereum.request({ method: 'eth_requestAccounts' })
+
+
+You can also hit:
+
+GET http://localhost:4000/state
+
+GET http://localhost:4000/backers/<yourAddress>
+
+GET http://localhost:4000/events (SSE stream)
+
+If you follow the steps and paste the files as shown, you’ll have a working full-stack dApp wired to the deployed contract at 0xd98bCbD04e6653960c29b8FEACDB30Da91122999 on Avalanche Fuji.
