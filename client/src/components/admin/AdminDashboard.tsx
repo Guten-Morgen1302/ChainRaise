@@ -41,6 +41,65 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/navigation/BackButton";
 
+// Component to display user's campaigns
+function UserCampaignsView({ userId }: { userId: string }) {
+  const { data: userCampaigns = [] } = useQuery<any[]>({
+    queryKey: [`/api/admin/users/${userId}/campaigns`],
+  });
+
+  const { data: userContributions = [] } = useQuery<any[]>({
+    queryKey: [`/api/admin/users/${userId}/contributions`],
+  });
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h4 className="font-medium mb-4">Created Campaigns ({userCampaigns.length})</h4>
+        {userCampaigns.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No campaigns created</p>
+        ) : (
+          <div className="space-y-2">
+            {userCampaigns.map((campaign: any) => (
+              <div key={campaign.id} className="flex items-center justify-between p-3 border rounded">
+                <div>
+                  <p className="font-medium">{campaign.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Goal: ${campaign.goalAmount} | Raised: ${campaign.currentAmount || '0'}
+                  </p>
+                </div>
+                <Badge variant={campaign.status === "active" ? "default" : campaign.status === "pending_approval" ? "secondary" : "destructive"}>
+                  {campaign.status.replace('_', ' ')}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      <div>
+        <h4 className="font-medium mb-4">Contributions Made ({userContributions.length})</h4>
+        {userContributions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No contributions made</p>
+        ) : (
+          <div className="space-y-2">
+            {userContributions.map((contribution: any) => (
+              <div key={contribution.id} className="flex items-center justify-between p-3 border rounded">
+                <div>
+                  <p className="font-medium">${contribution.amount} {contribution.currency}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(contribution.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <Badge variant="outline">{contribution.paymentMethod}</Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface AdminStats {
   totalUsers: number;
   totalCampaigns: number;
@@ -59,6 +118,18 @@ export function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [flagUserDialog, setFlagUserDialog] = useState(false);
   const [flagReason, setFlagReason] = useState("");
+  const [editUserDialog, setEditUserDialog] = useState(false);
+  const [notifyUserDialog, setNotifyUserDialog] = useState(false);
+  const [suspendUserDialog, setSuspendUserDialog] = useState(false);
+  const [resetPasswordDialog, setResetPasswordDialog] = useState(false);
+  const [deleteUserDialog, setDeleteUserDialog] = useState(false);
+  const [userCampaignsDialog, setUserCampaignsDialog] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState("info");
+  const [suspendReason, setSuspendReason] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [editedUser, setEditedUser] = useState<any>({});
 
   // Fetch real data from APIs
   const { data: users = [] } = useQuery<User[]>({
@@ -84,7 +155,7 @@ export function AdminDashboard() {
     pendingKyc: users.filter(user => user.kycStatus === "pending").length,
     flaggedUsers: users.filter(user => user.isFlagged).length,
     pendingReinstatements: reinstatementRequests.filter(req => req.status === "pending").length,
-    totalRaised: stats?.totalRaised || "0"
+    totalRaised: (stats as any)?.totalRaised || "0"
   };
 
   // Filter users based on search and flags
@@ -126,6 +197,93 @@ export function AdminDashboard() {
     },
     onError: () => {
       toast({ title: "Failed to unflag user", variant: "destructive" });
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest("DELETE", `/api/admin/users/${userId}`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "User deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setDeleteUserDialog(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to delete user", variant: "destructive" });
+    }
+  });
+
+  const suspendUserMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      return apiRequest("PUT", `/api/admin/users/${userId}/suspend`, { reason });
+    },
+    onSuccess: () => {
+      toast({ title: "User suspended successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setSuspendUserDialog(false);
+      setSuspendReason("");
+    },
+    onError: () => {
+      toast({ title: "Failed to suspend user", variant: "destructive" });
+    }
+  });
+
+  const unsuspendUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest("PUT", `/api/admin/users/${userId}/unsuspend`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "User unsuspended successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to unsuspend user", variant: "destructive" });
+    }
+  });
+
+  const editUserMutation = useMutation({
+    mutationFn: async ({ userId, updates }: { userId: string; updates: any }) => {
+      return apiRequest("PUT", `/api/admin/users/${userId}`, updates);
+    },
+    onSuccess: () => {
+      toast({ title: "User updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setEditUserDialog(false);
+      setEditedUser({});
+    },
+    onError: () => {
+      toast({ title: "Failed to update user", variant: "destructive" });
+    }
+  });
+
+  const notifyUserMutation = useMutation({
+    mutationFn: async ({ userId, title, message, type }: { userId: string; title: string; message: string; type: string }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/notify`, { title, message, type });
+    },
+    onSuccess: () => {
+      toast({ title: "Notification sent successfully" });
+      setNotifyUserDialog(false);
+      setNotificationTitle("");
+      setNotificationMessage("");
+      setNotificationType("info");
+    },
+    onError: () => {
+      toast({ title: "Failed to send notification", variant: "destructive" });
+    }
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: string; newPassword: string }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/reset-password`, { newPassword });
+    },
+    onSuccess: () => {
+      toast({ title: "Password reset successfully" });
+      setResetPasswordDialog(false);
+      setNewPassword("");
+    },
+    onError: () => {
+      toast({ title: "Failed to reset password", variant: "destructive" });
     }
   });
 
@@ -465,13 +623,333 @@ export function AdminDashboard() {
                             </Button>
                           )}
                           
-                          <Button size="sm" variant="outline">
-                            <Edit className="h-4 w-4" />
+                          <Dialog open={editUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
+                            setEditUserDialog(open);
+                            if (open) {
+                              setSelectedUser(user);
+                              setEditedUser({
+                                firstName: user.firstName || "",
+                                lastName: user.lastName || "",
+                                email: user.email,
+                                walletAddress: user.walletAddress || ""
+                              });
+                            } else {
+                              setSelectedUser(null);
+                              setEditedUser({});
+                            }
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline" data-testid={`button-edit-user-${user.id}`}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Edit User Details</DialogTitle>
+                                <DialogDescription>
+                                  Update user's basic information
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="text-sm font-medium">First Name</label>
+                                    <Input
+                                      value={editedUser.firstName || ""}
+                                      onChange={(e) => setEditedUser((prev: any) => ({ ...prev, firstName: e.target.value }))}
+                                      data-testid="input-edit-firstname"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium">Last Name</label>
+                                    <Input
+                                      value={editedUser.lastName || ""}
+                                      onChange={(e) => setEditedUser((prev: any) => ({ ...prev, lastName: e.target.value }))}
+                                      data-testid="input-edit-lastname"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">Email</label>
+                                  <Input
+                                    value={editedUser.email || ""}
+                                    onChange={(e) => setEditedUser((prev: any) => ({ ...prev, email: e.target.value }))}
+                                    data-testid="input-edit-email"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">Wallet Address</label>
+                                  <Input
+                                    value={editedUser.walletAddress || ""}
+                                    onChange={(e) => setEditedUser((prev: any) => ({ ...prev, walletAddress: e.target.value }))}
+                                    placeholder="0x..."
+                                    data-testid="input-edit-wallet"
+                                  />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="outline" onClick={() => setEditUserDialog(false)}>
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    onClick={() => editUserMutation.mutate({ userId: user.id, updates: editedUser })}
+                                    disabled={editUserMutation.isPending}
+                                    data-testid="button-save-user-edit"
+                                  >
+                                    {editUserMutation.isPending ? "Saving..." : "Save Changes"}
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                          
+                          <Dialog open={notifyUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
+                            setNotifyUserDialog(open);
+                            if (open) setSelectedUser(user);
+                            else {
+                              setSelectedUser(null);
+                              setNotificationTitle("");
+                              setNotificationMessage("");
+                              setNotificationType("info");
+                            }
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline" data-testid={`button-notify-user-${user.id}`}>
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Send Notification</DialogTitle>
+                                <DialogDescription>
+                                  Send a direct message to {user.firstName} {user.lastName}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-sm font-medium">Title</label>
+                                  <Input
+                                    value={notificationTitle}
+                                    onChange={(e) => setNotificationTitle(e.target.value)}
+                                    placeholder="Notification title"
+                                    data-testid="input-notification-title"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">Message</label>
+                                  <Textarea
+                                    value={notificationMessage}
+                                    onChange={(e) => setNotificationMessage(e.target.value)}
+                                    placeholder="Your message..."
+                                    rows={4}
+                                    data-testid="textarea-notification-message"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">Type</label>
+                                  <Select value={notificationType} onValueChange={setNotificationType}>
+                                    <SelectTrigger data-testid="select-notification-type">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="info">Info</SelectItem>
+                                      <SelectItem value="success">Success</SelectItem>
+                                      <SelectItem value="warning">Warning</SelectItem>
+                                      <SelectItem value="error">Error</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="outline" onClick={() => setNotifyUserDialog(false)}>
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    onClick={() => notifyUserMutation.mutate({ 
+                                      userId: user.id, 
+                                      title: notificationTitle, 
+                                      message: notificationMessage, 
+                                      type: notificationType 
+                                    })}
+                                    disabled={!notificationTitle || !notificationMessage || notifyUserMutation.isPending}
+                                    data-testid="button-send-notification"
+                                  >
+                                    {notifyUserMutation.isPending ? "Sending..." : "Send Notification"}
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                          
+                          <Dialog open={userCampaignsDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
+                            setUserCampaignsDialog(open);
+                            if (open) setSelectedUser(user);
+                            else setSelectedUser(null);
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline" data-testid={`button-view-campaigns-${user.id}`}>
+                                <TrendingUp className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl">
+                              <DialogHeader>
+                                <DialogTitle>User Campaigns: {user.firstName} {user.lastName}</DialogTitle>
+                                <DialogDescription>
+                                  All campaigns created by this user
+                                </DialogDescription>
+                              </DialogHeader>
+                              <UserCampaignsView userId={user.id} />
+                            </DialogContent>
+                          </Dialog>
+                          
+                          {user.isFlagged && user.flaggedReason?.startsWith("SUSPENDED:") ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600"
+                              onClick={() => unsuspendUserMutation.mutate(user.id)}
+                              disabled={unsuspendUserMutation.isPending}
+                              data-testid={`button-unsuspend-user-${user.id}`}
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Dialog open={suspendUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
+                              setSuspendUserDialog(open);
+                              if (open) setSelectedUser(user);
+                              else {
+                                setSelectedUser(null);
+                                setSuspendReason("");
+                              }
+                            }}>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="text-orange-600" data-testid={`button-suspend-user-${user.id}`}>
+                                  <UserX className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Suspend User Account</DialogTitle>
+                                  <DialogDescription>
+                                    Temporarily suspend this user's account access
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div>
+                                    <label className="text-sm font-medium">Reason for suspension</label>
+                                    <Textarea
+                                      value={suspendReason}
+                                      onChange={(e) => setSuspendReason(e.target.value)}
+                                      placeholder="Explain why this user is being suspended..."
+                                      data-testid="textarea-suspend-reason"
+                                    />
+                                  </div>
+                                  <div className="flex justify-end gap-2">
+                                    <Button variant="outline" onClick={() => setSuspendUserDialog(false)}>
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      variant="destructive"
+                                      onClick={() => suspendUserMutation.mutate({ userId: user.id, reason: suspendReason })}
+                                      disabled={!suspendReason.trim() || suspendUserMutation.isPending}
+                                      data-testid="button-confirm-suspend"
+                                    >
+                                      {suspendUserMutation.isPending ? "Suspending..." : "Suspend User"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                          
+                          <Dialog open={resetPasswordDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
+                            setResetPasswordDialog(open);
+                            if (open) setSelectedUser(user);
+                            else {
+                              setSelectedUser(null);
+                              setNewPassword("");
+                            }
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline" data-testid={`button-reset-password-${user.id}`}>
+                                <RefreshCw className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Reset User Password</DialogTitle>
+                                <DialogDescription>
+                                  Set a new password for {user.firstName} {user.lastName}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-sm font-medium">New Password</label>
+                                  <Input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="Enter new password (min 6 characters)"
+                                    data-testid="input-new-password"
+                                  />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="outline" onClick={() => setResetPasswordDialog(false)}>
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    onClick={() => resetPasswordMutation.mutate({ userId: user.id, newPassword })}
+                                    disabled={newPassword.length < 6 || resetPasswordMutation.isPending}
+                                    data-testid="button-confirm-reset-password"
+                                  >
+                                    {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                          
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              window.open(`/api/admin/users/${user.id}/export`, '_blank');
+                            }}
+                            data-testid={`button-export-user-${user.id}`}
+                          >
+                            <Download className="h-4 w-4" />
                           </Button>
                           
-                          <Button size="sm" variant="outline">
-                            <Mail className="h-4 w-4" />
-                          </Button>
+                          <Dialog open={deleteUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
+                            setDeleteUserDialog(open);
+                            if (open) setSelectedUser(user);
+                            else setSelectedUser(null);
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="outline" className="text-red-600" data-testid={`button-delete-user-${user.id}`}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Delete User Account</DialogTitle>
+                                <DialogDescription>
+                                  This action cannot be undone. This will permanently delete {user.firstName} {user.lastName}'s account and all associated data.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setDeleteUserDialog(false)}>
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => deleteUserMutation.mutate(user.id)}
+                                  disabled={deleteUserMutation.isPending}
+                                  data-testid="button-confirm-delete-user"
+                                >
+                                  {deleteUserMutation.isPending ? "Deleting..." : "Delete Permanently"}
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </TableCell>
                     </TableRow>

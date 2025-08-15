@@ -522,6 +522,200 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/admin/users/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteUser(id);
+      
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/suspend', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({ message: "Reason is required for suspending a user" });
+      }
+
+      const user = await storage.suspendUser(id, reason, req.user.username);
+      
+      // Create notification for suspended user
+      await storage.createUserNotification({
+        userId: id,
+        title: "Account Suspended",
+        message: `Your account has been suspended: ${reason}. Please contact support for assistance.`,
+        type: "error",
+      });
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error suspending user:", error);
+      res.status(500).json({ message: "Failed to suspend user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/unsuspend', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      const user = await storage.unsuspendUser(id);
+      
+      // Create notification for unsuspended user
+      await storage.createUserNotification({
+        userId: id,
+        title: "Account Restored",
+        message: "Your account has been restored. You now have full access to all features.",
+        type: "success",
+      });
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error unsuspending user:", error);
+      res.status(500).json({ message: "Failed to unsuspend user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Don't allow updating password this way
+      delete updates.password;
+      delete updates.id;
+      delete updates.createdAt;
+
+      const user = await storage.updateUser(id, updates);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.post('/api/admin/users/:id/reset-password', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { newPassword } = req.body;
+
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      // Hash the new password
+      const scrypt = require('crypto').scrypt;
+      const randomBytes = require('crypto').randomBytes;
+      const salt = randomBytes(16).toString("hex");
+      const hashedPassword = await new Promise((resolve, reject) => {
+        scrypt(newPassword, salt, 64, (err: any, derivedKey: any) => {
+          if (err) reject(err);
+          resolve(`${derivedKey.toString("hex")}.${salt}`);
+        });
+      });
+
+      const user = await storage.resetUserPassword(id, hashedPassword as string);
+      
+      // Create notification for user
+      await storage.createUserNotification({
+        userId: id,
+        title: "Password Reset",
+        message: "Your password has been reset by an administrator. Please use your new password to log in.",
+        type: "info",
+      });
+
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  app.post('/api/admin/users/:id/notify', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { title, message, type = "info" } = req.body;
+
+      if (!title || !message) {
+        return res.status(400).json({ message: "Title and message are required" });
+      }
+
+      const notification = await storage.createUserNotification({
+        userId: id,
+        title,
+        message,
+        type,
+      });
+
+      res.json(notification);
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      res.status(500).json({ message: "Failed to send notification" });
+    }
+  });
+
+  app.get('/api/admin/users/:id/campaigns', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const campaigns = await storage.getUserCampaigns(id);
+      res.json(campaigns);
+    } catch (error) {
+      console.error("Error fetching user campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch user campaigns" });
+    }
+  });
+
+  app.get('/api/admin/users/:id/contributions', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const contributions = await storage.getUserContributions(id);
+      res.json(contributions);
+    } catch (error) {
+      console.error("Error fetching user contributions:", error);
+      res.status(500).json({ message: "Failed to fetch user contributions" });
+    }
+  });
+
+  app.get('/api/admin/users/:id/export', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const [user, campaigns, contributions, kycApplication] = await Promise.all([
+        storage.getUser(id),
+        storage.getUserCampaigns(id),
+        storage.getUserContributions(id),
+        storage.getKycApplication(id),
+      ]);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const exportData = {
+        user: {
+          ...user,
+          password: "[REDACTED]", // Don't export password
+        },
+        campaigns,
+        contributions,
+        kycApplication,
+        exportedAt: new Date().toISOString(),
+        exportedBy: req.user.username,
+      };
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="user-${user.username}-${Date.now()}.json"`);
+      res.json(exportData);
+    } catch (error) {
+      console.error("Error exporting user data:", error);
+      res.status(500).json({ message: "Failed to export user data" });
+    }
+  });
+
   app.get('/api/admin/users/:id', requireAdmin, async (req: any, res) => {
     try {
       const { id } = req.params;

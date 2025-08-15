@@ -97,6 +97,12 @@ export interface IStorage {
   getAllUsers(filters?: { flagged?: boolean; kycStatus?: string; limit?: number; offset?: number }): Promise<User[]>;
   flagUser(userId: string, reason: string, flaggedBy: string): Promise<User>;
   unflagUser(userId: string): Promise<User>;
+  deleteUser(userId: string): Promise<void>;
+  suspendUser(userId: string, reason: string, suspendedBy: string): Promise<User>;
+  unsuspendUser(userId: string): Promise<User>;
+  getUserCampaigns(userId: string): Promise<Campaign[]>;
+  getUserContributions(userId: string): Promise<Contribution[]>;
+  resetUserPassword(userId: string, newPassword: string): Promise<User>;
   
   // Reinstatement requests
   createReinstatementRequest(request: InsertReinstatementRequest): Promise<ReinstatementRequest>;
@@ -494,6 +500,67 @@ export class DatabaseStorage implements IStorage {
         flaggedReason: null,
         flaggedBy: null,
         flaggedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Delete user's contributions first (cascade)
+    await db.delete(contributions).where(eq(contributions.backerId, userId));
+    // Delete user's campaigns
+    await db.delete(campaigns).where(eq(campaigns.creatorId, userId));
+    // Delete user's KYC applications
+    await db.delete(kycApplications).where(eq(kycApplications.userId, userId));
+    // Delete user's notifications
+    await db.delete(userNotifications).where(eq(userNotifications.userId, userId));
+    // Delete user's reinstatement requests
+    await db.delete(reinstatementRequests).where(eq(reinstatementRequests.userId, userId));
+    // Finally delete the user
+    await db.delete(users).where(eq(users.id, userId));
+  }
+
+  async suspendUser(userId: string, reason: string, suspendedBy: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isFlagged: true,
+        flaggedReason: `SUSPENDED: ${reason}`,
+        flaggedBy: suspendedBy,
+        flaggedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async unsuspendUser(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isFlagged: false,
+        flaggedReason: null,
+        flaggedBy: null,
+        flaggedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async getUserContributions(userId: string): Promise<Contribution[]> {
+    return db.select().from(contributions).where(eq(contributions.backerId, userId)).orderBy(desc(contributions.createdAt));
+  }
+
+  async resetUserPassword(userId: string, newPassword: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        password: newPassword,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
