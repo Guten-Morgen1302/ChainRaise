@@ -1423,25 +1423,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
-  // Handle API 404s properly
-  app.all('/api/*', (req, res) => {
-    res.status(404).json({ 
-      error: 'API endpoint not found',
-      path: req.path,
-      method: req.method 
-    });
-  });
-
-  // Error handling middleware for API routes
-  app.use('/api/*', (err: any, req: any, res: any, next: any) => {
-    console.error('API Error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error',
-      message: err.message 
-    });
-  });
-
   // Avalanche Transaction Routes
   app.post('/api/transactions/avalanche', isAuthenticated, async (req: any, res) => {
     try {
@@ -1527,6 +1508,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating Avalanche transaction:", error);
       res.status(500).json({ message: "Failed to update transaction" });
     }
+  });
+
+  // Public API for live transactions page (no authentication required)
+  app.get('/api/public/transactions/avalanche', async (req: any, res) => {
+    try {
+      const { limit = 50 } = req.query;
+      
+      const transactions = await storage.getAllAvalancheTransactions({
+        limit: parseInt(limit as string),
+      });
+      
+      // Enrich with campaign data for public display (no user data for privacy)
+      const enrichedTransactions = await Promise.all(
+        transactions.map(async (transaction) => {
+          const campaign = await storage.getCampaign(transaction.campaignId);
+          
+          return {
+            ...transaction,
+            campaign: campaign ? {
+              title: campaign.title,
+            } : null,
+          };
+        })
+      );
+
+      res.json(enrichedTransactions);
+    } catch (error) {
+      console.error("Error fetching public Avalanche transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // Handle API 404s properly
+  app.all('/api/*', (req, res) => {
+    res.status(404).json({ 
+      error: 'API endpoint not found',
+      path: req.path,
+      method: req.method 
+    });
+  });
+
+  // Error handling middleware for API routes
+  app.use('/api/*', (err: any, req: any, res: any, next: any) => {
+    console.error('API Error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: err.message 
+    });
   });
 
   const httpServer = createServer(app);

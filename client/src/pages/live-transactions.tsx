@@ -46,8 +46,26 @@ export default function LiveTransactions() {
     refetchInterval: 1000, // Update every second for real-time feel
   });
 
-  const { data: avalancheTransactions = [] } = useQuery({
-    queryKey: ["/api/transactions/avalanche"],
+  interface AvalancheTransaction {
+    id: string;
+    transactionHash: string;
+    amount: string;
+    walletAddress: string;
+    campaignId: string;
+    status: string;
+    createdAt: string;
+    transactionType?: string; // Added for compatibility
+    user?: {
+      username: string;
+      email: string;
+    };
+    campaign?: {
+      title: string;
+    };
+  }
+
+  const { data: avalancheTransactions = [] } = useQuery<AvalancheTransaction[]>({
+    queryKey: ["/api/public/transactions/avalanche"],
     refetchInterval: 1000,
   });
 
@@ -230,7 +248,7 @@ export default function LiveTransactions() {
                     <div className="space-y-4 max-h-[600px] overflow-y-auto">
                       <AnimatePresence>
                         {[...transactions, ...avalancheTransactions]
-                          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                          .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
                           .slice(0, 20)
                           .map((tx, index) => (
                           <motion.div
@@ -242,11 +260,11 @@ export default function LiveTransactions() {
                             className="bg-muted/30 rounded-xl p-4 border border-white/10 hover:bg-muted/50 transition-all"
                           >
                             <div className="flex justify-between items-start mb-2">
-                              <Badge className={getTransactionColor(tx.transactionType)}>
-                                {tx.transactionType.toUpperCase()}
+                              <Badge className={getTransactionColor(tx.transactionType || 'avalanche')}>
+                                {(tx.transactionType || 'AVALANCHE').toUpperCase()}
                               </Badge>
                               <div className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true })}
+                                {tx.createdAt ? formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true }) : 'Unknown time'}
                               </div>
                             </div>
                             

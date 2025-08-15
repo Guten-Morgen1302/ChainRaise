@@ -37,7 +37,7 @@ export function AdminAvalancheTransactions() {
   });
 
   const { data: transactions = [], isLoading, refetch } = useQuery<AvalancheTransaction[]>({
-    queryKey: ['/api/admin/transactions/avalanche', filters],
+    queryKey: ['/api/admin/transactions/avalanche'],
     refetchInterval: 5000, // Auto-refresh every 5 seconds for real-time updates
   });
 

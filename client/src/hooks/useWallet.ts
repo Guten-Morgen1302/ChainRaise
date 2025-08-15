@@ -178,6 +178,11 @@ export function useWallet() {
 
     await apiRequest('POST', '/api/transactions/avalanche', transactionData);
     
+    // Invalidate queries to refresh transaction data
+    queryClient.invalidateQueries({ queryKey: ['/api/transactions/avalanche'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions/avalanche'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/campaigns'] });
+    
     // Update wallet balance
     const newBalance = await provider.getBalance(wallet.address);
     setWallet(prev => ({ ...prev, balance: formatEther(newBalance) }));
