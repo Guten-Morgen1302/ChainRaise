@@ -1,17 +1,40 @@
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Activity } from "lucide-react";
+import { ExternalLink, Activity, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Transaction } from "@shared/schema";
 
 export default function TransactionFeed() {
   const { data: transactions = [] } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
-    refetchInterval: 5000, // Refresh every 5 seconds for real-time feel
+    refetchInterval: 2000, // Faster refresh for more real-time feel
   });
+
+  // Add WebSocket connection for instant updates
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws/admin`;
+    
+    const ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'authenticate', role: 'user' }));
+    };
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.event === 'transaction_created' || data.event === 'avalanche_transaction_created') {
+        // Instantly refresh when new transactions come in
+        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      }
+    };
+    
+    return () => ws.close();
+  }, []);
 
   const getTransactionTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -26,8 +49,12 @@ export default function TransactionFeed() {
     <Card className="glass-morphism rounded-2xl">
       <CardHeader>
         <CardTitle className="text-2xl font-bold flex items-center gap-3">
-          <div className="w-3 h-3 bg-cyber-green rounded-full animate-pulse"></div>
-          Live Transactions
+          <div className="relative">
+            <div className="w-3 h-3 bg-cyber-green rounded-full animate-pulse"></div>
+            <div className="absolute top-0 left-0 w-3 h-3 bg-cyber-green rounded-full animate-ping opacity-75"></div>
+          </div>
+          <span className="gradient-text">Live Transactions</span>
+          <Zap className="w-5 h-5 text-cyber-yellow animate-bounce" />
         </CardTitle>
       </CardHeader>
       

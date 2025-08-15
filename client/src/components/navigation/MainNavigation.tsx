@@ -21,6 +21,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
+} from "@/components/ui/navigation-menu";
+
 
 export function MainNavigation() {
   const [location] = useLocation();
@@ -33,6 +42,7 @@ export function MainNavigation() {
     { href: "/dashboard", icon: TrendingUp, label: "Dashboard" },
     { href: "/explorer", icon: Brain, label: "AI Explorer" },
     { href: "/contract-demo", icon: Shield, label: "Blockchain Demo" },
+    { href: "/live-transactions", icon: TrendingUp, label: "Live Tx" }
   ];
 
   return (

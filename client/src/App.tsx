@@ -15,11 +15,13 @@ import AccessGuide from "@/pages/AccessGuide";
 import Dashboard from "@/pages/dashboard";
 import Profile from "@/pages/profile";
 import KYC from "@/pages/kyc";
-import Explorer from "@/pages/explorer";
+import Explorer from "./pages/explorer";
+import ContractDemo from "./pages/contract-demo";
+import LiveTransactions from "./pages/live-transactions";
+import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminPage from "@/pages/admin";
 import AvalancheTransactionsPage from "@/pages/admin/avalanche-transactions";
 import AuthPage from "@/pages/auth-page";
-import ContractDemo from "@/pages/contract-demo";
 import NotFound from "@/pages/not-found";
 
 
@@ -40,6 +42,7 @@ function Router() {
       <Route path="/features" component={FeatureShowcase} />
       <Route path="/access-guide" component={AccessGuide} />
       <Route path="/explorer" component={Explorer} />
+      <Route path="/live-transactions" element={<LiveTransactions />} />
       <Route path="/contract-demo" component={ContractDemo} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/landing" component={Landing} />
