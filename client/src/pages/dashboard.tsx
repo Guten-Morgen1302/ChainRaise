@@ -116,6 +116,28 @@ export default function Dashboard() {
                 <p className="text-xl text-muted-foreground">
                   Manage your campaigns and track your impact
                 </p>
+                
+                {/* User Profile with KYC Status */}
+                <div className="mt-4 flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>@{user?.username}</span>
+                    <span>•</span>
+                    <span>{user?.email}</span>
+                  </div>
+                  <Badge 
+                    variant={user?.kycStatus === 'approved' ? 'default' : 
+                            user?.kycStatus === 'pending' || user?.kycStatus === 'under_review' ? 'secondary' : 'destructive'}
+                    className={`${
+                      user?.kycStatus === 'approved' ? 'text-green-600 border-green-600 bg-green-50' : 
+                      user?.kycStatus === 'pending' || user?.kycStatus === 'under_review' ? 'text-yellow-600 border-yellow-600 bg-yellow-50' : 'text-red-600 border-red-600 bg-red-50'
+                    }`}
+                  >
+                    {user?.kycStatus === 'approved' && <CheckCircle className="w-3 h-3 mr-1" />}
+                    {(user?.kycStatus === 'pending' || user?.kycStatus === 'under_review') && <Clock className="w-3 h-3 mr-1" />}
+                    {user?.kycStatus === 'rejected' && <AlertCircle className="w-3 h-3 mr-1" />}
+                    KYC: {user?.kycStatus?.replace('_', ' ').toUpperCase() || 'NOT SUBMITTED'}
+                  </Badge>
+                </div>
               </div>
               
               <div className="flex gap-3 mt-4 md:mt-0">
@@ -137,25 +159,32 @@ export default function Dashboard() {
                 className="mb-8"
               >
                 <Card className={`glass-morphism ${
-                  user?.kycStatus === "pending" 
+                  user?.kycStatus === "pending" || user?.kycStatus === "under_review" 
                     ? "border-cyber-yellow/50" 
-                    : "border-red-500/50"
+                    : user?.kycStatus === "rejected"
+                    ? "border-red-500/50"
+                    : "border-blue-500/50"
                 }`}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full animate-pulse ${
-                          user?.kycStatus === "pending" ? "bg-cyber-yellow" : "bg-red-500"
+                          user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "bg-cyber-yellow" : 
+                          user?.kycStatus === "rejected" ? "bg-red-500" : "bg-blue-500"
                         }`}></div>
                         <div>
                           <h3 className={`font-semibold ${
-                            user?.kycStatus === "pending" ? "text-cyber-yellow" : "text-red-400"
+                            user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "text-cyber-yellow" : 
+                            user?.kycStatus === "rejected" ? "text-red-400" : "text-blue-400"
                           }`}>
-                            {user?.kycStatus === "pending" ? "KYC Under Review" : "KYC Required"}
+                            {user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "KYC Under Review" : 
+                             user?.kycStatus === "rejected" ? "KYC Rejected" : "KYC Required"}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {user?.kycStatus === "pending" 
-                              ? "Your identity verification is being processed"
+                            {user?.kycStatus === "pending" || user?.kycStatus === "under_review" 
+                              ? "Your identity verification is being processed (1-3 business days)"
+                              : user?.kycStatus === "rejected"
+                              ? "Your KYC application was rejected. Please resubmit with corrections."
                               : "Complete KYC verification to create campaigns"
                             }
                           </p>
@@ -163,11 +192,14 @@ export default function Dashboard() {
                       </div>
                       <Link href="/kyc">
                         <Button className={
-                          user?.kycStatus === "pending" 
+                          user?.kycStatus === "pending" || user?.kycStatus === "under_review"
                             ? "bg-cyber-yellow text-black hover:bg-cyber-yellow/90" 
-                            : "bg-red-500 hover:bg-red-600"
+                            : user?.kycStatus === "rejected"
+                            ? "bg-red-500 hover:bg-red-600"
+                            : "bg-blue-500 hover:bg-blue-600"
                         }>
-                          {user?.kycStatus === "pending" ? "Check Status" : "Complete KYC"}
+                          {user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "Check Status" : 
+                           user?.kycStatus === "rejected" ? "Resubmit KYC" : "Complete KYC"}
                         </Button>
                       </Link>
                     </div>

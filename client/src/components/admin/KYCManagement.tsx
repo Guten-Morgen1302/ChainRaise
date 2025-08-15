@@ -85,6 +85,9 @@ export default function KYCManagement() {
         description: "KYC application has been reviewed successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/kyc/applications"] });
+      // Also invalidate user queries so KYC status updates everywhere
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/kyc/status"] });
       setSelectedApplication(null);
       setReviewStatus("");
       setAdminComments("");

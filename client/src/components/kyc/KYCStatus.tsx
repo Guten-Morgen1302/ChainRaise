@@ -44,6 +44,9 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
     setIsRefreshing(true);
     try {
       const { data } = await refetch();
+      // Also invalidate user query to update the user profile
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      
       if (data?.status !== kycStatus?.status) {
         // Status changed, show notification
         console.log('KYC status updated:', data?.status);
@@ -150,7 +153,8 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
     };
   };
 
-  const status = kycStatus?.status || user.kycStatus || 'not_submitted';
+  // Always use the KYC status from the API, fallback to user.kycStatus, then 'not_submitted'
+  const status = kycStatus?.status || user?.kycStatus || 'not_submitted';
   const config = getStatusConfig(status);
   const StatusIcon = config.icon;
 

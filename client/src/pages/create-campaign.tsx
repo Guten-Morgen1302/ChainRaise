@@ -72,7 +72,18 @@ export default function CreateCampaign() {
   const { data: userProfile } = useQuery({
     queryKey: ["/api/user"],
     enabled: isAuthenticated,
+    refetchOnWindowFocus: true, // Ensure fresh data when coming back to the page
   });
+
+  // Get fresh KYC status
+  const { data: kycStatus } = useQuery({
+    queryKey: ["/api/kyc/status"],
+    enabled: isAuthenticated,
+    refetchOnWindowFocus: true,
+  });
+
+  // Use the most up-to-date KYC status
+  const currentKycStatus = kycStatus?.status || userProfile?.kycStatus || user?.kycStatus;
 
   const createCampaignMutation = useMutation({
     mutationFn: async (data: CreateCampaignForm) => {
@@ -208,7 +219,7 @@ export default function CreateCampaign() {
         </section>
 
         {/* KYC Status Check */}
-        {user?.kycStatus !== "approved" && (
+        {currentKycStatus !== "approved" && (
           <section className="py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <KYCStatus />
@@ -436,20 +447,21 @@ export default function CreateCampaign() {
                         Previous
                       </Button>
                       
-                      {user?.kycStatus !== "approved" && (
+                      {currentKycStatus !== "approved" && (
                         <div className="text-sm text-muted-foreground">
                           <AlertTriangle className="w-4 h-4 inline mr-1" />
-                          KYC verification required to create campaigns
+                          KYC verification required to create campaigns (Current: {currentKycStatus?.replace('_', ' ').toUpperCase() || 'NOT SUBMITTED'})
                         </div>
                       )}
                       
                       <Button 
                         type="submit"
                         className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transition-all duration-300"
-                        disabled={createCampaignMutation.isPending || user?.kycStatus !== "approved"}
+                        disabled={createCampaignMutation.isPending || currentKycStatus !== "approved"}
                         onClick={() => {
                           console.log("Button clicked!");
                           console.log("User KYC status:", user?.kycStatus);
+                          console.log("Current KYC status:", currentKycStatus);
                           console.log("Form valid:", form.formState.isValid);
                           console.log("Form errors:", form.formState.errors);
                           console.log("Form values:", form.getValues());
@@ -461,7 +473,7 @@ export default function CreateCampaign() {
                             <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full mr-2"></div>
                             Creating Campaign...
                           </>
-                        ) : user?.kycStatus !== "approved" ? (
+                        ) : currentKycStatus !== "approved" ? (
                           <>
                             <AlertTriangle className="w-4 h-4 mr-2" />
                             KYC Required
