@@ -81,7 +81,7 @@ export function AdminDashboard() {
       email: "jane@example.com",
       firstName: "Jane",
       lastName: "Smith",
-      kycStatus: "verified",
+      kycStatus: "approved",
       createdAt: new Date().toISOString()
     }
   ];
@@ -266,7 +266,7 @@ export function AdminDashboard() {
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
                         <Badge 
-                          variant={user.kycStatus === "verified" ? "default" : 
+                          variant={user.kycStatus === "approved" ? "default" : 
                                   user.kycStatus === "pending" ? "secondary" : "destructive"}
                         >
                           {user.kycStatus}
@@ -281,7 +281,7 @@ export function AdminDashboard() {
                             <>
                               <Button 
                                 size="sm" 
-                                onClick={() => handleKycUpdate(user.id, "verified")}
+                                onClick={() => handleKycUpdate(user.id, "approved")}
                               >
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Approve

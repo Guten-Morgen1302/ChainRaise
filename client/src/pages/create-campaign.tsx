@@ -208,7 +208,7 @@ export default function CreateCampaign() {
         </section>
 
         {/* KYC Status Check */}
-        {user?.kycStatus !== "verified" && (
+        {user?.kycStatus !== "approved" && (
           <section className="py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <KYCStatus />
@@ -436,7 +436,7 @@ export default function CreateCampaign() {
                         Previous
                       </Button>
                       
-                      {user?.kycStatus !== "verified" && (
+                      {user?.kycStatus !== "approved" && (
                         <div className="text-sm text-muted-foreground">
                           <AlertTriangle className="w-4 h-4 inline mr-1" />
                           KYC verification required to create campaigns
@@ -446,7 +446,7 @@ export default function CreateCampaign() {
                       <Button 
                         type="submit"
                         className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transition-all duration-300"
-                        disabled={createCampaignMutation.isPending || user?.kycStatus !== "verified"}
+                        disabled={createCampaignMutation.isPending || user?.kycStatus !== "approved"}
                         onClick={() => {
                           console.log("Button clicked!");
                           console.log("User KYC status:", user?.kycStatus);
@@ -461,7 +461,7 @@ export default function CreateCampaign() {
                             <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full mr-2"></div>
                             Creating Campaign...
                           </>
-                        ) : user?.kycStatus !== "verified" ? (
+                        ) : user?.kycStatus !== "approved" ? (
                           <>
                             <AlertTriangle className="w-4 h-4 mr-2" />
                             KYC Required

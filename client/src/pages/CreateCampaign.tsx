@@ -166,7 +166,7 @@ export default function CreateCampaign() {
     ));
   };
 
-  // Check if user is verified for KYC
+  // Check if user is approved for KYC
   if (!user) {
     return <div className="container mx-auto px-4 py-8">Loading...</div>;
   }

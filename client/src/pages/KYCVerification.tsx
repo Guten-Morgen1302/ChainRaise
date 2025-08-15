@@ -116,7 +116,7 @@ export default function KYCVerification() {
 
   const getKycStatusColor = (status: string) => {
     switch (status) {
-      case "verified": return "text-green-600 bg-green-50";
+      case "approved": return "text-green-600 bg-green-50";
       case "rejected": return "text-red-600 bg-red-50";
       default: return "text-yellow-600 bg-yellow-50";
     }
@@ -149,14 +149,14 @@ export default function KYCVerification() {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 <strong>Current Status: </strong>
-                {user.kycStatus === "verified" && "✅ Verified - You can create campaigns"}
+                {user.kycStatus === "approved" && "✅ Verified - You can create campaigns"}
                 {user.kycStatus === "rejected" && "❌ Rejected - Please resubmit with correct documents"}
                 {user.kycStatus === "pending" && "⏳ Pending Review - Documents submitted and under review"}
                 {!user.kycStatus && "📋 Not Started - Please complete verification below"}
               </AlertDescription>
             </Alert>
 
-            {(user.kycStatus !== "verified") && (
+            {(user.kycStatus !== "approved") && (
               <form onSubmit={form.handleSubmit((data) => kycMutation.mutate(data))} className="space-y-6">
                 {/* Document Type */}
                 <div className="space-y-2">
@@ -342,7 +342,7 @@ export default function KYCVerification() {
               </form>
             )}
 
-            {user.kycStatus === "verified" && (
+            {user.kycStatus === "approved" && (
               <div className="text-center py-8">
                 <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
                 <h3 className="text-xl font-semibold text-green-700 dark:text-green-400">
