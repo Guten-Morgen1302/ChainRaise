@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
 import { 
   Shield, 
   CheckCircle, 
@@ -13,7 +14,8 @@ import {
   FileText,
   XCircle,
   Calendar,
-  MessageCircle
+  MessageCircle,
+  RefreshCw
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -30,11 +32,30 @@ interface KYCStatusData {
 
 export default function KYCStatus({ className = "" }: KYCStatusProps) {
   const { user, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: kycStatus, isLoading } = useQuery<KYCStatusData>({
+  const { data: kycStatus, isLoading, refetch } = useQuery<KYCStatusData>({
     queryKey: ["/api/kyc/status"],
     enabled: isAuthenticated,
   });
+
+  const handleRefreshStatus = async () => {
+    setIsRefreshing(true);
+    try {
+      const { data } = await refetch();
+      if (data?.status !== kycStatus?.status) {
+        // Status changed, show notification
+        console.log('KYC status updated:', data?.status);
+      } else {
+        console.log('Still under review, please check back later');
+      }
+    } catch (error) {
+      console.error('Failed to refresh status:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   if (!user || isLoading) {
     return (
@@ -63,6 +84,7 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
           actionVariant: "default" as const,
           actionLink: "/create-campaign",
           progress: 100,
+          step: 4,
         };
       case "pending":
       case "under_review":
@@ -75,7 +97,8 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
           description: "Your documents are being reviewed. You'll be notified within 1-3 business days.",
           actionText: "Check Back Later",
           actionVariant: "outline" as const,
-          progress: 75,
+          progress: 50,
+          step: 2,
         };
       case "rejected":
         return {
@@ -89,6 +112,7 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
           actionVariant: "destructive" as const,
           actionLink: "/kyc",
           progress: 25,
+          step: 1,
         };
       default:
         return {
@@ -101,9 +125,29 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
           actionText: "Start Verification",
           actionVariant: "default" as const,
           actionLink: "/kyc",
-          progress: 0,
+          progress: 25,
+          step: 1,
         };
     }
+  };
+
+  const getStepConfig = (stepNumber: number, currentStep: number) => {
+    const steps = [
+      { title: "Document Submission", description: "Submit your verification documents" },
+      { title: "Under Review", description: "Documents being reviewed by our team" },
+      { title: "Verification Complete", description: "Identity successfully verified" },
+      { title: "Ready to Launch Campaign", description: "Create unlimited fundraising campaigns" },
+    ];
+    
+    const isActive = stepNumber <= currentStep;
+    const isCurrent = stepNumber === currentStep;
+    
+    return {
+      ...steps[stepNumber - 1],
+      isActive,
+      isCurrent,
+      percentage: stepNumber * 25,
+    };
   };
 
   const status = kycStatus?.status || user.kycStatus || 'not_submitted';
@@ -136,11 +180,60 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
                   {status.replace('_', ' ').toUpperCase()}
                 </Badge>
               </div>
-              <Progress 
-                value={config.progress} 
-                className="mt-2 h-2" 
-                data-testid="progress-kyc"
-              />
+              
+              {/* KYC Process Steps */}
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between text-sm font-medium">
+                  <span>Step {config.step} of 4 – {config.progress}% Complete</span>
+                  {(status === 'pending' || status === 'under_review') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRefreshStatus}
+                      disabled={isRefreshing}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <RefreshCw className={`w-3 h-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      Refresh Status
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Progress Steps */}
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map((stepNum) => {
+                    const stepConfig = getStepConfig(stepNum, config.step);
+                    return (
+                      <div key={stepNum} className="text-center">
+                        <div className={`w-6 h-6 rounded-full mx-auto mb-1 flex items-center justify-center text-xs font-medium ${
+                          stepConfig.isCurrent 
+                            ? 'bg-primary text-primary-foreground animate-pulse'
+                            : stepConfig.isActive 
+                            ? 'bg-green-500 text-white'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {stepConfig.isActive && !stepConfig.isCurrent ? '✓' : stepNum}
+                        </div>
+                        <div className={`text-xs leading-tight ${
+                          stepConfig.isCurrent 
+                            ? 'font-medium text-primary'
+                            : stepConfig.isActive 
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-muted-foreground'
+                        }`}>
+                          {stepConfig.title}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <Progress 
+                  value={config.progress} 
+                  className="h-2" 
+                  data-testid="progress-kyc"
+                />
+              </div>
             </div>
           </CardTitle>
         </CardHeader>

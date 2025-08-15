@@ -81,13 +81,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
       
-      if (!user || user.kycStatus !== "verified") {
-        return res.status(403).json({ message: "KYC verification required to create campaigns" });
+      if (!user || user.kycStatus !== "approved") {
+        return res.status(403).json({ 
+          message: "KYC verification required to create campaigns",
+          kycStatus: user?.kycStatus || 'pending'
+        });
       }
 
       const campaignData = insertCampaignSchema.parse({
         ...req.body,
         creatorId: userId,
+        status: 'pending_approval', // New campaigns start as pending approval
       });
 
       const campaign = await storage.createCampaign(campaignData);
@@ -420,30 +424,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Campaign creation route (modified to check KYC)
-  app.post('/api/campaigns', isAuthenticated, async (req: any, res) => {
+  // Admin Campaign Management Routes
+  app.get('/api/admin/campaigns', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      // TODO: Add admin role check here
+      const { status } = req.query;
+      const campaigns = await storage.getCampaigns({
+        status: status as string,
+        limit: 100,
+      });
+      res.json(campaigns);
+    } catch (error) {
+      console.error("Error fetching admin campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch campaigns" });
+    }
+  });
+
+  app.get('/api/admin/campaigns/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check here
+      const { id } = req.params;
+      const campaign = await storage.getCampaign(id);
       
-      // Check if user has approved KYC
-      const user = await storage.getUser(userId);
-      if (user?.kycStatus !== 'approved') {
-        return res.status(403).json({ 
-          message: "KYC verification required to create campaigns",
-          kycStatus: user?.kycStatus || 'pending'
-        });
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
       }
 
-      const campaignData = insertCampaignSchema.parse({
-        ...req.body,
-        creatorId: userId,
-      });
-
-      const campaign = await storage.createCampaign(campaignData);
       res.json(campaign);
     } catch (error) {
-      console.error("Error creating campaign:", error);
-      res.status(500).json({ message: "Failed to create campaign" });
+      console.error("Error fetching campaign:", error);
+      res.status(500).json({ message: "Failed to fetch campaign" });
+    }
+  });
+
+  app.put('/api/admin/campaigns/:id/status', isAuthenticated, async (req: any, res) => {
+    try {
+      // TODO: Add admin role check here
+      const { id } = req.params;
+      const { status, adminComments } = req.body;
+
+      const campaign = await storage.getCampaign(id);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      const updatedCampaign = await storage.updateCampaign(id, {
+        status,
+        adminComments,
+      });
+
+      res.json(updatedCampaign);
+    } catch (error) {
+      console.error("Error updating campaign status:", error);
+      res.status(500).json({ message: "Failed to update campaign status" });
     }
   });
 

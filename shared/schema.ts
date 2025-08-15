@@ -53,13 +53,16 @@ export const campaigns = pgTable("campaigns", {
   currency: varchar("currency").default("ETH"),
   deadline: timestamp("deadline").notNull(),
   imageUrl: varchar("image_url"),
-  status: varchar("status").default("active"), // active, completed, cancelled
+  status: varchar("status").default("pending_approval"), // pending_approval, active, completed, cancelled, rejected
   smartContractAddress: varchar("smart_contract_address"),
   tags: text("tags").array(),
   rewards: jsonb("rewards"),
   updates: jsonb("updates"),
   credibilityScore: decimal("credibility_score", { precision: 3, scale: 1 }).default("0.0"),
   backerCount: integer("backer_count").default(0),
+  adminComments: text("admin_comments"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -86,9 +86,9 @@ export function AdminDashboard() {
     }
   ];
 
-  // Mock campaigns data - in real app would come from API
+  // Fetch campaigns from admin endpoint
   const { data: campaigns = [] } = useQuery({
-    queryKey: ["/api/campaigns"],
+    queryKey: ["/api/admin/campaigns"],
   });
 
   const handleKycUpdate = async (userId: string, status: "approved" | "rejected") => {
@@ -110,14 +110,14 @@ export function AdminDashboard() {
 
   const handleCampaignAction = async (campaignId: string, action: "approve" | "reject") => {
     try {
-      await apiRequest("PUT", `/api/admin/campaigns/${campaignId}`, { 
+      await apiRequest("PUT", `/api/admin/campaigns/${campaignId}/status`, { 
         status: action === "approve" ? "active" : "rejected" 
       });
       toast({
         title: "Campaign Updated",
         description: `Campaign has been ${action}ed.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/campaigns"] });
     } catch (error) {
       toast({
         title: "Error", 
@@ -340,8 +340,11 @@ export function AdminDashboard() {
                       <TableCell>${campaign.goalAmount}</TableCell>
                       <TableCell>${campaign.currentAmount}</TableCell>
                       <TableCell>
-                        <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
-                          {campaign.status}
+                        <Badge 
+                          variant={campaign.status === "active" ? "default" : 
+                                  campaign.status === "pending_approval" ? "secondary" : "destructive"}
+                        >
+                          {campaign.status.replace('_', ' ')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -350,7 +353,7 @@ export function AdminDashboard() {
                             <Eye className="h-4 w-4 mr-1" />
                             View
                           </Button>
-                          {campaign.status === "pending" && (
+                          {campaign.status === "pending_approval" && (
                             <>
                               <Button 
                                 size="sm"
