@@ -74,12 +74,20 @@ export default function KYCForm({ onSubmitSuccess }: KYCFormProps) {
 
   const submitKycMutation = useMutation({
     mutationFn: async (data: KycFormData) => {
-      // For demo purposes, we'll use placeholder URLs for uploaded documents
+      // Convert uploaded files to base64 for storage
+      const processFile = (file: File): Promise<string> => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      };
+
       const formData = {
         ...data,
-        idFrontImageUrl: uploadedFiles.idFront ? "https://example.com/id-front.jpg" : null,
-        idBackImageUrl: uploadedFiles.idBack ? "https://example.com/id-back.jpg" : null,
-        selfieImageUrl: uploadedFiles.selfie ? "https://example.com/selfie.jpg" : null,
+        idFrontImageUrl: uploadedFiles.idFront ? await processFile(uploadedFiles.idFront) : null,
+        idBackImageUrl: uploadedFiles.idBack ? await processFile(uploadedFiles.idBack) : null,
+        selfieImageUrl: uploadedFiles.selfie ? await processFile(uploadedFiles.selfie) : null,
       };
       
       return await apiRequest("POST", "/api/kyc/submit", formData);
@@ -517,11 +525,14 @@ export default function KYCForm({ onSubmitSuccess }: KYCFormProps) {
                           id="id-front-upload"
                           data-testid="upload-idFront"
                         />
-                        <Label htmlFor="id-front-upload" className="cursor-pointer">
-                          <Button type="button" variant="outline" size="sm">
-                            Choose File
-                          </Button>
-                        </Label>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => document.getElementById('id-front-upload')?.click()}
+                        >
+                          Choose File
+                        </Button>
                         {uploadedFiles.idFront && (
                           <p className="text-sm text-green-600 mt-2">
                             ✓ {uploadedFiles.idFront.name}
@@ -549,11 +560,14 @@ export default function KYCForm({ onSubmitSuccess }: KYCFormProps) {
                           id="id-back-upload"
                           data-testid="upload-idBack"
                         />
-                        <Label htmlFor="id-back-upload" className="cursor-pointer">
-                          <Button type="button" variant="outline" size="sm">
-                            Choose File
-                          </Button>
-                        </Label>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => document.getElementById('id-back-upload')?.click()}
+                        >
+                          Choose File
+                        </Button>
                         {uploadedFiles.idBack && (
                           <p className="text-sm text-green-600 mt-2">
                             ✓ {uploadedFiles.idBack.name}
@@ -581,11 +595,14 @@ export default function KYCForm({ onSubmitSuccess }: KYCFormProps) {
                           id="selfie-upload"
                           data-testid="upload-selfie"
                         />
-                        <Label htmlFor="selfie-upload" className="cursor-pointer">
-                          <Button type="button" variant="outline" size="sm">
-                            Choose File
-                          </Button>
-                        </Label>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => document.getElementById('selfie-upload')?.click()}
+                        >
+                          Choose File
+                        </Button>
                         {uploadedFiles.selfie && (
                           <p className="text-sm text-green-600 mt-2">
                             ✓ {uploadedFiles.selfie.name}

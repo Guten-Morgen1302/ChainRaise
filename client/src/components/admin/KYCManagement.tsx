@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Eye, 
+  Edit,
   CheckCircle, 
   XCircle, 
   Clock, 
@@ -293,7 +294,7 @@ export default function KYCManagement() {
                           data-testid={`button-view-${application.id}`}
                         >
                           <Eye className="w-4 h-4 mr-1" />
-                          Review
+                          View & Review
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -382,11 +383,25 @@ export default function KYCManagement() {
                                       <div className="mt-2 border-2 border-dashed border-muted-foreground/25 rounded-lg p-8">
                                         {doc.url ? (
                                           <div className="space-y-2">
-                                            <FileText className="w-8 h-8 mx-auto text-green-600" />
+                                            {doc.url.startsWith('data:image') ? (
+                                              <img 
+                                                src={doc.url} 
+                                                alt={doc.label}
+                                                className="w-full h-32 object-cover rounded border"
+                                              />
+                                            ) : (
+                                              <FileText className="w-8 h-8 mx-auto text-green-600" />
+                                            )}
                                             <p className="text-sm text-green-600">Document uploaded</p>
-                                            <Button variant="outline" size="sm">
-                                              View Document
-                                            </Button>
+                                            {doc.url.startsWith('data:image') && (
+                                              <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                onClick={() => window.open(doc.url, '_blank')}
+                                              >
+                                                View Full Size
+                                              </Button>
+                                            )}
                                           </div>
                                         ) : (
                                           <div className="space-y-2">

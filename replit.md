@@ -8,10 +8,13 @@ CryptoFund is a full-stack Web3 crowdfunding platform that combines the features
 - Database seeded with sample campaigns and users
 - Authentication system working properly
 - Images loading correctly with Unsplash integration
-- Fixed Three.js shader errors (removed color attribute conflict)
+- Fixed Three.js shader errors (renamed color attribute to particleColor)
 - Added CORS middleware for proper API communication
 - Fixed login redirect issue (buttons now go to /auth instead of /api/login)
 - Added placeholder image endpoint and updated campaign images
+- Enhanced KYC document upload system with proper file handling
+- Improved admin KYC review system with document preview and approval workflow
+- Fixed authentication route consistency (/api/user vs /api/auth/user)
 
 ## KYC System Enhancement (August 14, 2025)
 **COMPLETED** - Comprehensive KYC verification system integrated
