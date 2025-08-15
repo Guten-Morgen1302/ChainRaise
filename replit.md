@@ -27,6 +27,7 @@ CryptoFund is a full-stack Web3 crowdfunding platform that combines the features
 - **Instant Database Sync**: All changes broadcast to connected admin sessions without refresh
 - **Admin Actions**: Flag/unflag users, approve/reject KYC, manage campaigns with real-time feedback
 - **Auto-Refresh Tables**: User lists, campaign counters, and KYC queues update automatically
+- **Authentication Fixed**: Resolved password hashing issues, admin login now works with johntech/password and admin/password
 
 ## Security Enhancements (August 15, 2025)
 **COMPLETED** - Implemented robust role-based authentication and authorization

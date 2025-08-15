@@ -26,6 +26,12 @@ export async function seedDatabase() {
         profileImageUrl: null,
         walletAddress: "0x742d35Cc6e1B5b5e8b8E2Be2B8D8B8B8B8B8B8B8",
         kycDocuments: null,
+        isFlagged: false,
+        flaggedReason: null,
+        flaggedBy: null,
+        flaggedAt: null,
+        createdAt: null,
+        updatedAt: null,
       },
       {
         username: "sarahdesign",
@@ -37,6 +43,12 @@ export async function seedDatabase() {
         profileImageUrl: null,
         walletAddress: "0x1234567890123456789012345678901234567890",
         kycDocuments: null,
+        isFlagged: false,
+        flaggedReason: null,
+        flaggedBy: null,
+        flaggedAt: null,
+        createdAt: null,
+        updatedAt: null,
       },
       {
         username: "admin",
@@ -49,6 +61,12 @@ export async function seedDatabase() {
         profileImageUrl: null,
         walletAddress: null,
         kycDocuments: null,
+        isFlagged: false,
+        flaggedReason: null,
+        flaggedBy: null,
+        flaggedAt: null,
+        createdAt: null,
+        updatedAt: null,
       },
     ];
 
