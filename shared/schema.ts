@@ -36,6 +36,13 @@ export const users = pgTable("users", {
   walletAddress: varchar("wallet_address"),
   kycStatus: varchar("kyc_status").default("pending"), // pending, approved, rejected
   kycDocuments: jsonb("kyc_documents"),
+  role: varchar("role").default("user"), // user, admin
+  isFlagged: boolean("is_flagged").default(false),
+  flaggedReason: text("flagged_reason"),
+  flaggedBy: varchar("flagged_by"),
+  flaggedAt: timestamp("flagged_at"),
+  profileCompletion: integer("profile_completion").default(0),
+  joinDate: timestamp("join_date").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -63,6 +70,10 @@ export const campaigns = pgTable("campaigns", {
   adminComments: text("admin_comments"),
   reviewedBy: varchar("reviewed_by"),
   reviewedAt: timestamp("reviewed_at"),
+  isEditedAfterApproval: boolean("is_edited_after_approval").default(false),
+  originalApprovalDate: timestamp("original_approval_date"),
+  editCount: integer("edit_count").default(0),
+  lastEditedAt: timestamp("last_edited_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -204,6 +215,49 @@ export const insertAiInteractionSchema = createInsertSchema(aiInteractions).omit
   createdAt: true,
 });
 
+// Reinstatement Requests table
+export const reinstatementRequests = pgTable("reinstatement_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  reason: text("reason").notNull(),
+  additionalInfo: text("additional_info"),
+  status: varchar("status").default("pending"), // pending, approved, rejected
+  adminComments: text("admin_comments"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User Notifications table
+export const userNotifications = pgTable("user_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  title: varchar("title").notNull(),
+  message: text("message").notNull(),
+  type: varchar("type").notNull(), // info, success, warning, error
+  isRead: boolean("is_read").default(false),
+  relatedCampaignId: varchar("related_campaign_id"),
+  relatedKycId: varchar("related_kyc_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertReinstatementRequestSchema = createInsertSchema(reinstatementRequests).omit({
+  id: true,
+  status: true,
+  adminComments: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserNotificationSchema = createInsertSchema(userNotifications).omit({
+  id: true,
+  isRead: true,
+  createdAt: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -219,3 +273,7 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type AiInteraction = typeof aiInteractions.$inferSelect;
 export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
+export type ReinstatementRequest = typeof reinstatementRequests.$inferSelect;
+export type InsertReinstatementRequest = z.infer<typeof insertReinstatementRequestSchema>;
+export type UserNotification = typeof userNotifications.$inferSelect;
+export type InsertUserNotification = z.infer<typeof insertUserNotificationSchema>;

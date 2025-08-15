@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import type { Campaign, Contribution } from "@shared/schema";
 import { MainNavigation } from "@/components/navigation/MainNavigation";
 import { ThreeBackground } from "@/components/three/ThreeBackground";
 import Footer from "@/components/layout/footer";
@@ -39,12 +40,12 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: userCampaigns = [] } = useQuery({
+  const { data: userCampaigns = [] } = useQuery<Campaign[]>({
     queryKey: ["/api/campaigns"],
     retry: false,
   });
 
-  const { data: userContributions = [] } = useQuery({
+  const { data: userContributions = [] } = useQuery<Contribution[]>({
     queryKey: ["/api/contributions"],
     retry: false,
   });
@@ -52,6 +53,23 @@ export default function Dashboard() {
   const { data: stats } = useQuery({
     queryKey: ["/api/stats"],
     retry: false,
+  });
+
+  const { data: userNotifications = [] } = useQuery({
+    queryKey: ["/api/notifications"],
+    retry: false,
+  });
+
+  const { data: reinstatementRequest } = useQuery({
+    queryKey: ["/api/reinstatement-requests"],
+    retry: false,
+    enabled: user?.isFlagged || false,
+  });
+
+  const { data: canCreateCampaign } = useQuery({
+    queryKey: ["/api/user/can-create-campaign"],
+    retry: false,
+    enabled: !!user && !user.isFlagged,
   });
 
   useEffect(() => {
@@ -87,12 +105,12 @@ export default function Dashboard() {
     return null; // Will redirect via useEffect
   }
 
-  const myCampaigns = userCampaigns.filter(campaign => campaign.creatorId === user?.id);
-  const myContributions = userContributions.filter(contribution => contribution.backerId === user?.id);
+  const myCampaigns = userCampaigns.filter((campaign: Campaign) => campaign.creatorId === user?.id);
+  const myContributions = userContributions.filter((contribution: Contribution) => contribution.backerId === user?.id);
   
-  const totalRaised = myCampaigns.reduce((sum, campaign) => sum + parseFloat(campaign.currentAmount), 0);
-  const totalContributed = myContributions.reduce((sum, contribution) => sum + parseFloat(contribution.amount), 0);
-  const activeCampaigns = myCampaigns.filter(campaign => campaign.status === "active").length;
+  const totalRaised = myCampaigns.reduce((sum: number, campaign: Campaign) => sum + parseFloat(campaign.currentAmount || "0"), 0);
+  const totalContributed = myContributions.reduce((sum: number, contribution: Contribution) => sum + parseFloat(contribution.amount || "0"), 0);
+  const activeCampaigns = myCampaigns.filter((campaign: Campaign) => campaign.status === "active").length;
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -141,17 +159,75 @@ export default function Dashboard() {
               </div>
               
               <div className="flex gap-3 mt-4 md:mt-0">
-                <Link href="/create">
-                  <Button className="bg-gradient-to-r from-cyber-blue to-cyber-purple hover:scale-105 transition-all duration-300">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Campaign
+                {user?.isFlagged ? (
+                  <Button disabled className="bg-gradient-to-r from-gray-400 to-gray-500">
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    Account Flagged
                   </Button>
-                </Link>
+                ) : canCreateCampaign?.canCreate ? (
+                  <Link href="/create">
+                    <Button className="bg-gradient-to-r from-cyber-blue to-cyber-purple hover:scale-105 transition-all duration-300">
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Campaign
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button disabled className="bg-gradient-to-r from-gray-400 to-gray-500" title={canCreateCampaign?.reason}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    {canCreateCampaign?.reason || "Cannot Create Campaign"}
+                  </Button>
+                )}
               </div>
             </motion.div>
 
+            {/* Flagged User Banner */}
+            {user?.isFlagged && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="mb-8"
+              >
+                <Card className="glass-morphism border-red-500/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <AlertCircle className="w-6 h-6 text-red-400" />
+                        <div>
+                          <h3 className="font-semibold text-red-400">Account Flagged</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Your account is flagged. Please submit a reinstatement request to regain full access.
+                          </p>
+                          {user.flaggedReason && (
+                            <p className="text-sm text-red-300 mt-1">
+                              Reason: {user.flaggedReason}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {!reinstatementRequest || reinstatementRequest.status === "rejected" ? (
+                        <Button 
+                          className="bg-red-500 hover:bg-red-600" 
+                          onClick={() => {
+                            // TODO: Open reinstatement request modal
+                            console.log("Open reinstatement request modal");
+                          }}
+                        >
+                          Request Reinstatement
+                        </Button>
+                      ) : (
+                        <Badge variant="secondary">
+                          Request {reinstatementRequest.status}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
             {/* KYC Status Banner */}
-            {user?.kycStatus !== "approved" && (
+            {!user?.isFlagged && user?.kycStatus !== "approved" && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -274,6 +350,7 @@ export default function Dashboard() {
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="my-campaigns">My Campaigns</TabsTrigger>
                 <TabsTrigger value="backed-projects">Backed Projects</TabsTrigger>
+                <TabsTrigger value="notifications">Notifications ({userNotifications.filter((n: any) => !n.isRead).length})</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
 
@@ -286,14 +363,14 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {myCampaigns.slice(0, 3).map((campaign) => (
+                        {myCampaigns.slice(0, 3).map((campaign: Campaign) => (
                           <div key={campaign.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                             <div className="flex items-center gap-3">
                               <div className="w-2 h-2 bg-cyber-blue rounded-full"></div>
                               <div>
                                 <div className="font-medium">{campaign.title}</div>
                                 <div className="text-sm text-muted-foreground">
-                                  {formatDistanceToNow(new Date(campaign.createdAt), { addSuffix: true })}
+                                  {formatDistanceToNow(new Date(campaign.createdAt || ""), { addSuffix: true })}
                                 </div>
                               </div>
                             </div>
@@ -346,7 +423,7 @@ export default function Dashboard() {
                             <span className="text-muted-foreground">Success Rate</span>
                             <span className="font-mono">
                               {myCampaigns.length > 0 
-                                ? Math.round((myCampaigns.filter(c => c.status === "completed").length / myCampaigns.length) * 100)
+                                ? Math.round((myCampaigns.filter((c: Campaign) => c.status === "completed").length / myCampaigns.length) * 100)
                                 : 0
                               }%
                             </span>
@@ -372,22 +449,92 @@ export default function Dashboard() {
                   </div>
 
                   {myCampaigns.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                      {myCampaigns.map((campaign) => (
-                        <div key={campaign.id} className="relative">
-                          <CampaignCard campaign={campaign} />
-                          <div className="absolute top-2 right-2 flex gap-1">
-                            <Button variant="outline" size="icon" className="w-8 h-8 glass-morphism">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="icon" className="w-8 h-8 glass-morphism">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="icon" className="w-8 h-8 glass-morphism">
-                              <Share2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
+                    <div className="space-y-6">
+                      {myCampaigns.map((campaign: Campaign) => (
+                        <Card key={campaign.id} className="glass-morphism">
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-start gap-4">
+                                <div className="w-20 h-20 rounded-lg overflow-hidden">
+                                  <img 
+                                    src={campaign.imageUrl || "/api/placeholder/80/80"} 
+                                    alt={campaign.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-lg mb-2">{campaign.title}</h4>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Badge 
+                                      variant={campaign.status === "active" ? "default" : 
+                                              campaign.status === "pending_approval" ? "secondary" : 
+                                              campaign.status === "rejected" ? "destructive" : "secondary"}
+                                      className={`${
+                                        campaign.status === "pending_approval" ? "bg-yellow-100 text-yellow-800 border-yellow-300" :
+                                        campaign.status === "active" ? "bg-green-100 text-green-800 border-green-300" :
+                                        campaign.status === "rejected" ? "bg-red-100 text-red-800 border-red-300" : ""
+                                      }`}
+                                    >
+                                      {campaign.status === "pending_approval" ? "Under Review" :
+                                       campaign.status === "active" ? "Approved" :
+                                       campaign.status === "rejected" ? "Rejected" : 
+                                       campaign.status?.replace('_', ' ').toUpperCase()}
+                                    </Badge>
+                                    {campaign.isEditedAfterApproval && (
+                                      <Badge variant="outline" className="text-orange-600 border-orange-300">
+                                        Re-review Required
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-muted-foreground">Funding Progress</span>
+                                      <span className="font-mono">
+                                        {((parseFloat(campaign.currentAmount || "0") / parseFloat(campaign.goalAmount || "1")) * 100).toFixed(1)}%
+                                      </span>
+                                    </div>
+                                    <Progress 
+                                      value={(parseFloat(campaign.currentAmount || "0") / parseFloat(campaign.goalAmount || "1")) * 100} 
+                                      className="h-2" 
+                                    />
+                                    <div className="flex justify-between text-sm text-muted-foreground">
+                                      <span>{campaign.currentAmount || "0"} {campaign.currency} raised</span>
+                                      <span>{campaign.goalAmount} {campaign.currency} goal</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <Button variant="outline" size="sm" className="glass-morphism">
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View
+                                </Button>
+                                {campaign.status !== "rejected" && !user?.isFlagged && (
+                                  <Button variant="outline" size="sm" className="glass-morphism">
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit
+                                  </Button>
+                                )}
+                                <Button variant="outline" size="sm" className="glass-morphism">
+                                  <Share2 className="w-4 h-4 mr-2" />
+                                  Share
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            {campaign.adminComments && (
+                              <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                  <MessageCircle className="w-4 h-4 text-muted-foreground mt-0.5" />
+                                  <div>
+                                    <div className="text-sm font-medium text-muted-foreground">Admin Notes:</div>
+                                    <div className="text-sm">{campaign.adminComments}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   ) : (
@@ -416,8 +563,8 @@ export default function Dashboard() {
 
                   {myContributions.length > 0 ? (
                     <div className="space-y-4">
-                      {myContributions.map((contribution) => {
-                        const campaign = userCampaigns.find(c => c.id === contribution.campaignId);
+                      {myContributions.map((contribution: Contribution) => {
+                        const campaign = userCampaigns.find((c: Campaign) => c.id === contribution.campaignId);
                         return (
                           <Card key={contribution.id} className="glass-morphism">
                             <CardContent className="p-6">
@@ -433,7 +580,7 @@ export default function Dashboard() {
                                   <div>
                                     <h4 className="font-semibold">{campaign?.title || "Campaign"}</h4>
                                     <p className="text-sm text-muted-foreground">
-                                      Contributed {formatDistanceToNow(new Date(contribution.createdAt), { addSuffix: true })}
+                                      Contributed {formatDistanceToNow(new Date(contribution.createdAt || ""), { addSuffix: true })}
                                     </p>
                                     {contribution.message && (
                                       <p className="text-sm text-muted-foreground italic mt-1">
@@ -469,6 +616,86 @@ export default function Dashboard() {
                             Browse Campaigns
                           </Button>
                         </Link>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="notifications">
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-2xl font-bold">Notifications ({userNotifications.length})</h3>
+                    {userNotifications.some((n: any) => !n.isRead) && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // TODO: Mark all as read
+                          console.log("Mark all as read");
+                        }}
+                      >
+                        Mark All Read
+                      </Button>
+                    )}
+                  </div>
+
+                  {userNotifications.length > 0 ? (
+                    <div className="space-y-4">
+                      {userNotifications.map((notification: any) => (
+                        <Card key={notification.id} className={`glass-morphism transition-all duration-200 ${
+                          !notification.isRead ? "border-cyber-blue/50 bg-cyber-blue/5" : ""
+                        }`}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start gap-3">
+                                <div className={`w-2 h-2 rounded-full mt-2 ${
+                                  !notification.isRead ? "bg-cyber-blue animate-pulse" : "bg-muted"
+                                }`}></div>
+                                <div className="flex-1">
+                                  <h4 className="font-semibold mb-1">{notification.title}</h4>
+                                  <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</span>
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`${
+                                        notification.type === "success" ? "text-green-600 border-green-300" :
+                                        notification.type === "error" ? "text-red-600 border-red-300" :
+                                        notification.type === "warning" ? "text-yellow-600 border-yellow-300" :
+                                        "text-blue-600 border-blue-300"
+                                      }`}
+                                    >
+                                      {notification.type}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              {!notification.isRead && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    // TODO: Mark as read
+                                    console.log("Mark as read:", notification.id);
+                                  }}
+                                >
+                                  Mark Read
+                                </Button>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="glass-morphism">
+                      <CardContent className="p-8 text-center">
+                        <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No notifications yet</h3>
+                        <p className="text-muted-foreground">
+                          You'll see updates about your campaigns, KYC status, and other important information here.
+                        </p>
                       </CardContent>
                     </Card>
                   )}

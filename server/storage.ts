@@ -6,6 +6,8 @@ import {
   aiInteractions,
   kycApplications,
   adminUsers,
+  reinstatementRequests,
+  userNotifications,
   type User,
   type InsertUser,
   type Campaign,
@@ -20,6 +22,10 @@ import {
   type InsertKycApplication,
   type AdminUser,
   type InsertAdminUser,
+  type ReinstatementRequest,
+  type InsertReinstatementRequest,
+  type UserNotification,
+  type InsertUserNotification,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql } from "drizzle-orm";
@@ -86,6 +92,28 @@ export interface IStorage {
     totalBackers: number;
     successRate: number;
   }>;
+  
+  // User management
+  getAllUsers(filters?: { flagged?: boolean; kycStatus?: string; limit?: number; offset?: number }): Promise<User[]>;
+  flagUser(userId: string, reason: string, flaggedBy: string): Promise<User>;
+  unflagUser(userId: string): Promise<User>;
+  
+  // Reinstatement requests
+  createReinstatementRequest(request: InsertReinstatementRequest): Promise<ReinstatementRequest>;
+  getReinstatementRequests(status?: string): Promise<ReinstatementRequest[]>;
+  getReinstatementRequestByUserId(userId: string): Promise<ReinstatementRequest | undefined>;
+  updateReinstatementRequest(id: string, updates: Partial<ReinstatementRequest>): Promise<ReinstatementRequest>;
+  
+  // User notifications
+  createUserNotification(notification: InsertUserNotification): Promise<UserNotification>;
+  getUserNotifications(userId: string, unreadOnly?: boolean): Promise<UserNotification[]>;
+  markNotificationAsRead(id: string): Promise<UserNotification>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+  
+  // Campaign management enhancements
+  getUserCampaigns(userId: string): Promise<Campaign[]>;
+  canUserCreateCampaign(userId: string): Promise<{ canCreate: boolean; reason?: string }>;
+  updateCampaignWithEditTracking(id: string, updates: Partial<Campaign>, editorId: string): Promise<Campaign>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -415,6 +443,215 @@ export class DatabaseStorage implements IStorage {
       .from(adminUsers)
       .where(eq(adminUsers.email, email));
     return admin || undefined;
+  }
+
+  // User management methods
+  async getAllUsers(filters?: { flagged?: boolean; kycStatus?: string; limit?: number; offset?: number }): Promise<User[]> {
+    let query = db.select().from(users);
+    const conditions = [];
+
+    if (filters?.flagged !== undefined) {
+      conditions.push(eq(users.isFlagged, filters.flagged));
+    }
+    if (filters?.kycStatus) {
+      conditions.push(eq(users.kycStatus, filters.kycStatus));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit) as any;
+    }
+    if (filters?.offset) {
+      query = query.offset(filters.offset) as any;
+    }
+
+    return await query.orderBy(desc(users.createdAt));
+  }
+
+  async flagUser(userId: string, reason: string, flaggedBy: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isFlagged: true,
+        flaggedReason: reason,
+        flaggedBy: flaggedBy,
+        flaggedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async unflagUser(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        isFlagged: false,
+        flaggedReason: null,
+        flaggedBy: null,
+        flaggedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  // Reinstatement request methods
+  async createReinstatementRequest(requestData: InsertReinstatementRequest): Promise<ReinstatementRequest> {
+    const [request] = await db
+      .insert(reinstatementRequests)
+      .values({
+        ...requestData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return request;
+  }
+
+  async getReinstatementRequests(status?: string): Promise<ReinstatementRequest[]> {
+    let query = db.select().from(reinstatementRequests);
+    
+    if (status) {
+      query = query.where(eq(reinstatementRequests.status, status)) as any;
+    }
+
+    return await query.orderBy(desc(reinstatementRequests.createdAt));
+  }
+
+  async getReinstatementRequestByUserId(userId: string): Promise<ReinstatementRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(reinstatementRequests)
+      .where(eq(reinstatementRequests.userId, userId))
+      .orderBy(desc(reinstatementRequests.createdAt));
+    return request || undefined;
+  }
+
+  async updateReinstatementRequest(id: string, updates: Partial<ReinstatementRequest>): Promise<ReinstatementRequest> {
+    const [request] = await db
+      .update(reinstatementRequests)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(reinstatementRequests.id, id))
+      .returning();
+    return request;
+  }
+
+  // User notification methods
+  async createUserNotification(notificationData: InsertUserNotification): Promise<UserNotification> {
+    const [notification] = await db
+      .insert(userNotifications)
+      .values({
+        ...notificationData,
+        createdAt: new Date(),
+      })
+      .returning();
+    return notification;
+  }
+
+  async getUserNotifications(userId: string, unreadOnly?: boolean): Promise<UserNotification[]> {
+    let query = db.select().from(userNotifications);
+    
+    if (unreadOnly) {
+      query = query.where(and(eq(userNotifications.userId, userId), eq(userNotifications.isRead, false))) as any;
+    } else {
+      query = query.where(eq(userNotifications.userId, userId)) as any;
+    }
+
+    return await query.orderBy(desc(userNotifications.createdAt));
+  }
+
+  async markNotificationAsRead(id: string): Promise<UserNotification> {
+    const [notification] = await db
+      .update(userNotifications)
+      .set({ isRead: true })
+      .where(eq(userNotifications.id, id))
+      .returning();
+    return notification;
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(userNotifications)
+      .set({ isRead: true })
+      .where(eq(userNotifications.userId, userId));
+  }
+
+  // Enhanced campaign management methods
+  async getUserCampaigns(userId: string): Promise<Campaign[]> {
+    return await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.creatorId, userId))
+      .orderBy(desc(campaigns.createdAt));
+  }
+
+  async canUserCreateCampaign(userId: string): Promise<{ canCreate: boolean; reason?: string }> {
+    const user = await this.getUser(userId);
+    
+    if (!user) {
+      return { canCreate: false, reason: "User not found" };
+    }
+    
+    if (user.isFlagged) {
+      return { canCreate: false, reason: "Account is flagged and cannot create campaigns" };
+    }
+    
+    if (user.kycStatus !== "approved") {
+      return { canCreate: false, reason: "KYC verification required" };
+    }
+
+    const userCampaigns = await this.getUserCampaigns(userId);
+    const activeCampaigns = userCampaigns.filter(c => c.status === "active" || c.status === "pending_approval");
+    
+    // Check if user has more than 1 active campaign
+    if (activeCampaigns.length >= 1) {
+      // Check if any existing campaign is at least 80% funded or completed
+      const hasQualifyingCampaign = userCampaigns.some(campaign => {
+        const fundingPercentage = (parseFloat(campaign.currentAmount || "0") / parseFloat(campaign.goalAmount || "1")) * 100;
+        return fundingPercentage >= 80 || campaign.status === "completed";
+      });
+      
+      if (!hasQualifyingCampaign && activeCampaigns.length >= 1) {
+        return { canCreate: false, reason: "You can only create a second campaign if one existing campaign is at least 80% funded or completed" };
+      }
+    }
+
+    return { canCreate: true };
+  }
+
+  async updateCampaignWithEditTracking(id: string, updates: Partial<Campaign>, editorId: string): Promise<Campaign> {
+    const campaign = await this.getCampaign(id);
+    
+    if (!campaign) {
+      throw new Error("Campaign not found");
+    }
+
+    // If campaign was previously approved and is being edited, mark as needing review
+    let updateData = { ...updates, updatedAt: new Date() };
+    
+    if (campaign.status === "active" && campaign.creatorId === editorId) {
+      updateData = {
+        ...updateData,
+        status: "pending_approval",
+        isEditedAfterApproval: true,
+        editCount: (campaign.editCount || 0) + 1,
+        lastEditedAt: new Date(),
+      };
+    }
+
+    const [updatedCampaign] = await db
+      .update(campaigns)
+      .set(updateData)
+      .where(eq(campaigns.id, id))
+      .returning();
+    
+    return updatedCampaign;
   }
 }
 

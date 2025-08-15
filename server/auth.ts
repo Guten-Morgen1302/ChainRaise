@@ -99,6 +99,13 @@ export function setupAuth(app: Express) {
         walletAddress: null,
         kycStatus: "pending",
         kycDocuments: null,
+        role: "user",
+        isFlagged: false,
+        flaggedReason: null,
+        flaggedBy: null,
+        flaggedAt: null,
+        profileCompletion: 0,
+        joinDate: new Date(),
       });
 
       req.login(user, (err) => {
@@ -203,4 +210,17 @@ export function isAuthenticated(req: any, res: any, next: any) {
     return next();
   }
   res.status(401).json({ message: "Authentication required" });
+}
+
+export function requireAdmin(req: any, res: any, next: any) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  
+  const user = req.user;
+  if (user.role !== "admin") {
+    return res.status(403).json({ message: "Admin access required" });
+  }
+  
+  return next();
 }

@@ -54,6 +54,7 @@ export default function CreateCampaign() {
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+  const [canCreateCampaign, setCanCreateCampaign] = useState<{ canCreate: boolean; reason?: string } | null>(null);
 
   const form = useForm<CreateCampaignForm>({
     resolver: zodResolver(createCampaignFormSchema),
@@ -84,6 +85,13 @@ export default function CreateCampaign() {
 
   // Use the most up-to-date KYC status
   const currentKycStatus = kycStatus?.status || userProfile?.kycStatus || user?.kycStatus;
+
+  // Check if user can create campaigns
+  const { data: campaignEligibility } = useQuery({
+    queryKey: ["/api/user/can-create-campaign"],
+    enabled: isAuthenticated && currentKycStatus === "approved",
+    onSuccess: (data) => setCanCreateCampaign(data),
+  });
 
   const createCampaignMutation = useMutation({
     mutationFn: async (data: CreateCampaignForm) => {
@@ -127,7 +135,44 @@ export default function CreateCampaign() {
     console.log("Form submission triggered:", data);
     console.log("Form errors:", form.formState.errors);
     
+    if (!canCreateCampaign?.canCreate) {
+      toast({
+        title: "Cannot Create Campaign",
+        description: canCreateCampaign?.reason || "You are not eligible to create campaigns at this time.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createCampaignMutation.mutate(data);
+  };
+
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const validateCurrentStep = () => {
+    const values = form.getValues();
+    switch (currentStep) {
+      case 1:
+        return values.title && values.description;
+      case 2:
+        return values.category && values.fundingType;
+      case 3:
+        return values.goalAmount && values.currency;
+      case 4:
+        return true; // Optional fields in step 4
+      default:
+        return false;
+    }
   };
 
   const categories = [
@@ -203,23 +248,62 @@ export default function CreateCampaign() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mb-8"
             >
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-6">
                 <span className="text-sm text-muted-foreground">Step {currentStep} of {totalSteps}</span>
                 <span className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</span>
               </div>
-              <Progress value={progress} className="h-2 progress-glow" />
+              <Progress value={progress} className="h-2 progress-glow mb-6" />
+              
+              {/* Step Indicators */}
+              <div className="flex justify-between">
+                {[1, 2, 3, 4].map((step) => (
+                  <div key={step} className="flex flex-col items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                      step < currentStep ? "bg-cyber-green text-white" :
+                      step === currentStep ? "bg-cyber-blue text-white" :
+                      "bg-muted text-muted-foreground"
+                    }`}>
+                      {step < currentStep ? <CheckCircle className="w-4 h-4" /> : step}
+                    </div>
+                    <span className="text-xs mt-2 text-center max-w-20">
+                      {step === 1 && "Basics"}
+                      {step === 2 && "Details"}
+                      {step === 3 && "Funding"}
+                      {step === 4 && "Media"}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </div>
         </section>
 
-        {/* KYC Status Check */}
-        {currentKycStatus !== "approved" && (
+        {/* KYC and Eligibility Status Check */}
+        {currentKycStatus !== "approved" ? (
           <section className="py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <KYCStatus />
             </div>
           </section>
-        )}
+        ) : canCreateCampaign && !canCreateCampaign.canCreate ? (
+          <section className="py-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <Card className="glass-morphism border-red-500/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-6 h-6 text-red-400" />
+                    <div>
+                      <h3 className="font-semibold text-red-400">Campaign Creation Restricted</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {canCreateCampaign.reason}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+        ) : null}
 
         {/* Main Form */}
         <section className="py-16">
@@ -229,131 +313,26 @@ export default function CreateCampaign() {
               <div className="lg:col-span-2">
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <Card className="glass-morphism">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Lightbulb className="w-5 h-5 text-cyber-blue" />
-                          Campaign Basics
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <FormField
-                          control={form.control}
-                          name="title"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Campaign Title *</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Revolutionary IoT Smart Home System"
-                                  className="form-focus"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description *</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Tell the world about your innovative project..."
-                                  className="form-focus min-h-[120px]"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Step 1: Campaign Basics */}
+                    {currentStep === 1 && (
+                      <Card className="glass-morphism">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Lightbulb className="w-5 h-5 text-cyber-blue" />
+                            Step 1: Campaign Basics
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">Tell us about your project idea and vision</p>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
                           <FormField
                             control={form.control}
-                            name="category"
+                            name="title"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Category *</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger className="form-focus">
-                                      <SelectValue placeholder="Select category" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {categories.map((category) => (
-                                      <SelectItem key={category.value} value={category.value}>
-                                        <div className="flex items-center gap-2">
-                                          <div className={`w-3 h-3 rounded-full ${category.color}/70`}></div>
-                                          {category.label}
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="fundingType"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Funding Model *</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger className="form-focus">
-                                      <SelectValue placeholder="Select funding type" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {fundingTypes.map((type) => (
-                                      <SelectItem key={type.value} value={type.value}>
-                                        <div>
-                                          <div className="font-medium">{type.label}</div>
-                                          <div className="text-xs text-muted-foreground">{type.description}</div>
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="glass-morphism">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Target className="w-5 h-5 text-cyber-green" />
-                          Funding Details
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <FormField
-                            control={form.control}
-                            name="goalAmount"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Funding Goal *</FormLabel>
+                                <FormLabel>Campaign Title *</FormLabel>
                                 <FormControl>
                                   <Input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    placeholder="100"
+                                    placeholder="Revolutionary IoT Smart Home System"
                                     className="form-focus"
                                     {...field}
                                   />
@@ -365,120 +344,265 @@ export default function CreateCampaign() {
 
                           <FormField
                             control={form.control}
-                            name="currency"
+                            name="description"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Currency</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                                  <FormControl>
-                                    <SelectTrigger className="form-focus">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="ETH">ETH</SelectItem>
-                                    <SelectItem value="MATIC">MATIC</SelectItem>
-                                    <SelectItem value="USDC">USDC</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <FormLabel>Description *</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Tell the world about your innovative project. What problem does it solve? What makes it unique?"
+                                    className="form-focus min-h-[120px]"
+                                    {...field}
+                                  />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    )}
 
-                    <Card className="glass-morphism">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <ImageIcon className="w-5 h-5 text-cyber-purple" />
-                          Media & Tags
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <FormField
-                          control={form.control}
-                          name="imageUrl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Campaign Image URL</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="https://example.com/image.jpg"
-                                  className="form-focus"
-                                  {...field}
-                                  value={field.value || ""}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    {/* Step 2: Project Details */}
+                    {currentStep === 2 && (
+                      <Card className="glass-morphism">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Tag className="w-5 h-5 text-cyber-purple" />
+                            Step 2: Project Details
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">Categorize your project and choose your funding model</p>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                              control={form.control}
+                              name="category"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Category *</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger className="form-focus">
+                                        <SelectValue placeholder="Select category" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {categories.map((category) => (
+                                        <SelectItem key={category.value} value={category.value}>
+                                          <div className="flex items-center gap-2">
+                                            <div className={`w-3 h-3 rounded-full ${category.color}/70`}></div>
+                                            {category.label}
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
 
-                        <FormField
-                          control={form.control}
-                          name="tags"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Tags (comma separated)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="blockchain, innovation, IoT"
-                                  className="form-focus"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
+                            <FormField
+                              control={form.control}
+                              name="fundingType"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Funding Model *</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger className="form-focus">
+                                        <SelectValue placeholder="Select funding type" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {fundingTypes.map((type) => (
+                                        <SelectItem key={type.value} value={type.value}>
+                                          <div>
+                                            <div className="font-medium">{type.label}</div>
+                                            <div className="text-xs text-muted-foreground">{type.description}</div>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
 
+                    {/* Step 3: Funding Details */}
+                    {currentStep === 3 && (
+                      <Card className="glass-morphism">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Target className="w-5 h-5 text-cyber-green" />
+                            Step 3: Funding Details
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">Set your funding goal and campaign duration</p>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                              control={form.control}
+                              name="goalAmount"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Funding Goal *</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      placeholder="100"
+                                      className="form-focus"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="currency"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Currency</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                                    <FormControl>
+                                      <SelectTrigger className="form-focus">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="ETH">ETH</SelectItem>
+                                      <SelectItem value="MATIC">MATIC</SelectItem>
+                                      <SelectItem value="USDC">USDC</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Step 4: Media & Tags */}
+                    {currentStep === 4 && (
+                      <Card className="glass-morphism">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <ImageIcon className="w-5 h-5 text-cyber-purple" />
+                            Step 4: Media & Tags
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground">Add visual elements and tags to make your campaign discoverable</p>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          <FormField
+                            control={form.control}
+                            name="imageUrl"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Campaign Image URL (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="https://example.com/image.jpg"
+                                    className="form-focus"
+                                    {...field}
+                                    value={field.value || ""}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="tags"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Tags (comma separated, optional)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="blockchain, innovation, IoT, sustainable"
+                                    className="form-focus"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Navigation */}
                     <div className="flex justify-between items-center">
-                      <Button type="button" variant="outline" disabled={currentStep === 1}>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={prevStep}
+                        disabled={currentStep === 1}
+                      >
                         Previous
                       </Button>
                       
                       {currentKycStatus !== "approved" && (
                         <div className="text-sm text-muted-foreground">
                           <AlertTriangle className="w-4 h-4 inline mr-1" />
-                          KYC verification required to create campaigns (Current: {currentKycStatus?.replace('_', ' ').toUpperCase() || 'NOT SUBMITTED'})
+                          KYC verification required (Current: {currentKycStatus?.replace('_', ' ').toUpperCase() || 'NOT SUBMITTED'})
                         </div>
                       )}
                       
-                      <Button 
-                        type="submit"
-                        className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transition-all duration-300"
-                        disabled={createCampaignMutation.isPending || currentKycStatus !== "approved"}
-                        onClick={() => {
-                          console.log("Button clicked!");
-                          console.log("User KYC status:", user?.kycStatus);
-                          console.log("Current KYC status:", currentKycStatus);
-                          console.log("Form valid:", form.formState.isValid);
-                          console.log("Form errors:", form.formState.errors);
-                          console.log("Form values:", form.getValues());
-                        }}
-                        data-testid="button-launch-campaign"
-                      >
-                        {createCampaignMutation.isPending ? (
-                          <>
-                            <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                            Creating Campaign...
-                          </>
-                        ) : currentKycStatus !== "approved" ? (
-                          <>
-                            <AlertTriangle className="w-4 h-4 mr-2" />
-                            KYC Required
-                          </>
-                        ) : (
-                          <>
-                            <Rocket className="w-4 h-4 mr-2" />
-                            Launch Campaign
-                          </>
-                        )}
-                      </Button>
+                      {currentStep < totalSteps ? (
+                        <Button 
+                          type="button"
+                          onClick={nextStep}
+                          disabled={!validateCurrentStep()}
+                          className="bg-gradient-to-r from-cyber-blue to-cyber-purple"
+                        >
+                          Next Step
+                        </Button>
+                      ) : (
+                        <Button 
+                          type="submit"
+                          className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transition-all duration-300"
+                          disabled={createCampaignMutation.isPending || currentKycStatus !== "approved" || (canCreateCampaign && !canCreateCampaign.canCreate)}
+                          data-testid="button-launch-campaign"
+                        >
+                          {createCampaignMutation.isPending ? (
+                            <>
+                              <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                              Creating Campaign...
+                            </>
+                          ) : currentKycStatus !== "approved" ? (
+                            <>
+                              <AlertTriangle className="w-4 h-4 mr-2" />
+                              KYC Required
+                            </>
+                          ) : (canCreateCampaign && !canCreateCampaign.canCreate) ? (
+                            <>
+                              <AlertTriangle className="w-4 h-4 mr-2" />
+                              Restricted
+                            </>
+                          ) : (
+                            <>
+                              <Rocket className="w-4 h-4 mr-2" />
+                              Launch Campaign
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </form>
                 </Form>

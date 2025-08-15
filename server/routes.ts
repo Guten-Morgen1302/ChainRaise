@@ -1,14 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth, isAuthenticated, requireAdmin } from "./auth";
 import { 
   optimizeCampaignTitle, 
   enhanceCampaignDescription, 
   analyzeCampaignCredibility,
   predictFundingSuccess 
 } from "./openai";
-import { insertCampaignSchema, insertContributionSchema, insertTransactionSchema, insertKycApplicationSchema } from "@shared/schema";
+import { insertCampaignSchema, insertContributionSchema, insertTransactionSchema, insertKycApplicationSchema, insertReinstatementRequestSchema, insertUserNotificationSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -26,6 +26,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       kycStatus: user.kycStatus,
       profileImageUrl: user.profileImageUrl,
       walletAddress: user.walletAddress,
+      role: user.role,
+      isFlagged: user.isFlagged,
     });
   });
 
@@ -105,6 +107,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/campaigns/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (user?.isFlagged) {
+        return res.status(403).json({ message: "Cannot edit campaigns while account is flagged" });
+      }
+      
       const campaign = await storage.getCampaign(req.params.id);
       
       if (!campaign) {
@@ -115,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Unauthorized to update this campaign" });
       }
 
-      const updatedCampaign = await storage.updateCampaign(req.params.id, req.body);
+      const updatedCampaign = await storage.updateCampaignWithEditTracking(req.params.id, req.body, userId);
       res.json(updatedCampaign);
     } catch (error) {
       console.error("Error updating campaign:", error);
@@ -391,9 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin KYC routes
-  app.get('/api/admin/kyc/applications', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/kyc/applications', requireAdmin, async (req: any, res) => {
     try {
-      // TODO: Add admin role check here
       const { status } = req.query;
       const applications = await storage.getAllKycApplications(status as string);
       res.json(applications);
@@ -403,9 +410,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/kyc/applications/:id', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/kyc/applications/:id', requireAdmin, async (req: any, res) => {
     try {
-      // TODO: Add admin role check here
       const { id } = req.params;
       const application = await storage.getKycApplicationById(id);
       
@@ -420,9 +426,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/kyc/applications/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/admin/kyc/applications/:id', requireAdmin, async (req: any, res) => {
     try {
-      // TODO: Add admin role check here
       const { id } = req.params;
       const { status, adminComments } = req.body;
 
@@ -449,9 +454,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin Campaign Management Routes
-  app.get('/api/admin/campaigns', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/campaigns', requireAdmin, async (req: any, res) => {
     try {
-      // TODO: Add admin role check here
       const { status } = req.query;
       const campaigns = await storage.getCampaigns({
         status: status as string,
@@ -464,9 +468,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/campaigns/:id', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/campaigns/:id', requireAdmin, async (req: any, res) => {
     try {
-      // TODO: Add admin role check here
       const { id } = req.params;
       const campaign = await storage.getCampaign(id);
       
@@ -481,9 +484,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/campaigns/:id/status', isAuthenticated, async (req: any, res) => {
+  app.put('/api/admin/campaigns/:id/status', requireAdmin, async (req: any, res) => {
     try {
-      // TODO: Add admin role check here
       const { id } = req.params;
       const { status, adminComments } = req.body;
 
@@ -495,12 +497,266 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedCampaign = await storage.updateCampaign(id, {
         status,
         adminComments,
+        reviewedBy: req.user.username,
+        reviewedAt: new Date(),
+        ...(status === "active" && !campaign.originalApprovalDate && { originalApprovalDate: new Date() }),
       });
+
+      // Create notification for campaign creator
+      if (campaign.creatorId) {
+        await storage.createUserNotification({
+          userId: campaign.creatorId,
+          title: `Campaign ${status === "active" ? "Approved" : status === "rejected" ? "Rejected" : "Updated"}`,
+          message: `Your campaign "${campaign.title}" has been ${status}${adminComments ? `. Admin notes: ${adminComments}` : "."}`,
+          type: status === "active" ? "success" : status === "rejected" ? "error" : "info",
+          relatedCampaignId: id,
+        });
+      }
 
       res.json(updatedCampaign);
     } catch (error) {
       console.error("Error updating campaign status:", error);
       res.status(500).json({ message: "Failed to update campaign status" });
+    }
+  });
+
+  // Enhanced User Management Routes
+  app.get('/api/admin/users', requireAdmin, async (req: any, res) => {
+    try {
+      const { flagged, kycStatus, limit, offset } = req.query;
+      const users = await storage.getAllUsers({
+        flagged: flagged === 'true' ? true : flagged === 'false' ? false : undefined,
+        kycStatus: kycStatus as string,
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined,
+      });
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/admin/users/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get user's campaigns, contributions, and KYC info
+      const [campaigns, contributions, kycApplication] = await Promise.all([
+        storage.getUserCampaigns(id),
+        storage.getContributions(undefined, id),
+        storage.getKycApplication(id),
+      ]);
+
+      res.json({
+        ...user,
+        campaigns,
+        contributions,
+        kycApplication,
+      });
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      res.status(500).json({ message: "Failed to fetch user details" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/flag', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({ message: "Reason is required for flagging a user" });
+      }
+
+      const user = await storage.flagUser(id, reason, req.user.username);
+      
+      // Create notification for flagged user
+      await storage.createUserNotification({
+        userId: id,
+        title: "Account Flagged",
+        message: `Your account has been flagged: ${reason}. Please submit a reinstatement request to regain full access.`,
+        type: "warning",
+      });
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error flagging user:", error);
+      res.status(500).json({ message: "Failed to flag user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id/unflag', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      const user = await storage.unflagUser(id);
+      
+      // Create notification for unflagged user
+      await storage.createUserNotification({
+        userId: id,
+        title: "Account Unflagged",
+        message: "Your account has been unflagged. You now have full access to all features.",
+        type: "success",
+      });
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error unflagging user:", error);
+      res.status(500).json({ message: "Failed to unflag user" });
+    }
+  });
+
+  // Reinstatement Request Routes
+  app.post('/api/reinstatement-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+
+      if (!user?.isFlagged) {
+        return res.status(400).json({ message: "User is not flagged" });
+      }
+
+      // Check if there's already a pending request
+      const existingRequest = await storage.getReinstatementRequestByUserId(userId);
+      if (existingRequest && existingRequest.status === "pending") {
+        return res.status(400).json({ message: "You already have a pending reinstatement request" });
+      }
+
+      const requestData = insertReinstatementRequestSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const request = await storage.createReinstatementRequest(requestData);
+      res.status(201).json(request);
+    } catch (error) {
+      console.error("Error creating reinstatement request:", error);
+      res.status(400).json({ message: (error as Error).message || "Failed to create reinstatement request" });
+    }
+  });
+
+  app.get('/api/reinstatement-requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const request = await storage.getReinstatementRequestByUserId(userId);
+      res.json(request || null);
+    } catch (error) {
+      console.error("Error fetching reinstatement request:", error);
+      res.status(500).json({ message: "Failed to fetch reinstatement request" });
+    }
+  });
+
+  app.get('/api/admin/reinstatement-requests', requireAdmin, async (req: any, res) => {
+    try {
+      const { status } = req.query;
+      const requests = await storage.getReinstatementRequests(status as string);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching reinstatement requests:", error);
+      res.status(500).json({ message: "Failed to fetch reinstatement requests" });
+    }
+  });
+
+  app.put('/api/admin/reinstatement-requests/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status, adminComments } = req.body;
+
+      const request = await storage.updateReinstatementRequest(id, {
+        status,
+        adminComments,
+        reviewedBy: req.user.username,
+        reviewedAt: new Date(),
+      });
+
+      // If approved, unflag the user
+      if (status === "approved") {
+        const userId = request.userId;
+        await storage.unflagUser(userId);
+        
+        await storage.createUserNotification({
+          userId,
+          title: "Reinstatement Request Approved",
+          message: "Your reinstatement request has been approved. Your account has been unflagged and you now have full access.",
+          type: "success",
+        });
+      } else if (status === "rejected") {
+        await storage.createUserNotification({
+          userId: request.userId,
+          title: "Reinstatement Request Rejected",
+          message: `Your reinstatement request has been rejected${adminComments ? `: ${adminComments}` : "."}`,
+          type: "error",
+        });
+      }
+
+      res.json(request);
+    } catch (error) {
+      console.error("Error updating reinstatement request:", error);
+      res.status(500).json({ message: "Failed to update reinstatement request" });
+    }
+  });
+
+  // User Notification Routes
+  app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { unreadOnly } = req.query;
+      const notifications = await storage.getUserNotifications(userId, unreadOnly === 'true');
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.put('/api/notifications/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const notification = await storage.markNotificationAsRead(id);
+      res.json(notification);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.put('/api/notifications/mark-all-read', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  // Enhanced Campaign Routes
+  app.get('/api/user/campaigns', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const campaigns = await storage.getUserCampaigns(userId);
+      res.json(campaigns);
+    } catch (error) {
+      console.error("Error fetching user campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch user campaigns" });
+    }
+  });
+
+  app.get('/api/user/can-create-campaign', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const result = await storage.canUserCreateCampaign(userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error checking campaign creation eligibility:", error);
+      res.status(500).json({ message: "Failed to check campaign creation eligibility" });
     }
   });
 

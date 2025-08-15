@@ -1,0 +1,124 @@
+Only add and update the code required for the following features while keeping all existing logic, styling, and database connections intact. Follow the current architecture, folder structure, and naming conventions of the existing codebase.
+
+FEATURE 1 — Campaign Launch & Approval Workflow
+
+Once a user’s KYC is approved, allow them to create campaigns.
+
+When a user submits a new campaign, mark it as “Under Review” and require admin approval before it becomes visible to the public.
+
+In the admin portal’s campaign management table, add:
+
+View Campaign button → shows all details: campaign form data, images/videos, funding goal, description.
+
+Approve Campaign → sets status to “Approved” and makes it live.
+
+Reject Campaign → sets status to “Rejected” and hides it from public.
+
+In the user dashboard, show each campaign’s status (Approved, Rejected, Under Review).
+
+Allow multiple campaigns per user, but enforce rules (e.g., can only create a second campaign if one existing campaign is at least 80% funded or marked completed).
+
+If a user edits an already-approved campaign, set its status back to “Under Review” until admin approves changes.
+
+Add a 4-step progress bar to the campaign creation process:
+
+Step 1 of 4 → 25%
+
+Step 2 of 4 → 50%
+
+Step 3 of 4 → 75%
+
+Step 4 of 4 → 100%
+
+FEATURE 2 — User Dashboard Enhancements
+
+Show Profile Completion percentage and KYC status clearly at the top.
+
+Display a Campaign List with:
+
+Campaign Title
+
+Status (Approved, Rejected, Under Review)
+
+Funding Progress Bar (%)
+
+Edit Campaign button
+
+Show Total Funds Raised across all campaigns.
+
+Show basic personal info: Name, Email, KYC Status, Join Date.
+
+Provide easy navigation to KYC verification page if not approved.
+
+FEATURE 3 — Admin Portal: User Management
+
+In the Users section, show a table with columns:
+
+User
+
+Email
+
+KYC Status
+
+Joined
+
+Actions
+
+Actions column should have:
+
+View Profile (shows user details, KYC docs, campaign history, contributions)
+
+Approve / Reject KYC
+
+Edit User Details
+
+Suspend / Ban User
+
+Send Email / Notify
+
+View Campaigns
+
+Delete Account
+
+Export Data
+
+Impersonate User (log in as user for debugging)
+
+Reset Password
+
+Flag for Review (see workflow below)
+
+FEATURE 4 — Flagged User Workflow
+
+When a user is flagged, they cannot:
+
+Create new campaigns
+
+Edit campaigns
+
+Withdraw funds
+
+Instead, they see a message in their dashboard:
+“Your account is flagged. Please submit a reinstatement request to regain full access.”
+
+Add a Reinstatement Request Form in their dashboard.
+
+In admin portal → flagged users appear in a separate “Flagged Users” list.
+
+Admin can approve, reject, or keep under review.
+
+Notify the user of the decision via in-app notification and email.
+
+REQUIREMENTS
+
+Keep existing UI style and backend logic.
+
+Integrate with the current authentication and permissions system.
+
+Maintain responsive design for both desktop and mobile.
+
+Follow best practices for clean code and security.
+
+All new strings should be ready for localization.
+
+Ensure database schema updates are safe and migration-ready.
