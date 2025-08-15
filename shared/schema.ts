@@ -276,30 +276,38 @@ export const insertUserNotificationSchema = createInsertSchema(userNotifications
 
 export const insertAvalancheTransactionSchema = createInsertSchema(avalancheTransactions).omit({
   id: true,
+  status: true,
   createdAt: true,
   updatedAt: true,
 });
 
 // Type exports
-export type AvalancheTransaction = typeof avalancheTransactions.$inferSelect;
-export type InsertAvalancheTransaction = typeof insertAvalancheTransactionSchema._type;
-
-// Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
 export type Campaign = typeof campaigns.$inferSelect;
 export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
-export type KycApplication = typeof kycApplications.$inferSelect;
-export type InsertKycApplication = z.infer<typeof insertKycApplicationSchema>;
-export type AdminUser = typeof adminUsers.$inferSelect;
-export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+
 export type Contribution = typeof contributions.$inferSelect;
 export type InsertContribution = z.infer<typeof insertContributionSchema>;
+
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+
+export type AvalancheTransaction = typeof avalancheTransactions.$inferSelect;
+export type InsertAvalancheTransaction = z.infer<typeof insertAvalancheTransactionSchema>;
+
+export type KycApplication = typeof kycApplications.$inferSelect;
+export type InsertKycApplication = z.infer<typeof insertKycApplicationSchema>;
+
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+
 export type AiInteraction = typeof aiInteractions.$inferSelect;
 export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
+
 export type ReinstatementRequest = typeof reinstatementRequests.$inferSelect;
 export type InsertReinstatementRequest = z.infer<typeof insertReinstatementRequestSchema>;
+
 export type UserNotification = typeof userNotifications.$inferSelect;
 export type InsertUserNotification = z.infer<typeof insertUserNotificationSchema>;

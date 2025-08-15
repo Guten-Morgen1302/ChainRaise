@@ -68,6 +68,16 @@ export interface IStorage {
   }): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   
+  // Avalanche transaction operations
+  getAvalancheTransactions(filters?: {
+    campaignId?: string;
+    walletAddress?: string;
+    status?: string;
+    limit?: number;
+  }): Promise<AvalancheTransaction[]>;
+  createAvalancheTransaction(transaction: InsertAvalancheTransaction): Promise<AvalancheTransaction>;
+  updateAvalancheTransaction(id: string, updates: Partial<AvalancheTransaction>): Promise<AvalancheTransaction>;
+  
   // AI interaction operations
   createAiInteraction(interaction: InsertAiInteraction): Promise<AiInteraction>;
   getAiInteractions(userId: string, campaignId?: string): Promise<AiInteraction[]>;
@@ -804,7 +814,7 @@ export class DatabaseStorage implements IStorage {
         .update(campaigns)
         .set({ 
           currentAmount: newAmount.toString(),
-          backerCount: campaign.backerCount + 1
+          backerCount: (campaign.backerCount || 0) + 1
         })
         .where(eq(campaigns.id, campaignId));
     }
@@ -815,6 +825,51 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ walletAddress })
       .where(eq(users.id, userId));
+  }
+
+  // Implement missing Avalanche transaction methods
+  async getAvalancheTransactions(filters?: {
+    campaignId?: string;
+    walletAddress?: string;
+    status?: string;
+    limit?: number;
+  }): Promise<AvalancheTransaction[]> {
+    let query = db.select().from(avalancheTransactions);
+    
+    const conditions: any[] = [];
+    
+    if (filters?.campaignId) {
+      conditions.push(eq(avalancheTransactions.campaignId, filters.campaignId));
+    }
+    
+    if (filters?.walletAddress) {
+      conditions.push(eq(avalancheTransactions.walletAddress, filters.walletAddress));
+    }
+    
+    if (filters?.status) {
+      conditions.push(eq(avalancheTransactions.status, filters.status));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    query = query.orderBy(desc(avalancheTransactions.createdAt));
+    
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    return await query;
+  }
+
+  async updateAvalancheTransaction(id: string, updates: Partial<AvalancheTransaction>): Promise<AvalancheTransaction> {
+    const [updated] = await db
+      .update(avalancheTransactions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(avalancheTransactions.id, id))
+      .returning();
+    return updated;
   }
 }
 

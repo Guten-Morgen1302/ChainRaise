@@ -1442,6 +1442,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Avalanche Transaction Routes
+  app.post('/api/transactions/avalanche', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const transactionData = insertAvalancheTransactionSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const transaction = await storage.createAvalancheTransaction(transactionData);
+      
+      // Update campaign funding if transaction is successful
+      if (transaction.status === 'completed') {
+        await storage.updateCampaignFunding(transaction.campaignId, transaction.amount);
+      }
+
+      res.json(transaction);
+    } catch (error) {
+      console.error("Error creating Avalanche transaction:", error);
+      res.status(500).json({ message: "Failed to create transaction" });
+    }
+  });
+
+  app.get('/api/transactions/avalanche', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const transactions = await storage.getAvalancheTransactionsByUser(userId);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching Avalanche transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  app.get('/api/admin/transactions/avalanche', requireAdmin, async (req: any, res) => {
+    try {
+      const { status, campaignId, limit = 50, offset = 0 } = req.query;
+      
+      const filters: any = {};
+      if (status) filters.status = status;
+      if (campaignId) filters.campaignId = campaignId;
+      if (limit) filters.limit = parseInt(limit as string);
+      if (offset) filters.offset = parseInt(offset as string);
+
+      const transactions = await storage.getAllAvalancheTransactions(filters);
+      
+      // Enrich with user and campaign data
+      const enrichedTransactions = await Promise.all(
+        transactions.map(async (transaction) => {
+          const [user, campaign] = await Promise.all([
+            storage.getUser(transaction.userId),
+            storage.getCampaign(transaction.campaignId),
+          ]);
+          
+          return {
+            ...transaction,
+            user: user ? {
+              username: user.firstName + ' ' + user.lastName,
+              email: user.email,
+            } : null,
+            campaign: campaign ? {
+              title: campaign.title,
+            } : null,
+          };
+        })
+      );
+
+      res.json(enrichedTransactions);
+    } catch (error) {
+      console.error("Error fetching admin Avalanche transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  app.put('/api/admin/transactions/avalanche/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const transaction = await storage.updateAvalancheTransaction(id, updates);
+      res.json(transaction);
+    } catch (error) {
+      console.error("Error updating Avalanche transaction:", error);
+      res.status(500).json({ message: "Failed to update transaction" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -29,7 +29,8 @@ import {
   Search,
   Filter,
   Wifi,
-  WifiOff
+  WifiOff,
+  Wallet
 } from "lucide-react";
 import type { User, Campaign, ReinstatementRequest } from "@shared/schema";
 import {
@@ -43,6 +44,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/navigation/BackButton";
 import { useAdminWebSocket } from "@/hooks/useAdminWebSocket";
+import { AdminAvalancheTransactions } from "./AdminAvalancheTransactions";
 
 // Real-time Status Component
 function LiveStatusIndicator() {
@@ -498,6 +500,10 @@ export function AdminDashboard() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns ({campaigns.length})</TabsTrigger>
+          <TabsTrigger value="avalanche-transactions">
+            <Wallet className="h-4 w-4 mr-1" />
+            AVAX Payments
+          </TabsTrigger>
           <TabsTrigger value="flagged">Flagged Users ({adminStats.flaggedUsers})</TabsTrigger>
           <TabsTrigger value="reinstatements">Reinstatements ({adminStats.pendingReinstatements})</TabsTrigger>
           <TabsTrigger value="kyc">KYC Management</TabsTrigger>
@@ -1303,6 +1309,10 @@ export function AdminDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="avalanche-transactions">
+          <AdminAvalancheTransactions />
         </TabsContent>
 
         <TabsContent value="kyc">

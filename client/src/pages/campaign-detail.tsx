@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { PaymentModal } from "@/components/PaymentModal";
+import { AvalanchePaymentModal } from "@/components/payment/AvalanchePaymentModal";
 import { WalletConnection } from "@/components/WalletConnection";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -48,6 +49,7 @@ export default function CampaignDetail() {
   const [contributionMessage, setContributionMessage] = useState("");
   const [activeTab, setActiveTab] = useState("story");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAvalanchePayment, setShowAvalanchePayment] = useState(false);
   
   const { isConnected } = useWallet();
 
@@ -358,7 +360,7 @@ export default function CampaignDetail() {
                             )}
                             
                             <Button
-                              onClick={() => setShowPaymentModal(true)}
+                              onClick={() => setShowAvalanchePayment(true)}
                               disabled={!isAuthenticated}
                               className="w-full mt-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                               data-testid="button-avalanche-pay"
@@ -635,6 +637,28 @@ export default function CampaignDetail() {
         campaignTitle={campaignData.title}
         minAmount={0.001}
         maxAmount={10}
+      />
+
+      {/* Avalanche Payment Modal */}
+      <AvalanchePaymentModal
+        isOpen={showAvalanchePayment}
+        onClose={() => setShowAvalanchePayment(false)}
+        campaign={{
+          id: campaignData.id,
+          title: campaignData.title,
+          goalAmount: campaignData.goalAmount.toString(),
+          currentAmount: campaignData.currentAmount.toString(),
+          currency: campaignData.currency,
+        }}
+        onPaymentSuccess={(transaction) => {
+          // Update campaign data and show success message
+          queryClient.invalidateQueries({ queryKey: ["/api/campaigns", id] });
+          queryClient.invalidateQueries({ queryKey: ["/api/transactions", id] });
+          toast({
+            title: "Payment Successful!",
+            description: `Successfully contributed ${transaction.amount} AVAX to ${campaignData.title}`,
+          });
+        }}
       />
     </div>
   );

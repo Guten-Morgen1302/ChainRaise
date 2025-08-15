@@ -20,7 +20,7 @@ import ContractDemo from "./pages/contract-demo";
 import LiveTransactions from "./pages/live-transactions";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminPage from "@/pages/admin";
-import AvalancheTransactionsPage from "@/pages/admin/avalanche-transactions";
+import TransactionHistory from "@/pages/TransactionHistory";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 
@@ -36,7 +36,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/profile" component={Profile} />
       <Route path="/admin" component={AdminPage} />
-      <Route path="/admin/avalanche-transactions" component={AvalancheTransactionsPage} />
+      <Route path="/transactions" component={TransactionHistory} />
       <Route path="/kyc" component={KYC} />
       <Route path="/kyc-verification" component={KYCVerification} />
       <Route path="/features" component={FeatureShowcase} />

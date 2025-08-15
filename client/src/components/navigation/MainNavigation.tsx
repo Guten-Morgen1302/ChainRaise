@@ -9,7 +9,8 @@ import {
   Shield,
   Brain,
   Settings,
-  LogOut
+  LogOut,
+  Wallet
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -40,6 +41,7 @@ export function MainNavigation() {
     { href: "/campaigns", icon: Search, label: "Explore" },
     { href: "/create", icon: PlusCircle, label: "Create" },
     { href: "/dashboard", icon: TrendingUp, label: "Dashboard" },
+    { href: "/transactions", icon: Wallet, label: "My Payments" },
     { href: "/explorer", icon: Brain, label: "AI Explorer" },
     { href: "/contract-demo", icon: Shield, label: "Blockchain Demo" },
     { href: "/live-transactions", icon: TrendingUp, label: "Live Tx" }
