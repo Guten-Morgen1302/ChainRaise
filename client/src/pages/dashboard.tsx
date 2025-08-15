@@ -55,18 +55,18 @@ export default function Dashboard() {
     retry: false,
   });
 
-  const { data: userNotifications = [] } = useQuery({
+  const { data: userNotifications = [] } = useQuery<{id: string, message: string, isRead: boolean, createdAt: string}[]>({
     queryKey: ["/api/notifications"],
     retry: false,
   });
 
-  const { data: reinstatementRequest } = useQuery({
+  const { data: reinstatementRequest } = useQuery<{status: string}>({
     queryKey: ["/api/reinstatement-requests"],
     retry: false,
     enabled: user?.isFlagged || false,
   });
 
-  const { data: canCreateCampaign } = useQuery({
+  const { data: canCreateCampaign } = useQuery<{canCreate: boolean, reason?: string}>({
     queryKey: ["/api/user/can-create-campaign"],
     retry: false,
     enabled: !!user && !user.isFlagged,

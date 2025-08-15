@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -87,11 +87,16 @@ export default function CreateCampaign() {
   const currentKycStatus = kycStatus?.status || userProfile?.kycStatus || user?.kycStatus;
 
   // Check if user can create campaigns
-  const { data: campaignEligibility } = useQuery({
+  const { data: campaignEligibility } = useQuery<{canCreate: boolean, reason?: string}>({
     queryKey: ["/api/user/can-create-campaign"],
     enabled: isAuthenticated && currentKycStatus === "approved",
-    onSuccess: (data) => setCanCreateCampaign(data),
   });
+
+  useEffect(() => {
+    if (campaignEligibility) {
+      setCanCreateCampaign(campaignEligibility);
+    }
+  }, [campaignEligibility]);
 
   const createCampaignMutation = useMutation({
     mutationFn: async (data: CreateCampaignForm) => {
