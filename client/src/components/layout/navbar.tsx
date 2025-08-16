@@ -11,9 +11,6 @@ export default function Navbar() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Debug log
-  console.log('Navbar Auth State:', { isAuthenticated, user, isLoading });
-
   const navItems = isAuthenticated ? [
     { href: "/home", label: "Home" },
     { href: "/campaigns", label: "Explore" },

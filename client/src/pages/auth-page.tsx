@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { MainNavigation } from "@/components/navigation/MainNavigation";
 import { ThreeBackground } from "@/components/three/ThreeBackground";
 import { 
   Lock, 
@@ -104,7 +103,7 @@ export default function AuthPage() {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Account created!",
-        description: `Welcome to CryptoFund, ${user.firstName || user.username}!`,
+        description: `Welcome to FundIndia, ${user.firstName || user.username}!`,
       });
       setLocation("/");
     },
@@ -126,11 +125,10 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-teal-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-teal-900/20 relative">
       <ThreeBackground />
-      <MainNavigation />
       
-      <div className="relative z-10 pt-16">
+      <div className="relative z-10">
         <section className="py-12 min-h-screen flex items-center justify-center">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -143,12 +141,12 @@ export default function AuthPage() {
                 className="space-y-8"
               >
                 <div>
-                  <h1 className="text-4xl md:text-6xl font-black mb-6 gradient-text">
-                    Join the Future of Crowdfunding
+                  <h1 className="text-4xl md:text-6xl font-black mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-600 bg-clip-text text-transparent">
+                    Fund India's Dreams
                   </h1>
-                  <p className="text-xl text-muted-foreground leading-relaxed">
-                    Launch revolutionary campaigns, raise funds transparently on blockchain, 
-                    and connect with innovators worldwide on our Web3 crowdfunding platform.
+                  <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+                    Join thousands of Indians building the future. Launch campaigns, support innovation, 
+                    and be part of India's largest crowdfunding community.
                   </p>
                 </div>
 
@@ -192,11 +190,13 @@ export default function AuthPage() {
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="w-full max-w-md mx-auto"
               >
-                <Card className="glass-morphism">
+                <Card className="backdrop-blur-md bg-white/30 dark:bg-gray-800/30 border-white/30">
                   <CardHeader className="text-center">
-                    <CardTitle className="text-2xl font-bold">Get Started</CardTitle>
-                    <CardDescription>
-                      Sign in to your account or create a new one
+                    <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      Welcome to FundIndia
+                    </CardTitle>
+                    <CardDescription className="text-gray-600 dark:text-gray-300">
+                      Ready to make history? Sign in or create your account
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -268,11 +268,11 @@ export default function AuthPage() {
                             />
                             <Button
                               type="submit"
-                              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:scale-105 transition-all duration-300"
+                              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg py-3 rounded-full font-semibold"
                               disabled={loginMutation.isPending}
                               data-testid="button-login"
                             >
-                              {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                              {loginMutation.isPending ? "Signing In..." : "Sign In to FundIndia"}
                             </Button>
                           </form>
                         </Form>
@@ -400,7 +400,7 @@ export default function AuthPage() {
                             />
                             <Button
                               type="submit"
-                              className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:scale-105 transition-all duration-300"
+                              className="w-full bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-700 hover:to-green-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg py-3 rounded-full font-semibold"
                               disabled={registerMutation.isPending}
                               data-testid="button-register"
                             >
@@ -412,7 +412,7 @@ export default function AuthPage() {
                               ) : (
                                 <>
                                   <UserPlus className="w-4 h-4 mr-2" />
-                                  Create Account
+                                  Join FundIndia
                                 </>
                               )}
                             </Button>
