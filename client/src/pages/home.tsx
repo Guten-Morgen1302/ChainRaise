@@ -36,74 +36,221 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-background relative noise-bg">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="hero-bg mesh-gradient min-h-screen">
+        <div className="floating-orb"></div>
+        <div className="floating-orb"></div>
+        <div className="floating-orb"></div>
+      </div>
       <ThreeBackground />
       <MainNavigation />
       
       <div className="relative z-10">
         {/* Hero Section */}
-        <section className="py-16 noise-bg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-20 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center mb-12"
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="text-center mb-16"
             >
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <h1 className="text-4xl md:text-6xl heading-display">
-                  Welcome back, <span className="gradient-text">{user?.firstName || "Creator"}</span>
-                </h1>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="flex flex-col items-center gap-6 mb-8"
+              >
+                <div className="relative">
+                  <h1 className="text-5xl md:text-8xl heading-display leading-tight">
+                    Welcome back,{" "}
+                    <span className="relative inline-block">
+                      <span className="gradient-text animate-glow">
+                        {user?.firstName || "Creator"}
+                      </span>
+                      <motion.div
+                        className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-lg blur-xl"
+                        animate={{
+                          scale: [1, 1.1, 1],
+                          opacity: [0.5, 0.8, 0.5],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </span>
+                  </h1>
+                </div>
                 {user?.kycStatus && (
-                  <KYCBadge status={user.kycStatus as "approved" | "pending" | "rejected"} />
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ duration: 0.6, delay: 0.6, type: "spring" }}
+                  >
+                    <KYCBadge status={user.kycStatus as "approved" | "pending" | "rejected"} />
+                  </motion.div>
                 )}
-              </div>
-              <p className="text-xl body-text max-w-2xl mx-auto opacity-90">
-                Ready to launch your next revolutionary project or discover amazing campaigns?
-              </p>
+              </motion.div>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="text-2xl body-text max-w-3xl mx-auto opacity-90 leading-relaxed"
+              >
+                Ready to launch your next{" "}
+                <span className="text-primary font-semibold">revolutionary project</span>{" "}
+                or discover{" "}
+                <span className="text-accent font-semibold">amazing campaigns</span>?
+              </motion.p>
             </motion.div>
 
             {/* Quick Actions */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="grid md:grid-cols-3 gap-6 mb-16 max-w-4xl mx-auto"
+              transition={{ duration: 1, delay: 0.7 }}
+              className="grid md:grid-cols-3 gap-8 mb-20 max-w-5xl mx-auto"
             >
               <Link href="/create">
                 <motion.div
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  className="card-premium p-6 text-center group cursor-pointer"
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    y: -10,
+                    rotateY: 5,
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  className="card-mega p-8 text-center group cursor-pointer relative overflow-hidden"
                 >
-                  <div className="w-12 h-12 mx-auto mb-4 bg-primary/20 rounded-xl flex items-center justify-center group-hover:bg-primary/30 transition-colors">
-                    <Plus className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="heading-display text-lg mb-2">Create Campaign</h3>
-                  <p className="body-text text-sm opacity-70">Launch your revolutionary project</p>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '100%' }}
+                    transition={{ duration: 0.6 }}
+                  />
+                  <motion.div
+                    className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-2xl flex items-center justify-center group-hover:bg-primary/30 transition-all duration-300 relative"
+                    whileHover={{ 
+                      rotate: [0, -10, 10, 0],
+                      scale: 1.1
+                    }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <Plus className="w-8 h-8 text-primary" />
+                    <motion.div
+                      className="absolute inset-0 bg-primary/20 rounded-2xl"
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0, 0.5, 0]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </motion.div>
+                  <h3 className="heading-display text-2xl mb-3">Create Campaign</h3>
+                  <p className="body-text opacity-80 text-lg">Launch your revolutionary project</p>
                 </motion.div>
               </Link>
+              
               <Link href="/campaigns">
                 <motion.div
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  className="card-premium p-6 text-center group cursor-pointer"
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.9 }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    y: -10,
+                    rotateY: 5,
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  className="card-mega p-8 text-center group cursor-pointer relative overflow-hidden"
                 >
-                  <div className="w-12 h-12 mx-auto mb-4 bg-accent/20 rounded-xl flex items-center justify-center group-hover:bg-accent/30 transition-colors">
-                    <Eye className="w-6 h-6 text-accent" />
-                  </div>
-                  <h3 className="heading-display text-lg mb-2">Browse</h3>
-                  <p className="body-text text-sm opacity-70">Discover amazing campaigns</p>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '100%' }}
+                    transition={{ duration: 0.6 }}
+                  />
+                  <motion.div
+                    className="w-16 h-16 mx-auto mb-6 bg-accent/20 rounded-2xl flex items-center justify-center group-hover:bg-accent/30 transition-all duration-300 relative"
+                    whileHover={{ 
+                      rotate: [0, -10, 10, 0],
+                      scale: 1.1
+                    }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <Eye className="w-8 h-8 text-accent" />
+                    <motion.div
+                      className="absolute inset-0 bg-accent/20 rounded-2xl"
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0, 0.5, 0]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </motion.div>
+                  <h3 className="heading-display text-2xl mb-3">Browse</h3>
+                  <p className="body-text opacity-80 text-lg">Discover amazing campaigns</p>
                 </motion.div>
               </Link>
+              
               <Link href="/dashboard">
                 <motion.div
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  className="card-premium p-6 text-center group cursor-pointer"
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 1.0 }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    y: -10,
+                    rotateY: 5,
+                    transition: { duration: 0.3 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  className="card-mega p-8 text-center group cursor-pointer relative overflow-hidden"
                 >
-                  <div className="w-12 h-12 mx-auto mb-4 bg-success/20 rounded-xl flex items-center justify-center group-hover:bg-success/30 transition-colors">
-                    <Users className="w-6 h-6 text-success" />
-                  </div>
-                  <h3 className="heading-display text-lg mb-2">My Dashboard</h3>
-                  <p className="body-text text-sm opacity-70">Manage your campaigns</p>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '100%' }}
+                    transition={{ duration: 0.6 }}
+                  />
+                  <motion.div
+                    className="w-16 h-16 mx-auto mb-6 bg-success/20 rounded-2xl flex items-center justify-center group-hover:bg-success/30 transition-all duration-300 relative"
+                    whileHover={{ 
+                      rotate: [0, -10, 10, 0],
+                      scale: 1.1
+                    }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <Users className="w-8 h-8 text-success" />
+                    <motion.div
+                      className="absolute inset-0 bg-success/20 rounded-2xl"
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0, 0.5, 0]
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </motion.div>
+                  <h3 className="heading-display text-2xl mb-3">My Dashboard</h3>
+                  <p className="body-text opacity-80 text-lg">Manage your campaigns</p>
                 </motion.div>
               </Link>
             </motion.div>

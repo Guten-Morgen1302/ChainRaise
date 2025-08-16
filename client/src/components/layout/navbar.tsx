@@ -28,36 +28,78 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 glass border-b border-white/10 noise-bg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="fixed top-0 w-full z-50 glass border-b border-white/10 noise-bg relative overflow-hidden">
+      {/* Animated gradient background overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-success/5 opacity-0 hover:opacity-100 transition-opacity duration-700" />
+      <div className="absolute inset-0 mesh-gradient opacity-30" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center space-x-4"
+            className="flex items-center space-x-4 group"
           >
-            <div className="text-2xl font-bold heading-display gradient-text">
-              FundIndia
-            </div>
+            <motion.div 
+              className="text-2xl font-bold heading-display gradient-text relative cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
+              <span className="relative z-10">FundIndia</span>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg blur-xl opacity-0 group-hover:opacity-30"
+                whileHover={{ scale: 1.2 }}
+                transition={{ duration: 0.3 }}
+              />
+            </motion.div>
           </motion.div>
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {!isLoading && navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant="ghost"
-                  className={`text-sm font-medium transition-all duration-200 ${
-                    location === item.href 
-                      ? "text-primary" 
-                      : "text-muted-foreground hover:text-primary"
-                  }`}
-                >
-                  {item.label}
-                </Button>
-              </Link>
+            {!isLoading && navItems.map((item, index) => (
+              <motion.div
+                key={item.href}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 300
+                }}
+              >
+                <Link href={item.href}>
+                  <motion.div
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative group"
+                  >
+                    <Button
+                      variant="ghost"
+                      className={`text-sm font-medium transition-all duration-300 relative overflow-hidden ${
+                        location === item.href 
+                          ? "text-primary bg-primary/10" 
+                          : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      <span className="relative z-10">{item.label}</span>
+                      {location === item.href && (
+                        <motion.div
+                          layoutId="activeNav"
+                          className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-md"
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        />
+                      )}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 rounded-md"
+                        transition={{ duration: 0.2 }}
+                      />
+                    </Button>
+                  </motion.div>
+                </Link>
+              </motion.div>
             ))}
           </div>
 
@@ -99,12 +141,24 @@ export default function Navbar() {
                 >
                   Explore
                 </Button>
-                <Button
-                  className="gradient-primary text-white hover:shadow-lg hover:shadow-primary/25 transition-all duration-200"
-                  onClick={() => window.location.href = '/auth'}
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
-                  Get Started
-                </Button>
+                  <Button
+                    className="btn-premium relative overflow-hidden"
+                    onClick={() => window.location.href = '/auth'}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-accent to-success"
+                      initial={{ x: '-100%' }}
+                      whileHover={{ x: '0%' }}
+                      transition={{ duration: 0.3 }}
+                    />
+                    <span className="relative z-10 font-medium">Get Started</span>
+                  </Button>
+                </motion.div>
               </>
             ))}
           </div>
@@ -175,10 +229,10 @@ export default function Navbar() {
                       Explore Campaigns
                     </Button>
                     <Button
-                      className="w-full gradient-primary text-white"
+                      className="w-full btn-premium"
                       onClick={() => window.location.href = '/auth'}
                     >
-                      Get Started
+                      <span>Get Started</span>
                     </Button>
                   </>
                 ))}

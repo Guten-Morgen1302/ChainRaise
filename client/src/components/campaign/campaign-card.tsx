@@ -30,74 +30,198 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
   return (
     <Link href={`/campaigns/${campaign.id}`}>
       <motion.div
-        whileHover={{ scale: 1.05 }}
-        transition={{ duration: 0.3 }}
-        className="cursor-pointer"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ 
+          scale: 1.02, 
+          y: -8,
+          rotateX: 2,
+          transition: { duration: 0.3, ease: "easeOut" }
+        }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="cursor-pointer group relative"
       >
-        <Card className="group glass-morphism rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-cyber-blue/20 transition-all duration-500 card-hover">
+        <Card className="card-premium overflow-hidden relative backdrop-blur-xl border-white/10">
+          {/* Animated gradient overlay */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-success/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            initial={false}
+            animate={{ 
+              background: [
+                "linear-gradient(45deg, rgba(124, 58, 237, 0.1), rgba(34, 211, 238, 0.05), rgba(16, 185, 129, 0.1))",
+                "linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.05), rgba(124, 58, 237, 0.1))",
+                "linear-gradient(225deg, rgba(16, 185, 129, 0.1), rgba(124, 58, 237, 0.05), rgba(34, 211, 238, 0.1))"
+              ]
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          />
           {/* Image */}
           <div className="relative h-48 overflow-hidden">
-            <img 
+            <motion.img 
               src={campaign.imageUrl || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400"} 
               alt={campaign.title || "Campaign Image"}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+              className="w-full h-full object-cover"
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
             />
-            <div className="absolute top-4 left-4">
-              <Badge className={`${getCategoryColor(campaign.category)} px-3 py-1 rounded-full text-sm font-medium`}>
-                {campaign.category}
-              </Badge>
-            </div>
-            <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-mono">
-              {Math.round(progress)}% funded
-            </div>
+            {/* Shimmer overlay */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100"
+              initial={{ x: '-100%' }}
+              whileHover={{ 
+                x: '100%',
+                transition: { duration: 0.8, ease: "easeInOut" }
+              }}
+            />
+            <motion.div 
+              className="absolute top-4 left-4"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.1, rotate: 2 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >
+                <Badge className={`${getCategoryColor(campaign.category)} px-3 py-1 rounded-full text-sm font-medium shadow-lg border border-white/20`}>
+                  {campaign.category}
+                </Badge>
+              </motion.div>
+            </motion.div>
+            <motion.div 
+              className="absolute top-4 right-4 glass px-3 py-1 rounded-full text-sm font-mono border border-white/20"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              whileHover={{ scale: 1.05 }}
+            >
+              <motion.span
+                key={progress}
+                initial={{ scale: 1.2 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {Math.round(progress)}% funded
+              </motion.span>
+            </motion.div>
           </div>
 
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold mb-2 group-hover:text-cyber-blue transition-colors duration-300">
+          <CardContent className="p-6 relative z-10">
+            <motion.h3 
+              className="text-xl font-bold mb-2 transition-colors duration-300"
+              whileHover={{ 
+                color: "hsl(var(--primary))",
+                transition: { duration: 0.2 }
+              }}
+            >
               {campaign.title}
-            </h3>
+            </motion.h3>
             <p className="text-muted-foreground mb-4 text-sm line-clamp-2">
               {campaign.description}
             </p>
 
             {/* Progress */}
-            <div className="mb-4">
+            <motion.div 
+              className="mb-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-muted-foreground">Progress</span>
-                <span className="font-mono font-bold">
+                <motion.span 
+                  className="font-mono font-bold gradient-text"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
                   {campaign.currentAmount} / {campaign.goalAmount} {campaign.currency}
-                </span>
+                </motion.span>
               </div>
-              <Progress 
-                value={progress} 
-                className="h-2 progress-glow"
-              />
-            </div>
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                style={{ transformOrigin: "left" }}
+              >
+                <Progress 
+                  value={progress} 
+                  className="h-2 progress-glow relative overflow-hidden"
+                />
+              </motion.div>
+            </motion.div>
 
             {/* Stats */}
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Users className="w-4 h-4" />
+            <motion.div 
+              className="flex justify-between items-center text-sm"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <motion.div 
+                className="flex items-center gap-2 text-muted-foreground group-hover:text-accent transition-colors duration-300"
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Users className="w-4 h-4" />
+                </motion.div>
                 <span className="font-mono">{campaign.backerCount} backers</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="w-4 h-4" />
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors duration-300"
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div
+                  animate={{ 
+                    rotate: isCompleted ? 0 : [0, 5, -5, 0],
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: isCompleted ? 0 : Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Calendar className="w-4 h-4" />
+                </motion.div>
                 <span className="font-mono">
                   {isCompleted ? "Successfully funded!" : `${daysLeft} days left`}
                 </span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* Credibility Score */}
-            {parseFloat(campaign.credibilityScore) > 0 && (
-              <div className="mt-4 pt-4 border-t border-muted">
+            {campaign.credibilityScore && parseFloat(campaign.credibilityScore) > 0 && (
+              <motion.div 
+                className="mt-4 pt-4 border-t border-muted"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+              >
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Credibility Score</span>
-                  <Badge variant="secondary" className="bg-cyber-green/20 text-cyber-green">
-                    {campaign.credibilityScore}/10
-                  </Badge>
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  >
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-success/20 text-success border-success/30 shadow-md"
+                    >
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 0.4 }}
+                      >
+                        {campaign.credibilityScore}/10
+                      </motion.span>
+                    </Badge>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </CardContent>
         </Card>
