@@ -1,0 +1,59 @@
+PS C:\Users\harsh\OneDrive\Desktop\ChainRaise> npm run dev
+
+> rest-express@1.0.0 dev
+> cross-env NODE_ENV=development tsx server/index.ts
+
+Starting database seeding...
+Error seeding database: Error: getaddrinfo ENOTFOUND base
+    at C:\Users\harsh\OneDrive\Desktop\ChainRaise\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\Users\harsh\OneDrive\Desktop\ChainRaise\node_modules\src\node-postgres\session.ts:104:19)
+    at async DatabaseStorage.getCampaigns (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\storage.ts:219:21)
+    at async seedDatabase (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\seed.ts:10:31)
+    at async <anonymous> (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\index.ts:62:5) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'base'
+}
+12:39:02 PM [express] serving on localhost:5000
+Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+12:39:12 PM [express] GET /api/user 200 in 6ms
+Error fetching stats: Error: getaddrinfo ENOTFOUND base
+    at C:\Users\harsh\OneDrive\Desktop\ChainRaise\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\Users\harsh\OneDrive\Desktop\ChainRaise\node_modules\src\node-postgres\session.ts:104:19)
+    at async DatabaseStorage.getCampaignStats (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\storage.ts:369:27)
+    at async <anonymous> (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\routes.ts:640:21) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'base'
+}
+12:39:15 PM [express] GET /api/stats 500 in 2694ms :: {"message":"Failed to fetch statistics"}
+Error fetching campaigns: Error: getaddrinfo ENOTFOUND base
+    at C:\Users\harsh\OneDrive\Desktop\ChainRaise\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\Users\harsh\OneDrive\Desktop\ChainRaise\node_modules\src\node-postgres\session.ts:104:19)
+    at async DatabaseStorage.getCampaigns (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\storage.ts:219:21)
+    at async <anonymous> (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\routes.ts:214:25) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'base'
+}
+12:39:15 PM [express] GET /api/campaigns 500 in 2703ms :: {"message":"Failed to fetch campaigns"}
+Error fetching contributions: Error: getaddrinfo ENOTFOUND base
+    at C:\Users\harsh\OneDrive\Desktop\ChainRaise\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (C:\Users\harsh\OneDrive\Desktop\ChainRaise\node_modules\src\node-postgres\session.ts:104:19)
+    at async DatabaseStorage.getContributions (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\storage.ts:282:12)
+    at async <anonymous> (C:\Users\harsh\OneDrive\Desktop\ChainRaise\server\routes.ts:433:29) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'base'
+}
+12:39:17 PM [express] GET /api/contributions 500 in 4965ms :: {"message":"Failed to fetch contributio…
