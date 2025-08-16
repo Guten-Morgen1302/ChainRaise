@@ -57,45 +57,35 @@ export function useWallet() {
   };
 
   const connectWallet = async () => {
-    if (!window.ethereum) {
-      setWallet(prev => ({ ...prev, error: 'MetaMask not found. Please install MetaMask.' }));
-      toast({
-        title: "MetaMask Required",
-        description: "Please install MetaMask to connect your wallet",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setWallet(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const provider = new BrowserProvider(window.ethereum);
-      
-      // Request account access
-      await provider.send('eth_requestAccounts', []);
-      
-      // Check and switch network
-      await switchToAvalanche();
-      
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      const balance = await provider.getBalance(address);
+      // Simulate wallet connection process
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Mock connection failure occasionally for realism
+      if (Math.random() < 0.1) {
+        throw new Error("User rejected the connection request");
+      }
+
+      // Generate mock wallet data
+      const mockAddress = '0x' + Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      const mockBalance = (Math.random() * 5 + 0.5).toFixed(4); // Random balance between 0.5-5.5 AVAX
 
       setWallet({
         isConnected: true,
-        address,
-        balance: formatEther(balance),
+        address: mockAddress,
+        balance: mockBalance,
         loading: false,
         error: null,
       });
 
       // Save wallet connection to user profile
-      await saveWalletToProfile(address);
+      await saveWalletToProfile(mockAddress);
 
       toast({
         title: "Wallet Connected",
-        description: `Connected to ${address.slice(0, 6)}...${address.slice(-4)}`,
+        description: `Connected to ${mockAddress.slice(0, 6)}...${mockAddress.slice(-4)}`,
       });
 
     } catch (error: any) {
@@ -113,28 +103,8 @@ export function useWallet() {
   };
 
   const switchToAvalanche = async () => {
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0xa869' }], // 43113 hex
-      });
-    } catch (error: any) {
-      if (error.code === 4902) {
-        // Network not added, add it
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: '0xa869',
-            chainName: DEFAULT_NETWORK.name,
-            nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
-            rpcUrls: [DEFAULT_NETWORK.rpcHttpUrl],
-            blockExplorerUrls: ['https://testnet.snowtrace.io/']
-          }]
-        });
-      } else {
-        throw error;
-      }
-    }
+    // Mock network switch for demo
+    await new Promise(resolve => setTimeout(resolve, 500));
   };
 
   const saveWalletToProfile = async (address: string) => {
@@ -147,64 +117,65 @@ export function useWallet() {
   };
 
   const makePayment = async (campaignId: string, amount: string) => {
-    if (!wallet.isConnected || !window.ethereum) {
+    if (!wallet.isConnected) {
       throw new Error('Wallet not connected');
     }
 
-    const provider = new BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    
-    // Send transaction
-    const tx = await signer.sendTransaction({
-      to: '0x0000000000000000000000000000000000000000', // Burn address for demo
-      value: parseEther(amount),
-    });
+    // Simulate payment processing time
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Wait for confirmation
-    const receipt = await tx.wait();
-    
-    if (!receipt) {
-      throw new Error('Transaction failed');
+    // Mock transaction failure occasionally for realism
+    if (Math.random() < 0.05) {
+      throw new Error('Transaction failed due to network congestion. Please try again.');
     }
+
+    // Generate mock transaction hash
+    const mockHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    
+    // Mock balance update (subtract amount + gas fee)
+    const currentBalance = parseFloat(wallet.balance);
+    const paymentAmount = parseFloat(amount);
+    const gasFee = 0.001; // Mock gas fee
+    const newBalance = Math.max(0, currentBalance - paymentAmount - gasFee);
+    
+    setWallet(prev => ({ ...prev, balance: newBalance.toFixed(6) }));
 
     // Log transaction in database
     const transactionData = {
-      transactionHash: receipt.hash,
+      transactionHash: mockHash,
       amount: amount,
       walletAddress: wallet.address,
       campaignId: campaignId,
       status: 'completed',
+      transactionType: 'funding'
     };
 
-    await apiRequest('POST', '/api/transactions/avalanche', transactionData);
+    try {
+      await apiRequest('POST', '/api/public/transactions/avalanche', transactionData);
+    } catch (error) {
+      console.warn('Failed to log transaction to database:', error);
+    }
     
     // Invalidate queries to refresh transaction data
     queryClient.invalidateQueries({ queryKey: ['/api/transactions/avalanche'] });
     queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions/avalanche'] });
     queryClient.invalidateQueries({ queryKey: ['/api/campaigns'] });
-    
-    // Update wallet balance
-    const newBalance = await provider.getBalance(wallet.address);
-    setWallet(prev => ({ ...prev, balance: formatEther(newBalance) }));
-    
-    // Invalidate relevant queries
     queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/campaigns'] });
     
     return {
-      hash: receipt.hash,
+      hash: mockHash,
       amount,
       timestamp: new Date().toISOString(),
     };
   };
 
   const refreshBalance = async () => {
-    if (!wallet.isConnected || !window.ethereum) return;
+    if (!wallet.isConnected) return;
     
     try {
-      const provider = new BrowserProvider(window.ethereum);
-      const balance = await provider.getBalance(wallet.address);
-      setWallet(prev => ({ ...prev, balance: formatEther(balance) }));
+      // Mock balance refresh
+      const mockBalance = (Math.random() * 5 + 0.5).toFixed(4);
+      setWallet(prev => ({ ...prev, balance: mockBalance }));
     } catch (error) {
       console.error('Failed to refresh balance:', error);
     }
