@@ -182,23 +182,52 @@ export async function sendTransaction(params: {
   to: string;
   amount: string;
   currency: string;
+  gasLimit?: string;
+  gasPrice?: string;
 }): Promise<{
   hash: string;
   status: "pending" | "confirmed" | "failed";
 }> {
+  // Validate amount and balance first
+  const wallet = getStoredWallet();
+  if (!wallet) {
+    throw new Error("Please connect your wallet first");
+  }
+
+  const amount = parseFloat(params.amount);
+  const balance = parseFloat(wallet.balance);
+  
+  // Estimate gas if not provided
+  const gasInfo = await estimateGas({
+    to: params.to,
+    amount: params.amount
+  });
+  
+  const gasCost = parseFloat(gasInfo.gasCost);
+  const totalCost = amount + gasCost;
+  
+  // Check if user has sufficient funds including gas
+  if (totalCost > balance) {
+    const shortfall = (totalCost - balance).toFixed(6);
+    throw new Error(`Insufficient funds. You need ${shortfall} ${params.currency} more to cover the transaction amount and gas fees. Current balance: ${balance} ${params.currency}`);
+  }
+
   // Simulate transaction signing
   await new Promise(resolve => setTimeout(resolve, 2000));
 
-  // Mock transaction failure sometimes
-  if (Math.random() < 0.05) {
-    throw new Error("Transaction failed: Insufficient funds or gas");
+  // Mock network congestion or other failures
+  if (Math.random() < 0.03) {
+    throw new Error("Network is congested. Please try again with higher gas fees.");
   }
 
   const hash = generateTransactionHash();
 
+  // Update balance after successful transaction
+  wallet.balance = (balance - totalCost).toFixed(6);
+  localStorage.setItem("wallet_info", JSON.stringify(wallet));
+
   // Simulate mining time
   setTimeout(() => {
-    // In real implementation, this would be handled by blockchain events
     console.log(`Transaction ${hash} confirmed`);
   }, 5000);
 
@@ -264,12 +293,13 @@ export async function copyToClipboard(text: string): Promise<void> {
 }
 
 /**
- * Validate amount input
+ * Validate amount input with gas fee consideration
  */
-export function validateAmount(amount: string, balance?: string): {
+export async function validateAmount(amount: string, balance?: string, includingGas: boolean = true): Promise<{
   isValid: boolean;
   error?: string;
-} {
+  gasInfo?: any;
+}> {
   const numAmount = parseFloat(amount);
 
   if (isNaN(numAmount) || numAmount <= 0) {
@@ -286,14 +316,36 @@ export function validateAmount(amount: string, balance?: string): {
     };
   }
 
-  if (balance && numAmount > parseFloat(balance)) {
+  let gasInfo;
+  if (includingGas) {
+    try {
+      gasInfo = await estimateGas({
+        to: "0x0000000000000000000000000000000000000000",
+        amount: amount
+      });
+    } catch (error) {
+      gasInfo = { gasCost: "0.02" }; // fallback gas estimate
+    }
+  }
+
+  if (balance && includingGas && gasInfo) {
+    const totalNeeded = numAmount + parseFloat(gasInfo.gasCost);
+    if (totalNeeded > parseFloat(balance)) {
+      const shortfall = (totalNeeded - parseFloat(balance)).toFixed(6);
+      return {
+        isValid: false,
+        error: `Insufficient funds. You need ${shortfall} ETH more for the transaction and gas fees.`,
+        gasInfo
+      };
+    }
+  } else if (balance && numAmount > parseFloat(balance)) {
     return {
       isValid: false,
       error: "Insufficient balance",
     };
   }
 
-  return { isValid: true };
+  return { isValid: true, gasInfo };
 }
 
 /**
@@ -348,6 +400,7 @@ export async function estimateGas(params: {
   gasLimit: string;
   gasPrice: string;
   gasCost: string;
+  gasCostUSD: string;
 }> {
   // Simulate gas estimation
   await new Promise(resolve => setTimeout(resolve, 300));
@@ -356,11 +409,13 @@ export async function estimateGas(params: {
   const gasLimit = (baseGas + Math.floor(Math.random() * 10000)).toString();
   const gasPrice = (Math.random() * 20 + 10).toFixed(2); // 10-30 gwei
   const gasCost = ((parseFloat(gasLimit) * parseFloat(gasPrice)) / 1e9).toFixed(6);
+  const gasCostUSD = (parseFloat(gasCost) * 2000).toFixed(2); // Assuming $2000 ETH price
 
   return {
     gasLimit,
     gasPrice,
     gasCost,
+    gasCostUSD,
   };
 }
 

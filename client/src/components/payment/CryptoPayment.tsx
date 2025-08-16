@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { sendTransaction, validateAmount, estimateGas, getStoredWallet, connectWallet } from "@/lib/web3";
 import { 
   Select,
   SelectContent,
@@ -41,6 +42,9 @@ export function CryptoPayment({ campaignId, onSuccess }: CryptoPaymentProps) {
   const [amount, setAmount] = useState("");
   const [selectedToken, setSelectedToken] = useState(SUPPORTED_TOKENS[0]);
   const [walletConnected, setWalletConnected] = useState(false);
+  const [walletInfo, setWalletInfo] = useState<any>(null);
+  const [gasInfo, setGasInfo] = useState<any>(null);
+  const [validationError, setValidationError] = useState<string>("");
   const [transactionStep, setTransactionStep] = useState<"input" | "confirm" | "processing" | "success">("input");
 
   const contributeMutation = useMutation({
@@ -82,18 +86,28 @@ export function CryptoPayment({ campaignId, onSuccess }: CryptoPaymentProps) {
     },
   });
 
-  const connectWallet = async () => {
-    // Mock wallet connection - in real app would use MetaMask or WalletConnect
+  useEffect(() => {
+    // Check for existing wallet connection
+    const stored = getStoredWallet();
+    if (stored && stored.connected) {
+      setWalletConnected(true);
+      setWalletInfo(stored);
+    }
+  }, []);
+
+  const connectWalletHandler = async () => {
     try {
+      const wallet = await connectWallet();
+      setWalletConnected(true);
+      setWalletInfo(wallet);
       toast({
         title: "Wallet Connected",
-        description: "Mock wallet connected successfully (0x1234...7890)",
+        description: `Connected to ${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`,
       });
-      setWalletConnected(true);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Connection Failed",
-        description: "Please install MetaMask or use a Web3 browser.",
+        description: error.message || "Failed to connect wallet",
         variant: "destructive",
       });
     }
@@ -109,23 +123,70 @@ export function CryptoPayment({ campaignId, onSuccess }: CryptoPaymentProps) {
       return;
     }
 
+    // Validate amount including gas fees
+    try {
+      const validation = await validateAmount(amount, walletInfo?.balance, true);
+      if (!validation.isValid) {
+        setValidationError(validation.error || "Invalid amount");
+        toast({
+          title: "Validation Error",
+          description: validation.error,
+          variant: "destructive",
+        });
+        return;
+      }
+      setGasInfo(validation.gasInfo);
+      setValidationError("");
+    } catch (error: any) {
+      toast({
+        title: "Validation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setTransactionStep("confirm");
   };
 
   const confirmTransaction = async () => {
     setTransactionStep("processing");
     
-    // Simulate blockchain transaction
-    const mockTransactionHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-    
-    // Simulate processing delay
-    setTimeout(() => {
+    try {
+      // Send the actual blockchain transaction
+      const result = await sendTransaction({
+        to: `0x${campaignId.replace(/-/g, '').slice(0, 40)}`, // Mock campaign address
+        amount,
+        currency: selectedToken.symbol,
+        gasLimit: gasInfo?.gasLimit,
+        gasPrice: gasInfo?.gasPrice,
+      });
+      
+      // Record the contribution in our database
       contributeMutation.mutate({
         amount,
         currency: selectedToken.symbol,
-        transactionHash: mockTransactionHash,
+        transactionHash: result.hash,
       });
-    }, 2000);
+    } catch (error: any) {
+      setTransactionStep("input");
+      
+      // Enhanced error handling for different blockchain errors
+      let errorMessage = error.message;
+      if (error.message.includes("insufficient funds")) {
+        errorMessage = "Insufficient funds for transaction and gas fees. Please add more ETH to your wallet.";
+      } else if (error.message.includes("User rejected")) {
+        errorMessage = "Transaction was cancelled by user.";
+      } else if (error.message.includes("Network is congested")) {
+        errorMessage = "Network is busy. Try again with higher gas fees or wait for less congestion.";
+      }
+      
+      toast({
+        title: "Transaction Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const resetForm = () => {
@@ -183,7 +244,7 @@ export function CryptoPayment({ campaignId, onSuccess }: CryptoPaymentProps) {
                 Connect your crypto wallet to contribute
               </p>
             </div>
-            <Button onClick={connectWallet} className="w-full">
+            <Button onClick={connectWalletHandler} className="w-full">
               <Wallet className="h-4 w-4 mr-2" />
               Connect Wallet
             </Button>
@@ -199,7 +260,10 @@ export function CryptoPayment({ campaignId, onSuccess }: CryptoPaymentProps) {
                 </span>
               </div>
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                0x1234...7890 (Mock Wallet)
+                {walletInfo?.address ? `${walletInfo.address.slice(0, 6)}...${walletInfo.address.slice(-4)}` : "Loading..."}
+              </p>
+              <p className="text-xs text-green-500 dark:text-green-300 mt-1">
+                Balance: {walletInfo?.balance || "0.00"} ETH
               </p>
             </div>
 
@@ -257,11 +321,19 @@ export function CryptoPayment({ campaignId, onSuccess }: CryptoPaymentProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => setAmount(quickAmount)}
+                      disabled={walletInfo && parseFloat(quickAmount) > parseFloat(walletInfo.balance)}
                     >
                       {quickAmount} {selectedToken.symbol}
                     </Button>
                   ))}
                 </div>
+                
+                {/* Validation Error */}
+                {validationError && (
+                  <div className="text-sm text-red-500 bg-red-50 dark:bg-red-950 p-2 rounded">
+                    {validationError}
+                  </div>
+                )}
 
                 <Button onClick={handleContribute} className="w-full" disabled={!amount}>
                   Continue
@@ -285,12 +357,12 @@ export function CryptoPayment({ campaignId, onSuccess }: CryptoPaymentProps) {
                     </div>
                     <div className="flex justify-between">
                       <span>Gas Fee:</span>
-                      <span>~0.02 MATIC</span>
+                      <span>~{gasInfo?.gasCost || "0.02"} ETH (${gasInfo?.gasCostUSD || "40"})</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-medium">
-                      <span>Total:</span>
-                      <span>{amount} {selectedToken.symbol}</span>
+                      <span>Total Cost:</span>
+                      <span>{amount} {selectedToken.symbol} + Gas</span>
                     </div>
                   </div>
                 </div>

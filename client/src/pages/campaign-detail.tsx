@@ -22,6 +22,7 @@ import { apiRequest } from "@/lib/queryClient";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import CampaignStats from "@/components/campaign/campaign-stats";
+import { ErrorDisplay } from "@/components/ui/error-display";
 import { 
   Calendar, 
   Users, 
@@ -91,22 +92,22 @@ export default function CampaignDetail() {
 
   // Ensure campaign has required properties with defaults
   const campaignData = {
-    id: campaign.id || '',
-    title: campaign.title || 'Untitled Campaign',
-    description: campaign.description || 'No description available',
-    imageUrl: campaign.imageUrl || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=600",
-    category: campaign.category || 'General',
-    currentAmount: parseFloat(campaign.currentAmount || '0'),
-    goalAmount: parseFloat(campaign.goalAmount || '1000'),
-    currency: campaign.currency || 'ETH',
-    backerCount: parseInt(campaign.backerCount || '0'),
-    deadline: campaign.deadline || new Date().toISOString(),
-    status: campaign.status || 'active',
-    creatorId: campaign.creatorId || '',
-    credibilityScore: parseFloat(campaign.credibilityScore || '0'),
-    smartContractAddress: campaign.smartContractAddress || '',
-    updates: campaign.updates || [],
-    ...campaign
+    id: (campaign as any)?.id || '',
+    title: (campaign as any)?.title || 'Untitled Campaign',
+    description: (campaign as any)?.description || 'No description available',
+    imageUrl: (campaign as any)?.imageUrl || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=600",
+    category: (campaign as any)?.category || 'General',
+    currentAmount: parseFloat((campaign as any)?.currentAmount || '0'),
+    goalAmount: parseFloat((campaign as any)?.goalAmount || '1000'),
+    currency: (campaign as any)?.currency || 'ETH',
+    backerCount: parseInt((campaign as any)?.backerCount || '0'),
+    deadline: (campaign as any)?.deadline || new Date().toISOString(),
+    status: (campaign as any)?.status || 'active',
+    creatorId: (campaign as any)?.creatorId || '',
+    credibilityScore: parseFloat((campaign as any)?.credibilityScore || '0'),
+    smartContractAddress: (campaign as any)?.smartContractAddress || '',
+    updates: (campaign as any)?.updates || [],
+    ...(campaign as any)
   };
 
   const { data: contributions = [] } = useQuery({
@@ -145,7 +146,7 @@ export default function CampaignDetail() {
       queryClient.invalidateQueries({ queryKey: ["/api/campaigns", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/contributions", id] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -157,9 +158,28 @@ export default function CampaignDetail() {
         }, 2000);
         return;
       }
+      
+      // Enhanced error handling for blockchain-related issues
+      let errorTitle = "Contribution Failed";
+      let errorDescription = error.message;
+      
+      if (error.message?.includes("insufficient funds")) {
+        errorTitle = "Insufficient Funds";
+        errorDescription = "You don't have enough funds to complete this transaction, including gas fees. Please add more ETH to your wallet.";
+      } else if (error.message?.includes("gas")) {
+        errorTitle = "Gas Fee Error";
+        errorDescription = "There was an issue with gas fees. The network might be congested. Try again with higher gas fees.";
+      } else if (error.message?.includes("rejected")) {
+        errorTitle = "Transaction Cancelled";
+        errorDescription = "You cancelled the transaction in your wallet.";
+      } else if (error.message?.includes("network")) {
+        errorTitle = "Network Error";
+        errorDescription = "There was a network connectivity issue. Please check your connection and try again.";
+      }
+      
       toast({
-        title: "Contribution Failed",
-        description: error.message,
+        title: errorTitle,
+        description: errorDescription,
         variant: "destructive",
       });
     },
@@ -586,9 +606,9 @@ export default function CampaignDetail() {
                       <CardTitle>Recent Transactions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {transactions.length > 0 ? (
+                      {Array.isArray(transactions) && transactions.length > 0 ? (
                         <div className="space-y-3">
-                          {transactions.slice(0, 5).map((tx) => (
+                          {(transactions as any[]).slice(0, 5).map((tx: any) => (
                             <div key={tx.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                               <div>
                                 <div className="text-sm font-medium">
