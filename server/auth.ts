@@ -154,6 +154,8 @@ export function setupAuth(app: Express) {
           kycStatus: user.kycStatus,
           profileImageUrl: user.profileImageUrl,
           walletAddress: user.walletAddress,
+          role: user.role,
+          isFlagged: user.isFlagged,
         }
       });
     } else {
@@ -189,6 +191,8 @@ export function setupAuth(app: Express) {
           kycStatus: user.kycStatus,
           profileImageUrl: user.profileImageUrl,
           walletAddress: user.walletAddress,
+          role: user.role,
+          isFlagged: user.isFlagged,
         });
       });
     })(req, res, next);
@@ -213,6 +217,8 @@ export function setupAuth(app: Express) {
       kycStatus: user.kycStatus,
       profileImageUrl: user.profileImageUrl,
       walletAddress: user.walletAddress,
+      role: user.role,
+      isFlagged: user.isFlagged,
     });
   });
 }
