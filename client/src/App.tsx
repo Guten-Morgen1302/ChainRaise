@@ -31,7 +31,7 @@ function AppContent() {
   const [location] = useLocation();
   
   // Routes that should not show navbar
-  const noNavbarRoutes = ['/auth'];
+  const noNavbarRoutes = ['/auth', '/admin'];
   const showNavbar = !noNavbarRoutes.includes(location);
   
   return (

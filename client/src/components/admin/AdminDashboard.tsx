@@ -55,7 +55,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAdminWebSocket } from "@/hooks/useAdminWebSocket";
 import { AdminAvalancheTransactions } from "./AdminAvalancheTransactions";
 
-// Real-time Status Component - Enhanced
+// Real-time Status Component - Hacker Style
 function LiveStatusIndicator() {
   const { isConnected, connectionStatus, lastUpdate, refreshData, reconnect } = useAdminWebSocket();
   
@@ -63,20 +63,20 @@ function LiveStatusIndicator() {
     switch (status) {
       case 'connected': 
         return { 
-          color: 'text-emerald-400', 
-          bg: 'bg-emerald-500/20', 
-          border: 'border-emerald-500/30',
+          color: 'text-green-400', 
+          bg: 'bg-green-500/10', 
+          border: 'border-green-400/40',
           icon: <Wifi className="h-4 w-4" />,
-          label: 'Live',
+          label: '[ONLINE]',
           pulse: true
         };
       case 'connecting': 
         return { 
-          color: 'text-amber-400', 
-          bg: 'bg-amber-500/20', 
-          border: 'border-amber-500/30',
+          color: 'text-yellow-400', 
+          bg: 'bg-yellow-500/10', 
+          border: 'border-yellow-400/40',
           icon: <RefreshCw className="h-4 w-4 animate-spin" />,
-          label: 'Connecting',
+          label: '[CONNECTING]',
           pulse: true
         };
       case 'disconnected': 
@@ -84,10 +84,10 @@ function LiveStatusIndicator() {
       default: 
         return { 
           color: 'text-red-400', 
-          bg: 'bg-red-500/20', 
-          border: 'border-red-500/30',
+          bg: 'bg-red-500/10', 
+          border: 'border-red-400/40',
           icon: <WifiOff className="h-4 w-4" />,
-          label: 'Offline',
+          label: '[OFFLINE]',
           pulse: false
         };
     }
@@ -96,7 +96,7 @@ function LiveStatusIndicator() {
   const statusConfig = getStatusConfig(connectionStatus);
 
   const formatTime = (timestamp: string) => {
-    if (!timestamp) return 'Never';
+    if (!timestamp) return '00:00:00';
     return new Date(timestamp).toLocaleTimeString('en-US', { 
       hour12: false, 
       hour: '2-digit', 
@@ -109,52 +109,51 @@ function LiveStatusIndicator() {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-8"
+      className="mb-6"
     >
-      <Card className="relative overflow-hidden backdrop-blur-xl bg-black/20 border border-white/10 shadow-2xl">
+      <Card className="relative overflow-hidden bg-black border border-green-400/30 shadow-2xl shadow-green-400/10 font-mono">
         {/* Animated border */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 animate-pulse"></div>
-        <div className="absolute inset-[1px] rounded-lg bg-black/40 backdrop-blur-xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 via-green-400/5 to-green-400/10 animate-pulse"></div>
         
-        <CardContent className="relative z-10 pt-6">
+        <CardContent className="relative z-10 pt-4 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               {/* Status Indicator */}
-              <div className={`flex items-center space-x-3 px-4 py-2 rounded-full ${statusConfig.bg} ${statusConfig.border} border`}>
+              <div className={`flex items-center space-x-3 px-3 py-1 ${statusConfig.bg} ${statusConfig.border} border`}>
                 <div className={`${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`}>
                   {statusConfig.icon}
                 </div>
-                <span className={`font-bold text-sm ${statusConfig.color}`}>
+                <span className={`font-bold text-xs tracking-wider ${statusConfig.color}`}>
                   {statusConfig.label}
                 </span>
                 {statusConfig.pulse && (
-                  <div className={`w-2 h-2 rounded-full ${statusConfig.color.replace('text-', 'bg-')} animate-ping`}></div>
+                  <div className={`w-1 h-1 ${statusConfig.color.replace('text-', 'bg-')} animate-ping`}></div>
                 )}
               </div>
               
               {/* Divider */}
-              <div className="h-8 w-px bg-gradient-to-b from-transparent via-gray-500 to-transparent"></div>
+              <div className="h-6 w-px bg-green-400/30"></div>
               
               {/* Last Update */}
-              <div className="flex items-center space-x-2 text-gray-300">
-                <Activity className="h-4 w-4" />
-                <span className="text-sm">
-                  Last sync: <span className="font-mono font-semibold">{formatTime(lastUpdate)}</span>
+              <div className="flex items-center space-x-2 text-green-400/80">
+                <Activity className="h-3 w-3" />
+                <span className="text-xs tracking-wide">
+                  LAST_SYNC: <span className="text-green-400">{formatTime(lastUpdate)}</span>
                 </span>
               </div>
             </div>
             
             {/* Action Buttons */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={refreshData}
-                  className="bg-black/20 border-white/20 text-white hover:bg-white/10 transition-all duration-300"
+                  className="bg-black border-green-400/40 text-green-400 hover:bg-green-400/10 transition-all duration-300 text-xs font-mono tracking-wider"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  REFRESH
                 </Button>
               </motion.div>
               
@@ -164,10 +163,10 @@ function LiveStatusIndicator() {
                     variant="outline"
                     size="sm"
                     onClick={reconnect}
-                    className="bg-amber-500/20 border-amber-500/30 text-amber-300 hover:bg-amber-500/30"
+                    className="bg-black border-yellow-400/40 text-yellow-400 hover:bg-yellow-400/10 text-xs font-mono tracking-wider"
                   >
-                    <Wifi className="h-4 w-4 mr-2" />
-                    Reconnect
+                    <Wifi className="h-3 w-3 mr-1" />
+                    RECONNECT
                   </Button>
                 </motion.div>
               )}
@@ -181,10 +180,10 @@ function LiveStatusIndicator() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-300 flex items-center"
+                className="mt-3 px-3 py-2 bg-green-500/5 border border-green-400/20 text-xs text-green-400 flex items-center tracking-wide"
               >
-                <Zap className="h-4 w-4 mr-2" />
-                Real-time updates active - Changes appear instantly across all admin sessions
+                <Zap className="h-3 w-3 mr-2 animate-pulse" />
+                &gt;&gt; REAL_TIME_MONITORING_ACTIVE :: SECURE_CHANNEL_ESTABLISHED
               </motion.div>
             )}
             
@@ -193,10 +192,10 @@ function LiveStatusIndicator() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm text-amber-300 flex items-center"
+                className="mt-3 px-3 py-2 bg-yellow-500/5 border border-yellow-400/20 text-xs text-yellow-400 flex items-center tracking-wide"
               >
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Real-time updates paused - Manual refresh required for latest data
+                <AlertTriangle className="h-3 w-3 mr-2" />
+                &gt;&gt; CONNECTION_LOST :: SWITCHING_TO_MANUAL_MODE
               </motion.div>
             )}
           </AnimatePresence>
@@ -206,7 +205,7 @@ function LiveStatusIndicator() {
   );
 }
 
-// Enhanced Stats Card Component
+// Hacker Terminal Stats Card Component
 function StatsCard({ 
   title, 
   value, 
@@ -224,9 +223,9 @@ function StatsCard({
 }) {
   const getTrendConfig = () => {
     switch (trend) {
-      case 'up': return { color: 'text-emerald-400', bg: 'from-emerald-500/20 to-green-500/20' };
-      case 'down': return { color: 'text-red-400', bg: 'from-red-500/20 to-pink-500/20' };
-      default: return { color: 'text-blue-400', bg: 'from-blue-500/20 to-purple-500/20' };
+      case 'up': return { color: 'text-green-400', bg: 'bg-green-500/5', border: 'border-green-400/30' };
+      case 'down': return { color: 'text-red-400', bg: 'bg-red-500/5', border: 'border-red-400/30' };
+      default: return { color: 'text-cyan-400', bg: 'bg-cyan-500/5', border: 'border-cyan-400/30' };
     }
   };
 
@@ -234,33 +233,38 @@ function StatsCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay }}
-      whileHover={{ scale: 1.02, y: -5 }}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, delay }}
+      whileHover={{ scale: 1.05, y: -3 }}
       className="group cursor-pointer"
     >
-      <Card className="relative overflow-hidden backdrop-blur-xl bg-black/20 border border-white/10 hover:border-white/20 transition-all duration-300 h-full">
-        {/* Gradient background */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${trendConfig.bg} opacity-50 group-hover:opacity-70 transition-opacity duration-300`}></div>
+      <Card className={`relative overflow-hidden bg-black ${trendConfig.border} border hover:border-green-400/50 transition-all duration-300 h-full font-mono`}>
+        {/* Terminal-style animated border */}
+        <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 via-transparent to-green-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         
-        <CardContent className="relative z-10 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className={`p-3 rounded-xl bg-gradient-to-br ${trendConfig.bg} border border-white/10`}>
-              <Icon className={`h-6 w-6 ${trendConfig.color}`} />
+        <CardContent className="relative z-10 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className={`p-2 ${trendConfig.bg} ${trendConfig.border} border rounded`}>
+              <Icon className={`h-4 w-4 ${trendConfig.color}`} />
             </div>
             {change && (
-              <Badge className={`${trendConfig.color} bg-transparent border-current`}>
+              <Badge className={`${trendConfig.color} bg-black ${trendConfig.border} border text-xs font-mono tracking-wider`}>
                 {change}
               </Badge>
             )}
           </div>
           
           <div>
-            <h3 className="text-2xl md:text-3xl font-black text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 group-hover:bg-clip-text transition-all duration-300">
+            <h3 className={`text-xl md:text-2xl font-bold ${trendConfig.color} mb-1 group-hover:animate-pulse transition-all duration-300 font-mono tracking-wider`}>
               {value}
             </h3>
-            <p className="text-gray-400 font-semibold text-sm">{title}</p>
+            <p className="text-green-400/70 text-xs uppercase tracking-widest">[{title.toUpperCase()}]</p>
+          </div>
+          
+          {/* Terminal cursor effect */}
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="w-2 h-2 bg-green-400 animate-ping"></div>
           </div>
         </CardContent>
       </Card>
@@ -268,7 +272,7 @@ function StatsCard({
   );
 }
 
-// Component to display user's campaigns
+// Terminal User Activity View
 function UserCampaignsView({ userId }: { userId: string }) {
   const { data: userCampaigns = [] } = useQuery<any[]>({
     queryKey: [`/api/admin/users/${userId}/campaigns`],
@@ -279,30 +283,36 @@ function UserCampaignsView({ userId }: { userId: string }) {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-mono">
       <div>
-        <h4 className="font-bold text-lg text-white mb-4 flex items-center">
-          <Crown className="h-5 w-5 mr-2 text-amber-400" />
-          Created Campaigns ({userCampaigns.length})
+        <h4 className="font-bold text-sm text-green-400 mb-4 flex items-center tracking-wider">
+          <Crown className="h-4 w-4 mr-2 text-yellow-400" />
+          [CAMPAIGNS_CREATED: {userCampaigns.length}]
         </h4>
         {userCampaigns.length === 0 ? (
-          <p className="text-gray-400 italic">No campaigns created</p>
+          <p className="text-green-400/60 text-xs">// NO_CAMPAIGNS_FOUND</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {userCampaigns.map((campaign: any) => (
               <motion.div 
                 key={campaign.id} 
-                whileHover={{ scale: 1.02 }}
-                className="flex items-center justify-between p-4 bg-black/20 border border-white/10 rounded-xl hover:border-white/20 transition-all duration-300"
+                whileHover={{ scale: 1.01 }}
+                className="flex items-center justify-between p-3 bg-black border border-green-400/30 hover:border-green-400/50 transition-all duration-300"
               >
                 <div>
-                  <p className="font-semibold text-white">{campaign.title}</p>
-                  <p className="text-sm text-gray-400">
-                    Goal: ${campaign.goalAmount} | Raised: ${campaign.currentAmount || '0'}
+                  <p className="font-semibold text-green-400 text-sm">{campaign.title}</p>
+                  <p className="text-xs text-green-400/70">
+                    GOAL: ${campaign.goalAmount} | RAISED: ${campaign.currentAmount || '0'}
                   </p>
                 </div>
-                <Badge variant={campaign.status === "active" ? "default" : campaign.status === "pending_approval" ? "secondary" : "destructive"}>
-                  {campaign.status.replace('_', ' ')}
+                <Badge className={`font-mono text-xs ${
+                  campaign.status === "active" 
+                    ? "bg-green-500/20 text-green-400 border-green-400/30" 
+                    : campaign.status === "pending_approval" 
+                    ? "bg-yellow-500/20 text-yellow-400 border-yellow-400/30" 
+                    : "bg-red-500/20 text-red-400 border-red-400/30"
+                } border`}>
+                  [{campaign.status.toUpperCase().replace('_', '_')}]
                 </Badge>
               </motion.div>
             ))}
@@ -311,28 +321,28 @@ function UserCampaignsView({ userId }: { userId: string }) {
       </div>
       
       <div>
-        <h4 className="font-bold text-lg text-white mb-4 flex items-center">
-          <Wallet className="h-5 w-5 mr-2 text-green-400" />
-          Contributions Made ({userContributions.length})
+        <h4 className="font-bold text-sm text-green-400 mb-4 flex items-center tracking-wider">
+          <Wallet className="h-4 w-4 mr-2 text-cyan-400" />
+          [CONTRIBUTIONS_MADE: {userContributions.length}]
         </h4>
         {userContributions.length === 0 ? (
-          <p className="text-gray-400 italic">No contributions made</p>
+          <p className="text-green-400/60 text-xs">// NO_CONTRIBUTIONS_FOUND</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {userContributions.map((contribution: any) => (
               <motion.div 
                 key={contribution.id} 
-                whileHover={{ scale: 1.02 }}
-                className="flex items-center justify-between p-4 bg-black/20 border border-white/10 rounded-xl hover:border-white/20 transition-all duration-300"
+                whileHover={{ scale: 1.01 }}
+                className="flex items-center justify-between p-3 bg-black border border-green-400/30 hover:border-green-400/50 transition-all duration-300"
               >
                 <div>
-                  <p className="font-semibold text-white">${contribution.amount} {contribution.currency}</p>
-                  <p className="text-sm text-gray-400">
+                  <p className="font-semibold text-green-400 text-sm">${contribution.amount} {contribution.currency}</p>
+                  <p className="text-xs text-green-400/70">
                     {new Date(contribution.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <Badge variant="outline" className="border-green-400/50 text-green-400">
-                  {contribution.paymentMethod}
+                <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-400/30 border font-mono text-xs">
+                  [{contribution.paymentMethod.toUpperCase()}]
                 </Badge>
               </motion.div>
             ))}
@@ -558,37 +568,37 @@ export function AdminDashboard() {
   });
 
   return (
-    <div className="min-h-screen text-white">
-      {/* Header */}
+    <div className="min-h-screen text-green-400 font-mono">
+      {/* Terminal Header */}
       <motion.div 
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-black/30 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50"
+        className="bg-black border-b border-green-400/30 sticky top-0 z-50"
       >
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
-                  <Crown className="h-6 w-6 text-white" />
+                <div className="p-2 bg-green-400/10 border border-green-400/30 rounded">
+                  <Command className="h-5 w-5 text-green-400" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-black bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    Admin Control Center
+                  <h1 className="text-xl font-bold text-green-400 tracking-wider">
+                    [ADMIN_CONTROL_MATRIX]
                   </h1>
-                  <p className="text-sm text-gray-400">FundIndia Platform Management</p>
+                  <p className="text-xs text-green-400/70 uppercase tracking-widest">SYSTEM_ACCESS_LEVEL_9</p>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" className="bg-black/20 border-white/20 text-white hover:bg-white/10">
-                <Bell className="h-4 w-4 mr-2" />
-                Notifications
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" className="bg-black border-green-400/40 text-green-400 hover:bg-green-400/10 text-xs font-mono tracking-wider">
+                <Bell className="h-3 w-3 mr-1" />
+                ALERTS
               </Button>
-              <Button variant="outline" size="sm" className="bg-black/20 border-white/20 text-white hover:bg-white/10">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
+              <Button variant="outline" size="sm" className="bg-black border-green-400/40 text-green-400 hover:bg-green-400/10 text-xs font-mono tracking-wider">
+                <Settings className="h-3 w-3 mr-1" />
+                CONFIG
               </Button>
             </div>
           </div>
@@ -604,55 +614,55 @@ export function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <TabsList className="grid w-full grid-cols-7 mb-8 bg-black/30 border border-white/10 p-1">
+            <TabsList className="grid w-full grid-cols-7 mb-6 bg-black border border-green-400/30 p-1">
               <TabsTrigger 
                 value="overview" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-green-400/20 data-[state=active]:border-green-400/50 data-[state=active]:text-green-400 text-green-400/60 font-mono text-xs tracking-wider transition-all duration-300 border border-transparent"
               >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Overview
+                <BarChart3 className="h-3 w-3 mr-1" />
+                SYS_OVERVIEW
               </TabsTrigger>
               <TabsTrigger 
                 value="users" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-green-400/20 data-[state=active]:border-green-400/50 data-[state=active]:text-green-400 text-green-400/60 font-mono text-xs tracking-wider transition-all duration-300 border border-transparent"
               >
-                <Users className="h-4 w-4 mr-2" />
-                Users
+                <Users className="h-3 w-3 mr-1" />
+                USER_DB
               </TabsTrigger>
               <TabsTrigger 
                 value="campaigns" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-green-400/20 data-[state=active]:border-green-400/50 data-[state=active]:text-green-400 text-green-400/60 font-mono text-xs tracking-wider transition-all duration-300 border border-transparent"
               >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Campaigns
+                <TrendingUp className="h-3 w-3 mr-1" />
+                CAMPAIGNS
               </TabsTrigger>
               <TabsTrigger 
                 value="flagged" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-red-400/20 data-[state=active]:border-red-400/50 data-[state=active]:text-red-400 text-green-400/60 font-mono text-xs tracking-wider transition-all duration-300 border border-transparent"
               >
-                <Flag className="h-4 w-4 mr-2" />
-                Flagged
+                <Flag className="h-3 w-3 mr-1" />
+                FLAGGED
               </TabsTrigger>
               <TabsTrigger 
                 value="reinstatements" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-yellow-400/20 data-[state=active]:border-yellow-400/50 data-[state=active]:text-yellow-400 text-green-400/60 font-mono text-xs tracking-wider transition-all duration-300 border border-transparent"
               >
-                <UserCheck className="h-4 w-4 mr-2" />
-                Appeals
+                <UserCheck className="h-3 w-3 mr-1" />
+                APPEALS
               </TabsTrigger>
               <TabsTrigger 
                 value="kyc" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-cyan-400/20 data-[state=active]:border-cyan-400/50 data-[state=active]:text-cyan-400 text-green-400/60 font-mono text-xs tracking-wider transition-all duration-300 border border-transparent"
               >
-                <Shield className="h-4 w-4 mr-2" />
-                KYC
+                <Shield className="h-3 w-3 mr-1" />
+                KYC_VERIFY
               </TabsTrigger>
               <TabsTrigger 
                 value="transactions" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                className="data-[state=active]:bg-purple-400/20 data-[state=active]:border-purple-400/50 data-[state=active]:text-purple-400 text-green-400/60 font-mono text-xs tracking-wider transition-all duration-300 border border-transparent"
               >
-                <Wallet className="h-4 w-4 mr-2" />
-                Blockchain
+                <Wallet className="h-3 w-3 mr-1" />
+                BLOCKCHAIN
               </TabsTrigger>
             </TabsList>
           </motion.div>
