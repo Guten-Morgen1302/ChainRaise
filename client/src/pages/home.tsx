@@ -232,19 +232,25 @@ export default function Home() {
             <motion.div variants={itemVariants} className="text-center mb-12">
               <div className="relative inline-block">
                 <motion.h1 
-                  className="text-4xl md:text-6xl font-black mb-4 text-white"
+                  className="text-4xl md:text-6xl font-black mb-4"
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
                   style={{ 
-                    background: 'linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    textShadow: '0 0 30px rgba(124, 58, 237, 0.5)'
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    textShadow: '0 0 30px rgba(124, 58, 237, 0.8), 0 0 60px rgba(34, 211, 238, 0.4)'
                   }}
                 >
-                  Welcome back, <span className="relative">
+                  Welcome back, <span 
+                    className="relative"
+                    style={{
+                      background: 'linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      fontWeight: '900'
+                    }}
+                  >
                     {user?.firstName || "Creator"}
                     <motion.div
                       className="absolute -inset-2 bg-gradient-to-r from-primary/20 to-accent/20 rounded-lg blur-xl"
