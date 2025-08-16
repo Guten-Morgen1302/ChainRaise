@@ -13,9 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { Campaign, Contribution } from "@shared/schema";
-import { MainNavigation } from "@/components/navigation/MainNavigation";
-import { ThreeBackground } from "@/components/three/ThreeBackground";
-import Footer from "@/components/layout/footer";
+import { PageLayout } from "@/components/layout/PageLayout";
 import CampaignCard from "@/components/campaign/campaign-card";
 import { 
   Plus, 
@@ -127,16 +125,14 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background relative">
-        <ThreeBackground />
-        <MainNavigation />
+      <PageLayout>
         <div className="relative z-10 pt-16 flex justify-center items-center min-h-screen">
           <div className="text-center">
-            <div className="w-8 h-8 animate-spin border-2 border-cyber-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+            <div className="w-8 h-8 animate-spin border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-muted-foreground">Loading dashboard...</p>
           </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -152,9 +148,7 @@ export default function Dashboard() {
   const activeCampaigns = myCampaigns.filter((campaign: Campaign) => campaign.status === "active").length;
 
   return (
-    <div className="min-h-screen bg-background relative noise-bg">
-      <ThreeBackground />
-      <MainNavigation />
+    <PageLayout>
       
       <div className="relative z-10 pt-16">
         {/* Header */}
@@ -922,8 +916,6 @@ export default function Dashboard() {
           </div>
         </section>
       </div>
-
-      <Footer />
-    </div>
+    </PageLayout>
   );
 }

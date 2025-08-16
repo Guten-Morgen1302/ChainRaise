@@ -16,9 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
-import { MainNavigation } from "@/components/navigation/MainNavigation";
-import { ThreeBackground } from "@/components/three/ThreeBackground";
-import Footer from "@/components/layout/footer";
+import { PageLayout } from "@/components/layout/PageLayout";
 import CampaignAssistant from "@/components/ai/campaign-assistant";
 import KYCStatus from "@/components/kyc/kyc-status";
 import { insertCampaignSchema } from "@shared/schema";
@@ -197,36 +195,32 @@ export default function CreateCampaign() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background relative">
-        <ThreeBackground />
-        <MainNavigation />
+      <PageLayout>
         <div className="relative z-10 pt-16 flex justify-center items-center min-h-screen">
           <Card className="glass-morphism max-w-md">
             <CardContent className="p-8 text-center">
-              <AlertTriangle className="w-12 h-12 text-cyber-yellow mx-auto mb-4" />
+              <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
               <p className="text-muted-foreground mb-4">
                 You need to be logged in to create campaigns.
               </p>
               <Button 
                 onClick={() => window.location.href = '/auth'}
-                className="bg-gradient-to-r from-cyber-blue to-cyber-purple"
+                className="bg-gradient-to-r from-primary to-accent"
               >
                 Log In
               </Button>
             </CardContent>
           </Card>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   const progress = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <ThreeBackground />
-      <MainNavigation />
+    <PageLayout>
       
       <div className="relative z-10 pt-16">
         {/* Header */}
@@ -630,8 +624,6 @@ export default function CreateCampaign() {
           </div>
         </section>
       </div>
-
-      <Footer />
-    </div>
+    </PageLayout>
   );
 }

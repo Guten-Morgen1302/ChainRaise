@@ -263,7 +263,7 @@ export default function Home() {
                   transition={{ delay: 0.7, duration: 0.5 }}
                   className="inline-flex items-center gap-3"
                 >
-                  <KYCBadge status={user?.kycStatus || "pending"} />
+                  <KYCBadge status={(user?.kycStatus as "pending" | "approved" | "rejected") || "pending"} />
                   {user?.kycStatus === 'approved' && (
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                       <Star className="w-3 h-3 mr-1" />
