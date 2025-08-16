@@ -54,78 +54,20 @@ export default function CampaignDetail() {
   
   const { isConnected } = useWallet();
 
-  const { data: campaign, isLoading } = useQuery({
+  const { data: campaign, isLoading, error, isError } = useQuery<any>({
     queryKey: [`/api/campaigns/${id}`],
     retry: false,
   });
 
-  // Handle case when campaign data is loading or not found
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyber-blue mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading campaign...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!campaign) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Campaign Not Found</h2>
-            <p className="text-muted-foreground">The campaign you're looking for doesn't exist.</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  // Ensure campaign has required properties with defaults
-  const campaignData = {
-    id: (campaign as any)?.id || '',
-    title: (campaign as any)?.title || 'Untitled Campaign',
-    description: (campaign as any)?.description || 'No description available',
-    imageUrl: (campaign as any)?.imageUrl || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=600",
-    category: (campaign as any)?.category || 'General',
-    currentAmount: parseFloat((campaign as any)?.currentAmount || '0'),
-    goalAmount: parseFloat((campaign as any)?.goalAmount || '1000'),
-    currency: (campaign as any)?.currency || 'ETH',
-    backerCount: parseInt((campaign as any)?.backerCount || '0'),
-    deadline: (campaign as any)?.deadline || new Date().toISOString(),
-    status: (campaign as any)?.status || 'active',
-    creatorId: (campaign as any)?.creatorId || '',
-    credibilityScore: parseFloat((campaign as any)?.credibilityScore || '0'),
-    smartContractAddress: (campaign as any)?.smartContractAddress || '',
-    updates: (campaign as any)?.updates || [],
-    ...(campaign as any)
-  };
-
   const { data: contributions = [] } = useQuery({
-    queryKey: [`/api/contributions/${id}`],
+    queryKey: [`/api/campaigns/${id}/contributions`],
     retry: false,
   });
 
   const { data: transactions = [] } = useQuery({
-    queryKey: [`/api/transactions/${id}`],
+    queryKey: [`/api/campaigns/${id}/transactions`],
     retry: false,
   });
-
-  const progress = (campaignData.currentAmount / campaignData.goalAmount) * 100;
-  const deadline = new Date(campaignData.deadline);
-  const now = new Date();
-  const daysLeft = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-  const isCompleted = campaignData.status === 'completed' || daysLeft === 0;
-  const isOwner = user?.id === campaignData.creatorId;
 
   const contributeMutation = useMutation({
     mutationFn: async (data: {
@@ -144,7 +86,7 @@ export default function CampaignDetail() {
       setContributionAmount("");
       setContributionMessage("");
       queryClient.invalidateQueries({ queryKey: [`/api/campaigns/${id}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/contributions/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/campaigns/${id}/contributions`] });
     },
     onError: (error: any) => {
       if (isUnauthorizedError(error)) {
@@ -184,6 +126,74 @@ export default function CampaignDetail() {
       });
     },
   });
+
+  // Debug logging
+  console.log('Campaign detail debug:', { id, campaign, isLoading, isError, error });
+
+  // Handle case when campaign data is loading or not found
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyber-blue mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading campaign...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isError || (!isLoading && !campaign)) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Campaign Not Found</h2>
+            <p className="text-muted-foreground">
+              {error ? "Error loading campaign data." : "The campaign you're looking for doesn't exist."}
+            </p>
+            {error && (
+              <p className="text-sm text-red-400 mt-2">
+                Error: {(error as any).message}
+              </p>
+            )}
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Use the campaign data directly since API returns correct format
+  const campaignData = {
+    id: campaign.id || '',
+    title: campaign.title || 'Untitled Campaign',
+    description: campaign.description || 'No description available',
+    imageUrl: campaign.imageUrl || "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=600",
+    category: campaign.category || 'General',
+    currentAmount: parseFloat(campaign.currentAmount || '0'),
+    goalAmount: parseFloat(campaign.goalAmount || '1000'),
+    currency: campaign.currency || 'ETH',
+    backerCount: parseInt(campaign.backerCount?.toString() || '0'),
+    deadline: campaign.deadline || new Date().toISOString(),
+    status: campaign.status || 'active',
+    creatorId: campaign.creatorId || '',
+    credibilityScore: parseFloat(campaign.credibilityScore?.toString() || '0'),
+    smartContractAddress: campaign.smartContractAddress || '',
+    updates: campaign.updates || [],
+    ...campaign
+  };
+
+  const progress = (campaignData.currentAmount / campaignData.goalAmount) * 100;
+  const deadline = new Date(campaignData.deadline);
+  const now = new Date();
+  const daysLeft = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  const isCompleted = campaignData.status === 'completed' || daysLeft === 0;
+  const isOwner = user?.id === campaignData.creatorId;
 
   // Remove duplicate definitions since they're already defined above
 
