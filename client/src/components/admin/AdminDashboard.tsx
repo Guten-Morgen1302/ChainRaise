@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import KYCManagement from "./KYCManagement";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -30,7 +31,16 @@ import {
   Filter,
   Wifi,
   WifiOff,
-  Wallet
+  Wallet,
+  BarChart3,
+  Activity,
+  UserCheck,
+  Zap,
+  Globe,
+  Crown,
+  Settings,
+  Bell,
+  Command
 } from "lucide-react";
 import type { User, Campaign, ReinstatementRequest } from "@shared/schema";
 import {
@@ -42,33 +52,48 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { BackButton } from "@/components/navigation/BackButton";
 import { useAdminWebSocket } from "@/hooks/useAdminWebSocket";
 import { AdminAvalancheTransactions } from "./AdminAvalancheTransactions";
 
-// Real-time Status Component
+// Real-time Status Component - Enhanced
 function LiveStatusIndicator() {
   const { isConnected, connectionStatus, lastUpdate, refreshData, reconnect } = useAdminWebSocket();
   
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'connected': return 'text-green-500';
-      case 'connecting': return 'text-yellow-500 animate-pulse';
-      case 'disconnected': return 'text-gray-500';
-      case 'error': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
-  };
-  
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'connected': return <Wifi className="h-4 w-4" />;
-      case 'connecting': return <RefreshCw className="h-4 w-4 animate-spin" />;
+      case 'connected': 
+        return { 
+          color: 'text-emerald-400', 
+          bg: 'bg-emerald-500/20', 
+          border: 'border-emerald-500/30',
+          icon: <Wifi className="h-4 w-4" />,
+          label: 'Live',
+          pulse: true
+        };
+      case 'connecting': 
+        return { 
+          color: 'text-amber-400', 
+          bg: 'bg-amber-500/20', 
+          border: 'border-amber-500/30',
+          icon: <RefreshCw className="h-4 w-4 animate-spin" />,
+          label: 'Connecting',
+          pulse: true
+        };
       case 'disconnected': 
       case 'error': 
-      default: return <WifiOff className="h-4 w-4" />;
+      default: 
+        return { 
+          color: 'text-red-400', 
+          bg: 'bg-red-500/20', 
+          border: 'border-red-500/30',
+          icon: <WifiOff className="h-4 w-4" />,
+          label: 'Offline',
+          pulse: false
+        };
     }
   };
+
+  const statusConfig = getStatusConfig(connectionStatus);
 
   const formatTime = (timestamp: string) => {
     if (!timestamp) return 'Never';
@@ -81,62 +106,165 @@ function LiveStatusIndicator() {
   };
 
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className={`flex items-center space-x-2 ${getStatusColor(connectionStatus)}`}>
-              {getStatusIcon(connectionStatus)}
-              <span className="font-medium capitalize">
-                {connectionStatus === 'connected' ? 'Live' : connectionStatus}
-              </span>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mb-8"
+    >
+      <Card className="relative overflow-hidden backdrop-blur-xl bg-black/20 border border-white/10 shadow-2xl">
+        {/* Animated border */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 animate-pulse"></div>
+        <div className="absolute inset-[1px] rounded-lg bg-black/40 backdrop-blur-xl"></div>
+        
+        <CardContent className="relative z-10 pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              {/* Status Indicator */}
+              <div className={`flex items-center space-x-3 px-4 py-2 rounded-full ${statusConfig.bg} ${statusConfig.border} border`}>
+                <div className={`${statusConfig.color} ${statusConfig.pulse ? 'animate-pulse' : ''}`}>
+                  {statusConfig.icon}
+                </div>
+                <span className={`font-bold text-sm ${statusConfig.color}`}>
+                  {statusConfig.label}
+                </span>
+                {statusConfig.pulse && (
+                  <div className={`w-2 h-2 rounded-full ${statusConfig.color.replace('text-', 'bg-')} animate-ping`}></div>
+                )}
+              </div>
+              
+              {/* Divider */}
+              <div className="h-8 w-px bg-gradient-to-b from-transparent via-gray-500 to-transparent"></div>
+              
+              {/* Last Update */}
+              <div className="flex items-center space-x-2 text-gray-300">
+                <Activity className="h-4 w-4" />
+                <span className="text-sm">
+                  Last sync: <span className="font-mono font-semibold">{formatTime(lastUpdate)}</span>
+                </span>
+              </div>
             </div>
             
-            <div className="h-4 border-l border-gray-300"></div>
-            
-            <div className="text-sm text-muted-foreground">
-              Last update: {formatTime(lastUpdate)}
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-3">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshData}
+                  className="bg-black/20 border-white/20 text-white hover:bg-white/10 transition-all duration-300"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </motion.div>
+              
+              {!isConnected && (
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={reconnect}
+                    className="bg-amber-500/20 border-amber-500/30 text-amber-300 hover:bg-amber-500/30"
+                  >
+                    <Wifi className="h-4 w-4 mr-2" />
+                    Reconnect
+                  </Button>
+                </motion.div>
+              )}
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={refreshData}
-              className="flex items-center space-x-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              <span>Refresh</span>
-            </Button>
+          {/* Status Messages */}
+          <AnimatePresence>
+            {isConnected && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-300 flex items-center"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Real-time updates active - Changes appear instantly across all admin sessions
+              </motion.div>
+            )}
             
             {!isConnected && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={reconnect}
-                className="flex items-center space-x-2 text-orange-600"
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm text-amber-300 flex items-center"
               >
-                <Wifi className="h-4 w-4" />
-                <span>Reconnect</span>
-              </Button>
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Real-time updates paused - Manual refresh required for latest data
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+// Enhanced Stats Card Component
+function StatsCard({ 
+  title, 
+  value, 
+  change, 
+  icon: Icon, 
+  trend = 'up',
+  delay = 0 
+}: { 
+  title: string; 
+  value: string | number; 
+  change?: string; 
+  icon: any; 
+  trend?: 'up' | 'down' | 'neutral';
+  delay?: number;
+}) {
+  const getTrendConfig = () => {
+    switch (trend) {
+      case 'up': return { color: 'text-emerald-400', bg: 'from-emerald-500/20 to-green-500/20' };
+      case 'down': return { color: 'text-red-400', bg: 'from-red-500/20 to-pink-500/20' };
+      default: return { color: 'text-blue-400', bg: 'from-blue-500/20 to-purple-500/20' };
+    }
+  };
+
+  const trendConfig = getTrendConfig();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay }}
+      whileHover={{ scale: 1.02, y: -5 }}
+      className="group cursor-pointer"
+    >
+      <Card className="relative overflow-hidden backdrop-blur-xl bg-black/20 border border-white/10 hover:border-white/20 transition-all duration-300 h-full">
+        {/* Gradient background */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${trendConfig.bg} opacity-50 group-hover:opacity-70 transition-opacity duration-300`}></div>
+        
+        <CardContent className="relative z-10 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className={`p-3 rounded-xl bg-gradient-to-br ${trendConfig.bg} border border-white/10`}>
+              <Icon className={`h-6 w-6 ${trendConfig.color}`} />
+            </div>
+            {change && (
+              <Badge className={`${trendConfig.color} bg-transparent border-current`}>
+                {change}
+              </Badge>
             )}
           </div>
-        </div>
-        
-        {isConnected && (
-          <div className="mt-3 px-3 py-1 bg-green-50 border border-green-200 rounded text-xs text-green-700">
-            🟢 Real-time updates active - Changes will appear instantly
+          
+          <div>
+            <h3 className="text-2xl md:text-3xl font-black text-white mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 group-hover:bg-clip-text transition-all duration-300">
+              {value}
+            </h3>
+            <p className="text-gray-400 font-semibold text-sm">{title}</p>
           </div>
-        )}
-        
-        {!isConnected && (
-          <div className="mt-3 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
-            ⚠️ Real-time updates paused - Click refresh to update manually
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -153,44 +281,60 @@ function UserCampaignsView({ userId }: { userId: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="font-medium mb-4">Created Campaigns ({userCampaigns.length})</h4>
+        <h4 className="font-bold text-lg text-white mb-4 flex items-center">
+          <Crown className="h-5 w-5 mr-2 text-amber-400" />
+          Created Campaigns ({userCampaigns.length})
+        </h4>
         {userCampaigns.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No campaigns created</p>
+          <p className="text-gray-400 italic">No campaigns created</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {userCampaigns.map((campaign: any) => (
-              <div key={campaign.id} className="flex items-center justify-between p-3 border rounded">
+              <motion.div 
+                key={campaign.id} 
+                whileHover={{ scale: 1.02 }}
+                className="flex items-center justify-between p-4 bg-black/20 border border-white/10 rounded-xl hover:border-white/20 transition-all duration-300"
+              >
                 <div>
-                  <p className="font-medium">{campaign.title}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-semibold text-white">{campaign.title}</p>
+                  <p className="text-sm text-gray-400">
                     Goal: ${campaign.goalAmount} | Raised: ${campaign.currentAmount || '0'}
                   </p>
                 </div>
                 <Badge variant={campaign.status === "active" ? "default" : campaign.status === "pending_approval" ? "secondary" : "destructive"}>
                   {campaign.status.replace('_', ' ')}
                 </Badge>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
       </div>
       
       <div>
-        <h4 className="font-medium mb-4">Contributions Made ({userContributions.length})</h4>
+        <h4 className="font-bold text-lg text-white mb-4 flex items-center">
+          <Wallet className="h-5 w-5 mr-2 text-green-400" />
+          Contributions Made ({userContributions.length})
+        </h4>
         {userContributions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No contributions made</p>
+          <p className="text-gray-400 italic">No contributions made</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {userContributions.map((contribution: any) => (
-              <div key={contribution.id} className="flex items-center justify-between p-3 border rounded">
+              <motion.div 
+                key={contribution.id} 
+                whileHover={{ scale: 1.02 }}
+                className="flex items-center justify-between p-4 bg-black/20 border border-white/10 rounded-xl hover:border-white/20 transition-all duration-300"
+              >
                 <div>
-                  <p className="font-medium">${contribution.amount} {contribution.currency}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-semibold text-white">${contribution.amount} {contribution.currency}</p>
+                  <p className="text-sm text-gray-400">
                     {new Date(contribution.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <Badge variant="outline">{contribution.paymentMethod}</Badge>
-              </div>
+                <Badge variant="outline" className="border-green-400/50 text-green-400">
+                  {contribution.paymentMethod}
+                </Badge>
+              </motion.div>
             ))}
           </div>
         )}
@@ -213,7 +357,7 @@ export function AdminDashboard() {
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("overview");
   
-  // WebSocket connection is handled by LiveStatusIndicator component
+  // State management
   const [userFilter, setUserFilter] = useState("");
   const [flaggedFilter, setFlaggedFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -272,7 +416,7 @@ export function AdminDashboard() {
     return matchesSearch && matchesFlag;
   });
 
-  // User management mutations
+  // User management mutations (keeping all existing functionality)
   const flagUserMutation = useMutation({
     mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
       return apiRequest("PUT", `/api/admin/users/${userId}/flag`, { reason });
@@ -351,32 +495,15 @@ export function AdminDashboard() {
       toast({ title: "User updated successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setEditUserDialog(false);
-      setEditedUser({});
     },
     onError: () => {
       toast({ title: "Failed to update user", variant: "destructive" });
     }
   });
 
-  const notifyUserMutation = useMutation({
-    mutationFn: async ({ userId, title, message, type }: { userId: string; title: string; message: string; type: string }) => {
-      return apiRequest("POST", `/api/admin/users/${userId}/notify`, { title, message, type });
-    },
-    onSuccess: () => {
-      toast({ title: "Notification sent successfully" });
-      setNotifyUserDialog(false);
-      setNotificationTitle("");
-      setNotificationMessage("");
-      setNotificationType("info");
-    },
-    onError: () => {
-      toast({ title: "Failed to send notification", variant: "destructive" });
-    }
-  });
-
   const resetPasswordMutation = useMutation({
     mutationFn: async ({ userId, newPassword }: { userId: string; newPassword: string }) => {
-      return apiRequest("POST", `/api/admin/users/${userId}/reset-password`, { newPassword });
+      return apiRequest("PUT", `/api/admin/users/${userId}/reset-password`, { newPassword });
     },
     onSuccess: () => {
       toast({ title: "Password reset successfully" });
@@ -388,937 +515,821 @@ export function AdminDashboard() {
     }
   });
 
-  const reinstatementMutation = useMutation({
-    mutationFn: async ({ id, status, adminComments }: { id: string; status: string; adminComments?: string }) => {
-      return apiRequest("PUT", `/api/admin/reinstatement-requests/${id}`, { status, adminComments });
+  const notifyUserMutation = useMutation({
+    mutationFn: async ({ userId, notification }: { userId: string; notification: any }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/notify`, notification);
     },
     onSuccess: () => {
-      toast({ title: "Reinstatement request updated successfully" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/reinstatement-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "Notification sent successfully" });
+      setNotifyUserDialog(false);
+      setNotificationTitle("");
+      setNotificationMessage("");
     },
     onError: () => {
-      toast({ title: "Failed to update reinstatement request", variant: "destructive" });
+      toast({ title: "Failed to send notification", variant: "destructive" });
     }
   });
 
-  const handleCampaignAction = async (campaignId: string, action: "approve" | "reject") => {
-    try {
-      await apiRequest("PUT", `/api/admin/campaigns/${campaignId}/status`, { 
-        status: action === "approve" ? "active" : "rejected" 
-      });
-      toast({
-        title: "Campaign Updated",
-        description: `Campaign has been ${action}ed.`,
-      });
+  // Campaign management mutations
+  const approveCampaignMutation = useMutation({
+    mutationFn: async (campaignId: string) => {
+      return apiRequest("PUT", `/api/admin/campaigns/${campaignId}/approve`, {});
+    },
+    onSuccess: () => {
+      toast({ title: "Campaign approved successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/campaigns"] });
-    } catch (error) {
-      toast({
-        title: "Error", 
-        description: "Failed to update campaign.",
-        variant: "destructive",
-      });
+    },
+    onError: () => {
+      toast({ title: "Failed to approve campaign", variant: "destructive" });
     }
-  };
+  });
+
+  const rejectCampaignMutation = useMutation({
+    mutationFn: async ({ campaignId, reason }: { campaignId: string; reason: string }) => {
+      return apiRequest("PUT", `/api/admin/campaigns/${campaignId}/reject`, { reason });
+    },
+    onSuccess: () => {
+      toast({ title: "Campaign rejected successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/campaigns"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to reject campaign", variant: "destructive" });
+    }
+  });
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage users, campaigns, and platform settings</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <BackButton to="/dashboard" label="Back to Dashboard" />
-        </div>
-      </div>
-
-      {/* Real-time Status Indicator */}
-      <LiveStatusIndicator />
-
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{adminStats.totalUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Registered users</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{adminStats.totalCampaigns}</div>
-            <p className="text-xs text-muted-foreground">All campaigns</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending KYC</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{adminStats.pendingKyc}</div>
-            <p className="text-xs text-muted-foreground">Requires review</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Flagged Users</CardTitle>
-            <Flag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{adminStats.flaggedUsers}</div>
-            <p className="text-xs text-muted-foreground">Restricted access</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Raised</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{adminStats.totalRaised} ETH</div>
-            <p className="text-xs text-muted-foreground">Platform lifetime</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Management Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
-          <TabsTrigger value="campaigns">Campaigns ({campaigns.length})</TabsTrigger>
-          <TabsTrigger value="avalanche-transactions">
-            <Wallet className="h-4 w-4 mr-1" />
-            AVAX Payments
-          </TabsTrigger>
-          <TabsTrigger value="flagged">Flagged Users ({adminStats.flaggedUsers})</TabsTrigger>
-          <TabsTrigger value="reinstatements">Reinstatements ({adminStats.pendingReinstatements})</TabsTrigger>
-          <TabsTrigger value="kyc">KYC Management</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <Card>
-            <CardHeader>
-              <CardTitle>Platform Overview</CardTitle>
-              <CardDescription>
-                Recent activity and platform health metrics
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Recent Activity</h4>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>• 5 new campaigns submitted today</p>
-                      <p>• 12 users completed KYC verification</p>
-                      <p>• $45,230 raised in the last 24 hours</p>
-                      <p>• 23 successful transactions processed</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium">System Health</h4>
-                    <div className="text-sm space-y-1">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span>Database: Healthy</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span>Payment Processing: Online</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span>Blockchain Sync: Active</span>
-                      </div>
-                    </div>
-                  </div>
+    <div className="min-h-screen text-white">
+      {/* Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-black/30 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50"
+      >
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
+                  <Crown className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    Admin Control Center
+                  </h1>
+                  <p className="text-sm text-gray-400">FundIndia Platform Management</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm" className="bg-black/20 border-white/20 text-white hover:bg-white/10">
+                <Bell className="h-4 w-4 mr-2" />
+                Notifications
+              </Button>
+              <Button variant="outline" size="sm" className="bg-black/20 border-white/20 text-white hover:bg-white/10">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
-        <TabsContent value="users">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>
-                Comprehensive user account management and monitoring
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Search and Filter Controls */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <LiveStatusIndicator />
+
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <TabsList className="grid w-full grid-cols-7 mb-8 bg-black/30 border border-white/10 p-1">
+              <TabsTrigger 
+                value="overview" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="users" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Users
+              </TabsTrigger>
+              <TabsTrigger 
+                value="campaigns" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Campaigns
+              </TabsTrigger>
+              <TabsTrigger 
+                value="flagged" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+              >
+                <Flag className="h-4 w-4 mr-2" />
+                Flagged
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reinstatements" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+              >
+                <UserCheck className="h-4 w-4 mr-2" />
+                Appeals
+              </TabsTrigger>
+              <TabsTrigger 
+                value="kyc" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                KYC
+              </TabsTrigger>
+              <TabsTrigger 
+                value="transactions" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                Blockchain
+              </TabsTrigger>
+            </TabsList>
+          </motion.div>
+
+          <TabsContent value="overview" className="space-y-8">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+              <StatsCard
+                title="Total Users"
+                value={adminStats.totalUsers.toLocaleString()}
+                change="+12.5%"
+                icon={Users}
+                trend="up"
+                delay={0}
+              />
+              <StatsCard
+                title="Active Campaigns"
+                value={adminStats.totalCampaigns}
+                change="+8.2%"
+                icon={TrendingUp}
+                trend="up"
+                delay={0.1}
+              />
+              <StatsCard
+                title="Pending KYC"
+                value={adminStats.pendingKyc}
+                change={adminStats.pendingKyc > 0 ? "Needs attention" : "All clear"}
+                icon={Shield}
+                trend={adminStats.pendingKyc > 0 ? "neutral" : "up"}
+                delay={0.2}
+              />
+              <StatsCard
+                title="Flagged Users"
+                value={adminStats.flaggedUsers}
+                change={adminStats.flaggedUsers > 0 ? "Monitor closely" : "All good"}
+                icon={Flag}
+                trend={adminStats.flaggedUsers > 0 ? "down" : "up"}
+                delay={0.3}
+              />
+              <StatsCard
+                title="Appeals Pending"
+                value={adminStats.pendingReinstatements}
+                change="Review required"
+                icon={UserCheck}
+                trend="neutral"
+                delay={0.4}
+              />
+              <StatsCard
+                title="Total Raised"
+                value={`₹${(parseFloat(adminStats.totalRaised) * 75).toFixed(0)}L`}
+                change="+24.7%"
+                icon={DollarSign}
+                trend="up"
+                delay={0.5}
+              />
+            </div>
+
+            {/* Activity Feed */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Card className="backdrop-blur-xl bg-black/20 border border-white/10">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-white flex items-center">
+                    <Activity className="h-5 w-5 mr-2 text-blue-400" />
+                    Recent Activity
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Latest platform events and admin actions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {users.slice(0, 5).map((user, index) => (
+                      <motion.div
+                        key={user.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        className="flex items-center space-x-4 p-3 bg-black/20 rounded-lg border border-white/5"
+                      >
+                        <div className="p-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg">
+                          <Users className="h-4 w-4 text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white font-semibold">
+                            New user registration: {user.firstName} {user.lastName}
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            KYC Status: {user.kycStatus} • {user.email}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="border-blue-400/50 text-blue-400">
+                          {new Date().toLocaleDateString()}
+                        </Badge>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-black/20 p-6 rounded-xl border border-white/10"
+            >
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">User Management</h2>
+                <p className="text-gray-400">Manage all platform users and their permissions</p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    placeholder="Search users by name or email..."
+                    placeholder="Search users..."
                     value={userFilter}
                     onChange={(e) => setUserFilter(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400 min-w-[250px]"
                   />
                 </div>
+                
                 <Select value={flaggedFilter} onValueChange={setFlaggedFilter}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="bg-black/20 border-white/20 text-white min-w-[150px]">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-black/90 border-white/20">
                     <SelectItem value="all">All Users</SelectItem>
-                    <SelectItem value="normal">Normal Users</SelectItem>
-                    <SelectItem value="flagged">Flagged Users</SelectItem>
+                    <SelectItem value="flagged">Flagged Only</SelectItem>
+                    <SelectItem value="normal">Normal Only</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
               </div>
+            </motion.div>
 
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>KYC Status</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="font-medium">
-                          {user.firstName} {user.lastName}
-                        </div>
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={user.kycStatus === "approved" ? "default" : 
-                                  user.kycStatus === "pending" ? "secondary" : "destructive"}
-                        >
-                          {user.kycStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {user.isFlagged ? (
-                          <Badge variant="destructive" className="flex items-center gap-1">
-                            <Flag className="h-3 w-3" />
-                            Flagged
-                          </Badge>
-                        ) : (
-                          <Badge variant="default">Active</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(user.createdAt || "").toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>User Profile: {user.firstName} {user.lastName}</DialogTitle>
-                                <DialogDescription>
-                                  Detailed user information and activity
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="text-sm font-medium">Email</label>
-                                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">KYC Status</label>
-                                    <p className="text-sm text-muted-foreground">{user.kycStatus}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Wallet Address</label>
-                                    <p className="text-sm text-muted-foreground font-mono">{user.walletAddress || "Not connected"}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Join Date</label>
-                                    <p className="text-sm text-muted-foreground">{new Date(user.createdAt || "").toLocaleDateString()}</p>
-                                  </div>
-                                </div>
-                                {user.isFlagged && (
-                                  <div className="p-3 bg-red-50 border border-red-200 rounded">
-                                    <div className="flex items-center gap-2">
-                                      <Flag className="h-4 w-4 text-red-600" />
-                                      <span className="font-medium text-red-800">Account Flagged</span>
-                                    </div>
-                                    <p className="text-sm text-red-700 mt-1">
-                                      Reason: {user.flaggedReason}
-                                    </p>
-                                    <p className="text-xs text-red-600 mt-1">
-                                      Flagged by: {user.flaggedBy} on {new Date(user.flaggedAt || "").toLocaleDateString()}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          
-                          {!user.isFlagged ? (
-                            <Dialog open={flagUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
-                              setFlagUserDialog(open);
-                              if (open) setSelectedUser(user);
-                              else { setSelectedUser(null); setFlagReason(""); }
-                            }}>
-                              <DialogTrigger asChild>
-                                <Button size="sm" variant="outline" className="text-red-600">
-                                  <Flag className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Flag User Account</DialogTitle>
-                                  <DialogDescription>
-                                    Flag this user account to restrict their access to platform features.
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <label className="text-sm font-medium">Reason for flagging</label>
-                                    <Textarea
-                                      value={flagReason}
-                                      onChange={(e) => setFlagReason(e.target.value)}
-                                      placeholder="Explain why this user is being flagged..."
-                                      className="mt-1"
-                                    />
-                                  </div>
-                                  <div className="flex justify-end gap-2">
-                                    <Button variant="outline" onClick={() => setFlagUserDialog(false)}>
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      variant="destructive"
-                                      onClick={() => flagUserMutation.mutate({ userId: user.id, reason: flagReason })}
-                                      disabled={!flagReason.trim() || flagUserMutation.isPending}
-                                    >
-                                      {flagUserMutation.isPending ? "Flagging..." : "Flag User"}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600"
-                              onClick={() => unflagUserMutation.mutate(user.id)}
-                              disabled={unflagUserMutation.isPending}
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                          )}
-                          
-                          <Dialog open={editUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
-                            setEditUserDialog(open);
-                            if (open) {
-                              setSelectedUser(user);
-                              setEditedUser({
-                                firstName: user.firstName || "",
-                                lastName: user.lastName || "",
-                                email: user.email,
-                                walletAddress: user.walletAddress || ""
-                              });
-                            } else {
-                              setSelectedUser(null);
-                              setEditedUser({});
-                            }
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline" data-testid={`button-edit-user-${user.id}`}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit User Details</DialogTitle>
-                                <DialogDescription>
-                                  Update user's basic information
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="text-sm font-medium">First Name</label>
-                                    <Input
-                                      value={editedUser.firstName || ""}
-                                      onChange={(e) => setEditedUser((prev: any) => ({ ...prev, firstName: e.target.value }))}
-                                      data-testid="input-edit-firstname"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Last Name</label>
-                                    <Input
-                                      value={editedUser.lastName || ""}
-                                      onChange={(e) => setEditedUser((prev: any) => ({ ...prev, lastName: e.target.value }))}
-                                      data-testid="input-edit-lastname"
-                                    />
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium">Email</label>
-                                  <Input
-                                    value={editedUser.email || ""}
-                                    onChange={(e) => setEditedUser((prev: any) => ({ ...prev, email: e.target.value }))}
-                                    data-testid="input-edit-email"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium">Wallet Address</label>
-                                  <Input
-                                    value={editedUser.walletAddress || ""}
-                                    onChange={(e) => setEditedUser((prev: any) => ({ ...prev, walletAddress: e.target.value }))}
-                                    placeholder="0x..."
-                                    data-testid="input-edit-wallet"
-                                  />
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="outline" onClick={() => setEditUserDialog(false)}>
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    onClick={() => editUserMutation.mutate({ userId: user.id, updates: editedUser })}
-                                    disabled={editUserMutation.isPending}
-                                    data-testid="button-save-user-edit"
-                                  >
-                                    {editUserMutation.isPending ? "Saving..." : "Save Changes"}
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          
-                          <Dialog open={notifyUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
-                            setNotifyUserDialog(open);
-                            if (open) setSelectedUser(user);
-                            else {
-                              setSelectedUser(null);
-                              setNotificationTitle("");
-                              setNotificationMessage("");
-                              setNotificationType("info");
-                            }
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline" data-testid={`button-notify-user-${user.id}`}>
-                                <Mail className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Send Notification</DialogTitle>
-                                <DialogDescription>
-                                  Send a direct message to {user.firstName} {user.lastName}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <label className="text-sm font-medium">Title</label>
-                                  <Input
-                                    value={notificationTitle}
-                                    onChange={(e) => setNotificationTitle(e.target.value)}
-                                    placeholder="Notification title"
-                                    data-testid="input-notification-title"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium">Message</label>
-                                  <Textarea
-                                    value={notificationMessage}
-                                    onChange={(e) => setNotificationMessage(e.target.value)}
-                                    placeholder="Your message..."
-                                    rows={4}
-                                    data-testid="textarea-notification-message"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium">Type</label>
-                                  <Select value={notificationType} onValueChange={setNotificationType}>
-                                    <SelectTrigger data-testid="select-notification-type">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="info">Info</SelectItem>
-                                      <SelectItem value="success">Success</SelectItem>
-                                      <SelectItem value="warning">Warning</SelectItem>
-                                      <SelectItem value="error">Error</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="outline" onClick={() => setNotifyUserDialog(false)}>
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    onClick={() => notifyUserMutation.mutate({ 
-                                      userId: user.id, 
-                                      title: notificationTitle, 
-                                      message: notificationMessage, 
-                                      type: notificationType 
-                                    })}
-                                    disabled={!notificationTitle || !notificationMessage || notifyUserMutation.isPending}
-                                    data-testid="button-send-notification"
-                                  >
-                                    {notifyUserMutation.isPending ? "Sending..." : "Send Notification"}
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          
-                          <Dialog open={userCampaignsDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
-                            setUserCampaignsDialog(open);
-                            if (open) setSelectedUser(user);
-                            else setSelectedUser(null);
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline" data-testid={`button-view-campaigns-${user.id}`}>
-                                <TrendingUp className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl">
-                              <DialogHeader>
-                                <DialogTitle>User Campaigns: {user.firstName} {user.lastName}</DialogTitle>
-                                <DialogDescription>
-                                  All campaigns created by this user
-                                </DialogDescription>
-                              </DialogHeader>
-                              <UserCampaignsView userId={user.id} />
-                            </DialogContent>
-                          </Dialog>
-                          
-                          {user.isFlagged && user.flaggedReason?.startsWith("SUSPENDED:") ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600"
-                              onClick={() => unsuspendUserMutation.mutate(user.id)}
-                              disabled={unsuspendUserMutation.isPending}
-                              data-testid={`button-unsuspend-user-${user.id}`}
-                            >
-                              <RefreshCw className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Dialog open={suspendUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
-                              setSuspendUserDialog(open);
-                              if (open) setSelectedUser(user);
-                              else {
-                                setSelectedUser(null);
-                                setSuspendReason("");
-                              }
-                            }}>
-                              <DialogTrigger asChild>
-                                <Button size="sm" variant="outline" className="text-orange-600" data-testid={`button-suspend-user-${user.id}`}>
-                                  <UserX className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Suspend User Account</DialogTitle>
-                                  <DialogDescription>
-                                    Temporarily suspend this user's account access
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <label className="text-sm font-medium">Reason for suspension</label>
-                                    <Textarea
-                                      value={suspendReason}
-                                      onChange={(e) => setSuspendReason(e.target.value)}
-                                      placeholder="Explain why this user is being suspended..."
-                                      data-testid="textarea-suspend-reason"
-                                    />
-                                  </div>
-                                  <div className="flex justify-end gap-2">
-                                    <Button variant="outline" onClick={() => setSuspendUserDialog(false)}>
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      variant="destructive"
-                                      onClick={() => suspendUserMutation.mutate({ userId: user.id, reason: suspendReason })}
-                                      disabled={!suspendReason.trim() || suspendUserMutation.isPending}
-                                      data-testid="button-confirm-suspend"
-                                    >
-                                      {suspendUserMutation.isPending ? "Suspending..." : "Suspend User"}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          )}
-                          
-                          <Dialog open={resetPasswordDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
-                            setResetPasswordDialog(open);
-                            if (open) setSelectedUser(user);
-                            else {
-                              setSelectedUser(null);
-                              setNewPassword("");
-                            }
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline" data-testid={`button-reset-password-${user.id}`}>
-                                <RefreshCw className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Reset User Password</DialogTitle>
-                                <DialogDescription>
-                                  Set a new password for {user.firstName} {user.lastName}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <label className="text-sm font-medium">New Password</label>
-                                  <Input
-                                    type="password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder="Enter new password (min 6 characters)"
-                                    data-testid="input-new-password"
-                                  />
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="outline" onClick={() => setResetPasswordDialog(false)}>
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    onClick={() => resetPasswordMutation.mutate({ userId: user.id, newPassword })}
-                                    disabled={newPassword.length < 6 || resetPasswordMutation.isPending}
-                                    data-testid="button-confirm-reset-password"
-                                  >
-                                    {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              window.open(`/api/admin/users/${user.id}/export`, '_blank');
-                            }}
-                            data-testid={`button-export-user-${user.id}`}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          
-                          <Dialog open={deleteUserDialog && selectedUser?.id === user.id} onOpenChange={(open) => {
-                            setDeleteUserDialog(open);
-                            if (open) setSelectedUser(user);
-                            else setSelectedUser(null);
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline" className="text-red-600" data-testid={`button-delete-user-${user.id}`}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Delete User Account</DialogTitle>
-                                <DialogDescription>
-                                  This action cannot be undone. This will permanently delete {user.firstName} {user.lastName}'s account and all associated data.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setDeleteUserDialog(false)}>
-                                  Cancel
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  onClick={() => deleteUserMutation.mutate(user.id)}
-                                  disabled={deleteUserMutation.isPending}
-                                  data-testid="button-confirm-delete-user"
-                                >
-                                  {deleteUserMutation.isPending ? "Deleting..." : "Delete Permanently"}
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </TableCell>
+            {/* Enhanced Users Table */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="backdrop-blur-xl bg-black/20 border border-white/10 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/10">
+                      <TableHead className="text-gray-300 font-semibold">User</TableHead>
+                      <TableHead className="text-gray-300 font-semibold">KYC Status</TableHead>
+                      <TableHead className="text-gray-300 font-semibold">Status</TableHead>
+                      <TableHead className="text-gray-300 font-semibold">Joined</TableHead>
+                      <TableHead className="text-gray-300 font-semibold">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="campaigns">
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Management</CardTitle>
-              <CardDescription>
-                Review and manage campaign submissions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Campaign</TableHead>
-                    <TableHead>Creator</TableHead>
-                    <TableHead>Goal</TableHead>
-                    <TableHead>Raised</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {campaigns.slice(0, 5).map((campaign: any) => (
-                    <TableRow key={campaign.id}>
-                      <TableCell>
-                        <div className="font-medium">{campaign.title}</div>
-                      </TableCell>
-                      <TableCell>{campaign.creatorId}</TableCell>
-                      <TableCell>${campaign.goalAmount}</TableCell>
-                      <TableCell>${campaign.currentAmount}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={campaign.status === "active" ? "default" : 
-                                  campaign.status === "pending_approval" ? "secondary" : "destructive"}
-                        >
-                          {campaign.status.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                          {campaign.status === "pending_approval" && (
-                            <>
-                              <Button 
-                                size="sm"
-                                onClick={() => handleCampaignAction(campaign.id, "approve")}
-                              >
-                                Approve
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="destructive"
-                                onClick={() => handleCampaignAction(campaign.id, "reject")}
-                              >
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="flagged">
-          <Card>
-            <CardHeader>
-              <CardTitle>Flagged Users</CardTitle>
-              <CardDescription>
-                Manage users with restricted access and review flagging reasons
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Flagged Reason</TableHead>
-                    <TableHead>Flagged By</TableHead>
-                    <TableHead>Date Flagged</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.filter(user => user.isFlagged).map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="font-medium">
-                          {user.firstName} {user.lastName}
-                        </div>
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell className="max-w-xs">
-                        <p className="text-sm truncate" title={user.flaggedReason || ""}>
-                          {user.flaggedReason}
-                        </p>
-                      </TableCell>
-                      <TableCell>{user.flaggedBy}</TableCell>
-                      <TableCell>
-                        {user.flaggedAt ? new Date(user.flaggedAt).toLocaleDateString() : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-green-600"
-                            onClick={() => unflagUserMutation.mutate(user.id)}
-                            disabled={unflagUserMutation.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Unflag
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              
-              {users.filter(user => user.isFlagged).length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No flagged users</p>
-                  <p className="text-sm">All users currently have normal access</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reinstatements">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reinstatement Requests</CardTitle>
-              <CardDescription>
-                Review and process user reinstatement requests
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Additional Info</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reinstatementRequests.map((request) => {
-                    const user = users.find(u => u.id === request.userId);
-                    return (
-                      <TableRow key={request.id}>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user, index) => (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * index }}
+                        className="border-white/5 hover:bg-white/5 transition-colors"
+                      >
                         <TableCell>
-                          <div className="font-medium">
-                            {user ? `${user.firstName} ${user.lastName}` : "Unknown User"}
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">
+                                {user.firstName?.charAt(0) || user.username.charAt(0)}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-white font-semibold">
+                                {user.firstName} {user.lastName} 
+                                {user.role === 'admin' && <Crown className="inline h-4 w-4 ml-1 text-amber-400" />}
+                              </p>
+                              <p className="text-gray-400 text-sm">{user.email}</p>
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            {user?.email}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <p className="text-sm truncate" title={request.reason}>
-                            {request.reason}
-                          </p>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <p className="text-sm truncate" title={request.additionalInfo || ""}>
-                            {request.additionalInfo || "N/A"}
-                          </p>
                         </TableCell>
                         <TableCell>
                           <Badge 
-                            variant={request.status === "approved" ? "default" : 
-                                    request.status === "pending" ? "secondary" : "destructive"}
+                            variant={user.kycStatus === "approved" ? "default" : user.kycStatus === "pending" ? "secondary" : "destructive"}
+                            className="capitalize"
                           >
-                            {request.status}
+                            {user.kycStatus}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {new Date(request.createdAt || "").toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {request.status === "pending" && (
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => reinstatementMutation.mutate({ id: request.id, status: "approved" })}
-                                disabled={reinstatementMutation.isPending}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => reinstatementMutation.mutate({ id: request.id, status: "rejected" })}
-                                disabled={reinstatementMutation.isPending}
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
-                          {request.status !== "pending" && (
-                            <Badge variant="outline">
-                              {request.status === "approved" ? "Approved" : "Rejected"}
+                          {user.isFlagged ? (
+                            <Badge variant="destructive" className="flex items-center w-fit">
+                              <Flag className="h-3 w-3 mr-1" />
+                              Flagged
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-green-400/50 text-green-400">
+                              Active
                             </Badge>
                           )}
                         </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                        <TableCell className="text-gray-300">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setUserCampaignsDialog(true);
+                              }}
+                              className="bg-black/20 border-white/20 text-white hover:bg-white/10"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            
+                            {user.isFlagged ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => unflagUserMutation.mutate(user.id)}
+                                className="bg-green-500/20 border-green-500/30 text-green-400 hover:bg-green-500/30"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setFlagUserDialog(true);
+                                }}
+                                className="bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30"
+                              >
+                                <Flag className="h-4 w-4" />
+                              </Button>
+                            )}
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setEditedUser({
+                                  firstName: user.firstName,
+                                  lastName: user.lastName,
+                                  email: user.email,
+                                });
+                                setEditUserDialog(true);
+                              }}
+                              className="bg-blue-500/20 border-blue-500/30 text-blue-400 hover:bg-blue-500/30"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="campaigns" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-black/20 p-6 rounded-xl border border-white/10"
+            >
+              <h2 className="text-2xl font-bold text-white mb-2">Campaign Management</h2>
+              <p className="text-gray-400">Review and manage all crowdfunding campaigns</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="grid gap-6"
+            >
+              {campaigns.map((campaign, index) => (
+                <motion.div
+                  key={campaign.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Card className="backdrop-blur-xl bg-black/20 border border-white/10 hover:border-white/20 transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <h3 className="text-xl font-bold text-white">{campaign.title}</h3>
+                            <Badge variant={campaign.status === "active" ? "default" : campaign.status === "pending_approval" ? "secondary" : "destructive"}>
+                              {campaign.status.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                          <p className="text-gray-400 mb-4">{campaign.description}</p>
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <p className="text-gray-400">Goal</p>
+                              <p className="text-white font-semibold">${campaign.goalAmount}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400">Raised</p>
+                              <p className="text-green-400 font-semibold">${campaign.currentAmount || 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400">Category</p>
+                              <p className="text-white font-semibold capitalize">{campaign.category}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-400">Created</p>
+                              <p className="text-white font-semibold">
+                                {new Date(campaign.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {campaign.status === "pending_approval" && (
+                          <div className="flex space-x-2 ml-4">
+                            <Button
+                              onClick={() => approveCampaignMutation.mutate(campaign.id)}
+                              className="bg-green-500 hover:bg-green-600"
+                              disabled={approveCampaignMutation.isPending}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Approve
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => rejectCampaignMutation.mutate({ campaignId: campaign.id, reason: "Policy violation" })}
+                              disabled={rejectCampaignMutation.isPending}
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="flagged" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-black/20 p-6 rounded-xl border border-white/10"
+            >
+              <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
+                <Flag className="h-6 w-6 mr-2 text-red-400" />
+                Flagged Users Management
+              </h2>
+              <p className="text-gray-400">Monitor and manage users requiring attention</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="grid gap-4"
+            >
+              {users.filter(user => user.isFlagged).map((user, index) => (
+                <motion.div
+                  key={user.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Card className="backdrop-blur-xl bg-red-500/5 border border-red-500/20 hover:border-red-500/30 transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold">
+                              {user.firstName?.charAt(0) || user.username.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="text-white font-bold">{user.firstName} {user.lastName}</h3>
+                            <p className="text-gray-400">{user.email}</p>
+                            <p className="text-red-400 text-sm">Reason: {user.flagReason || "Policy violation"}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex space-x-2">
+                          <Button
+                            onClick={() => unflagUserMutation.mutate(user.id)}
+                            className="bg-green-500 hover:bg-green-600"
+                            disabled={unflagUserMutation.isPending}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Unflag
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setDeleteUserDialog(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+              
+              {users.filter(user => user.isFlagged).length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-12"
+                >
+                  <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">All Clear!</h3>
+                  <p className="text-gray-400">No flagged users at the moment</p>
+                </motion.div>
+              )}
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="reinstatements" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-black/20 p-6 rounded-xl border border-white/10"
+            >
+              <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
+                <UserCheck className="h-6 w-6 mr-2 text-amber-400" />
+                Reinstatement Appeals
+              </h2>
+              <p className="text-gray-400">Review and process user appeal requests</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="grid gap-4"
+            >
+              {reinstatementRequests.map((request, index) => (
+                <motion.div
+                  key={request.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Card className="backdrop-blur-xl bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/30 transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-white font-bold">Appeal Request</h3>
+                            <p className="text-amber-400 text-sm">
+                              Status: {request.status} • {new Date(request.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="border-amber-400/50 text-amber-400">
+                            {request.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="bg-black/20 p-4 rounded-lg">
+                          <p className="text-gray-300">{request.reason}</p>
+                        </div>
+                        
+                        {request.status === "pending" && (
+                          <div className="flex space-x-2">
+                            <Button className="bg-green-500 hover:bg-green-600">
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Approve Appeal
+                            </Button>
+                            <Button variant="destructive">
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Reject Appeal
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
               
               {reinstatementRequests.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <RefreshCw className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No reinstatement requests</p>
-                  <p className="text-sm">User reinstatement requests will appear here</p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-12"
+                >
+                  <UserCheck className="h-16 w-16 text-amber-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">No Appeals</h3>
+                  <p className="text-gray-400">No reinstatement requests pending</p>
+                </motion.div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </motion.div>
+          </TabsContent>
 
-        <TabsContent value="avalanche-transactions">
-          <AdminAvalancheTransactions />
-        </TabsContent>
+          <TabsContent value="kyc" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-black/20 p-6 rounded-xl border border-white/10"
+            >
+              <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
+                <Shield className="h-6 w-6 mr-2 text-cyan-400" />
+                KYC Verification Center
+              </h2>
+              <p className="text-gray-400">Verify user identities and approve KYC applications</p>
+            </motion.div>
 
-        <TabsContent value="kyc">
-          <KYCManagement />
-        </TabsContent>
-      </Tabs>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <KYCManagement />
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="transactions" className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-black/20 p-6 rounded-xl border border-white/10"
+            >
+              <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
+                <Wallet className="h-6 w-6 mr-2 text-purple-400" />
+                Blockchain Transactions
+              </h2>
+              <p className="text-gray-400">Monitor all Avalanche blockchain transactions</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <AdminAvalancheTransactions />
+            </motion.div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Dialogs - Enhanced with dark theme */}
+        <Dialog open={userCampaignsDialog} onOpenChange={setUserCampaignsDialog}>
+          <DialogContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">
+                User Details: {selectedUser?.firstName} {selectedUser?.lastName}
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Complete overview of user activity and campaigns
+              </DialogDescription>
+            </DialogHeader>
+            {selectedUser && <UserCampaignsView userId={selectedUser.id} />}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={flagUserDialog} onOpenChange={setFlagUserDialog}>
+          <DialogContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
+            <DialogHeader>
+              <DialogTitle>Flag User</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Provide a reason for flagging this user
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Enter reason for flagging..."
+                value={flagReason}
+                onChange={(e) => setFlagReason(e.target.value)}
+                className="bg-black/20 border-white/20 text-white placeholder:text-gray-400"
+              />
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setFlagUserDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => selectedUser && flagUserMutation.mutate({ userId: selectedUser.id, reason: flagReason })}
+                  disabled={!flagReason.trim() || flagUserMutation.isPending}
+                  className="bg-red-500 hover:bg-red-600"
+                >
+                  Flag User
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={editUserDialog} onOpenChange={setEditUserDialog}>
+          <DialogContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Update user information
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="First Name"
+                value={editedUser.firstName || ""}
+                onChange={(e) => setEditedUser({ ...editedUser, firstName: e.target.value })}
+                className="bg-black/20 border-white/20 text-white placeholder:text-gray-400"
+              />
+              <Input
+                placeholder="Last Name"
+                value={editedUser.lastName || ""}
+                onChange={(e) => setEditedUser({ ...editedUser, lastName: e.target.value })}
+                className="bg-black/20 border-white/20 text-white placeholder:text-gray-400"
+              />
+              <Input
+                placeholder="Email"
+                value={editedUser.email || ""}
+                onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
+                className="bg-black/20 border-white/20 text-white placeholder:text-gray-400"
+              />
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setEditUserDialog(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => selectedUser && editUserMutation.mutate({ userId: selectedUser.id, updates: editedUser })}
+                  disabled={editUserMutation.isPending}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  Update User
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={deleteUserDialog} onOpenChange={setDeleteUserDialog}>
+          <DialogContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
+            <DialogHeader>
+              <DialogTitle className="text-red-400">Delete User</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                This action cannot be undone. This will permanently delete the user account and all associated data.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setDeleteUserDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => selectedUser && deleteUserMutation.mutate(selectedUser.id)}
+                disabled={deleteUserMutation.isPending}
+              >
+                Delete User
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
