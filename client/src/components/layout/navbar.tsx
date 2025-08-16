@@ -7,9 +7,12 @@ import { Menu, X, Wallet } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
 export default function Navbar() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Debug log
+  console.log('Navbar Auth State:', { isAuthenticated, user, isLoading });
 
   const navItems = isAuthenticated ? [
     { href: "/home", label: "Home" },
@@ -45,14 +48,14 @@ export default function Navbar() {
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
+            {!isLoading && navItems.map((item) => (
               <Link key={item.href} href={item.href}>
                 <Button
                   variant="ghost"
                   className={`text-sm font-medium transition-colors duration-300 ${
                     location === item.href 
-                      ? "text-cyber-blue" 
-                      : "text-muted-foreground hover:text-cyber-blue"
+                      ? "text-indigo-600 dark:text-indigo-400" 
+                      : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
                   }`}
                 >
                   {item.label}
@@ -65,19 +68,19 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             
-            {isAuthenticated ? (
+            {!isLoading && (isAuthenticated ? (
               <>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="glass-morphism border-white/20 hover:bg-white/20"
+                  className="backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30 hover:bg-white/30 dark:hover:bg-gray-800/30"
                   onClick={() => window.location.href = '/profile'}
                 >
                   <Wallet className="w-4 h-4 mr-2" />
                   <span className="font-mono text-sm">
                     {user?.walletAddress 
                       ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`
-                      : "Profile"
+                      : user?.username || "Profile"
                     }
                   </span>
                 </Button>
@@ -85,19 +88,28 @@ export default function Navbar() {
                   variant="outline"
                   size="sm"
                   onClick={() => window.location.href = '/api/logout'}
-                  className="glass-morphism hover:bg-white/20"
+                  className="backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30 hover:bg-white/30 dark:hover:bg-gray-800/30"
                 >
                   Logout
                 </Button>
               </>
             ) : (
-              <Button
-                className="bg-gradient-to-r from-cyber-blue to-cyber-purple hover:scale-105 transition-transform duration-300"
-                onClick={() => window.location.href = '/api/login'}
-              >
-                Connect Wallet
-              </Button>
-            )}
+              <>
+                <Button
+                  variant="outline"
+                  className="backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                  onClick={() => window.location.href = '/campaigns'}
+                >
+                  Explore
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                  onClick={() => window.location.href = '/auth'}
+                >
+                  Get Started
+                </Button>
+              </>
+            ))}
           </div>
 
           {/* Mobile Menu Button */}
@@ -122,7 +134,7 @@ export default function Navbar() {
             className="md:hidden border-t border-white/10 py-4"
           >
             <div className="flex flex-col space-y-2">
-              {navItems.map((item) => (
+              {!isLoading && navItems.map((item) => (
                 <Link key={item.href} href={item.href}>
                   <Button
                     variant="ghost"
@@ -136,14 +148,17 @@ export default function Navbar() {
               
               <div className="border-t border-white/10 pt-4 mt-4 space-y-2">
                 <ThemeToggle />
-                {isAuthenticated ? (
+                {!isLoading && (isAuthenticated ? (
                   <>
                     <Button
                       variant="outline"
-                      className="w-full glass-morphism"
+                      className="w-full backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30"
+                      onClick={() => window.location.href = '/profile'}
                     >
                       <Wallet className="w-4 h-4 mr-2" />
-                      <span className="font-mono text-sm">0x1a2b...c3d4</span>
+                      <span className="font-mono text-sm">
+                        {user?.username || "Profile"}
+                      </span>
                     </Button>
                     <Button
                       variant="outline"
@@ -154,13 +169,22 @@ export default function Navbar() {
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    className="w-full bg-gradient-to-r from-cyber-blue to-cyber-purple"
-                    onClick={() => window.location.href = '/api/login'}
-                  >
-                    Connect Wallet
-                  </Button>
-                )}
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30"
+                      onClick={() => window.location.href = '/campaigns'}
+                    >
+                      Explore Campaigns
+                    </Button>
+                    <Button
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
+                      onClick={() => window.location.href = '/auth'}
+                    >
+                      Get Started
+                    </Button>
+                  </>
+                ))}
               </div>
             </div>
           </motion.div>
