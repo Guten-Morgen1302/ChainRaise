@@ -85,7 +85,7 @@ export default function KYCStatus({ className = "" }: KYCStatusProps) {
           description: "Your identity has been successfully verified. You can now create campaigns!",
           actionText: "Create Campaign",
           actionVariant: "default" as const,
-          actionLink: "/create-campaign",
+          actionLink: "/create",
           progress: 100,
           step: 4,
         };

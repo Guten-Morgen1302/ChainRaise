@@ -96,10 +96,13 @@ export default function CampaignAssistant({
         {
           type: "success",
           title: "Description Enhancement",
-          content: `AI improved your description focusing on: ${data.keyImprovements.join(", ")}`,
+          content: `AI enhanced description: "${data.enhancedDescription?.slice(0, 100)}..."`,
           action: "Apply Enhancement"
         }
       ]);
+      
+      // Store the enhanced description for later use
+      (window as any).lastEnhancedDescription = data.enhancedDescription;
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -218,11 +221,15 @@ export default function CampaignAssistant({
         });
       }
     } else if (suggestion.title === "Description Enhancement" && onDescriptionSuggestion) {
-      // This would need the enhanced description from the mutation response
-      toast({
-        title: "Enhancement Applied",
-        description: "Description improvements have been applied.",
-      });
+      // Apply the enhanced description
+      const enhancedDescription = (window as any).lastEnhancedDescription;
+      if (enhancedDescription) {
+        onDescriptionSuggestion(enhancedDescription);
+        toast({
+          title: "Enhancement Applied",
+          description: "AI-enhanced description has been applied to your campaign.",
+        });
+      }
     }
   };
 

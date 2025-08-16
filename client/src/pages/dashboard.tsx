@@ -163,7 +163,7 @@ export default function Dashboard() {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <div className="flex items-center gap-6 mb-6 md:mb-0">
                   <Avatar className="h-20 w-20 border-2 border-primary/20">
-                    <AvatarImage src={user?.profileImageUrl} alt={user?.firstName || "User"} />
+                    <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || "User"} />
                     <AvatarFallback className="bg-primary/20 text-primary text-xl heading-display">
                       {user?.firstName?.charAt(0) || user?.username?.charAt(0) || "U"}
                     </AvatarFallback>

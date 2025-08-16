@@ -82,7 +82,7 @@ export default function CreateCampaign() {
   });
 
   // Use the most up-to-date KYC status
-  const currentKycStatus = kycStatus?.status || userProfile?.kycStatus || user?.kycStatus;
+  const currentKycStatus = kycStatus?.status || user?.kycStatus;
 
   // Check if user can create campaigns
   const { data: campaignEligibility } = useQuery<{canCreate: boolean, reason?: string}>({
@@ -576,7 +576,7 @@ export default function CreateCampaign() {
                         <Button 
                           type="submit"
                           className="bg-gradient-to-r from-cyber-blue to-cyber-green hover:scale-105 transition-all duration-300"
-                          disabled={createCampaignMutation.isPending || currentKycStatus !== "approved" || (canCreateCampaign && !canCreateCampaign.canCreate)}
+                          disabled={createCampaignMutation.isPending || currentKycStatus !== "approved" || (canCreateCampaign ? !canCreateCampaign.canCreate : true)}
                           data-testid="button-launch-campaign"
                         >
                           {createCampaignMutation.isPending ? (
