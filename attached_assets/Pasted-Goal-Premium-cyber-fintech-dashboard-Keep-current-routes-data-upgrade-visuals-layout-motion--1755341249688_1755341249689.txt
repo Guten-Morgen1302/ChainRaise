@@ -1,0 +1,196 @@
+Goal: Premium cyber-fintech dashboard. Keep current routes & data; upgrade visuals, layout, motion.
+
+Foundation
+
+Stack: Next.js + Tailwind + shadcn/ui + Framer Motion + Recharts (sparklines).
+
+Theme: Dark by default; glass surfaces (bg-white/5, backdrop-blur-xl), subtle noise.
+
+Color tokens: Bg #0B0F14, Card #111827, Border #1F2937, Primary #7C3AED, Accent #22D3EE, Success #10B981, Warn #F59E0B, Danger #EF4444.
+
+Type: Geometric sans (Display for headings, Inter for body). Headings tight tracking; body 90% opacity.
+
+Layout: App shell with left sidebar (icons + labels), sticky topbar (search, quick actions, user menu), content max-width 1360px.
+
+Cards: Radius 16–20, soft shadow, 1px gradient borders, hover lift + shadow deepen (Framer spring 90ms).
+
+Motion: Page fade+slide; components stagger 60–120ms; respect prefers-reduced-motion.
+
+Charts: Minimal grid, smooth line, tooltip with INR/crypto formatting.
+
+Empty states: Illustration + 1-line help + primary CTA.
+
+Accessibility: Focus rings visible, ARIA labels on tabs, keyboard nav complete.
+
+Global Components
+
+KYC Badge: Approved (green), Pending (amber), Rejected (red). Tooltip explains next step.
+
+Risk Chip: Low/Med/High (AI).
+
+Copyable Hash: Shorten + copy icon + tooltip “Copied”.
+
+Live Status Dot: WebSocket: green=connected, yellow=reconnecting, red=offline.
+
+Toast kit: Success/Info/Warning/Error with icons; avoid stacking spam.
+
+🏠 /home — Logged-In Home (Creator + Backer)
+
+Keep: welcome, quick actions, KYC alert, overview stats, featured.
+Upgrade Prompt
+
+Hero row: “Welcome back, {FirstName}” + sub; KYC badge inline.
+
+Quick actions (3): Create Campaign / Browse / My Dashboard — large glass buttons with icons; hover glow.
+
+KYC banner: contextual actions (Start/Resume/View status); concise copy.
+
+Stat tiles (4): Contributions, Total Raised (platform), Active Campaigns, Success Rate — count-up numbers, tiny sparkline, last-7-days delta pill.
+
+Featured grid (≤6): Larger card, progressive image, animated progress bar, time-left chip, “View / Contribute” buttons.
+
+Personal feed: “Recent activity” (you created, backed, received…).
+
+Acceptance: CLS < 0.05; tiles animate once on view; keyboard focus order left→right, top→bottom.
+
+🔎 /campaigns — Browse & Discover
+
+Keep: search, category filters, grid, pagination.
+Upgrade Prompt
+
+Search bar: large, pill, leading search icon; debounce; clear button.
+
+Filter chips: Multi-select (Technology/Gaming/DeFi/Creative/GreenTech/Research); active chips lift + accent ring; “Clear all.”
+
+Sort dropdown: Most funded, Newest, Ending soon.
+
+Campaign card v2: image → gradient overlay → title; subtext 2 lines clamp; progress + ₹raised/goal; creator chip; AI risk chip (optional).
+
+Density control: comfortable/compact toggle.
+
+Load more: morphs to infinite scroll on desktop; fallback button on mobile.
+
+Empty state: “No matches — try other categories” + reset filters.
+
+Acceptance: Search+filters persist in URL query; grid responsive 1→4 cols; screen-reader names on filter chips.
+
+📊 /dashboard — User Hub
+
+Keep: banners, stats, tabs (Overview/My Campaigns/Backed/Notifications/Analytics).
+Upgrade Prompt
+
+Header bar: avatar, username, email, KYC badge; “New Campaign” primary button (disabled if KYC not approved; tooltip explains).
+
+Status banners: Flagged (red) with “Appeal/Contact” links; KYC (amber) with steps; dismissible but sticky until resolved.
+
+Stats row (4): Created, Total Raised (ETH), Backed count, Total Contributed (ETH); count-up + sparkline + delta pill vs last 30d.
+
+Tabs redesign:
+
+Overview: Recent activity feed (timeline with icons), “Profile completion” checklist (progress ring), payout summary card.
+
+My Campaigns: Table/cards toggle; columns: Status, Title, Raised/Goal, Progress, Updated, Actions (Edit/View/Share). Admin comments as popover.
+
+Backed Projects: Cards with your contribution badge; quick “View Update”.
+
+Notifications: Group by Today/This week; “Mark all read”.
+
+Analytics: Mini charts (funding over time, conversion %, top categories). Tooltips with INR/crypto.
+
+Acceptance: All tabs keyboard accessible; row actions reachable by tab; loading skeletons for each panel.
+
+✍️ /create — Campaign Wizard (4 steps)
+
+Keep: steps & validations; KYC gate; AI helper.
+Upgrade Prompt
+
+Stepper top: 1) Basics 2) Details 3) Funding 4) Media & Tags; show progress %; save-as-draft always visible.
+
+Step 1 (Basics): Title (with length meter), Description with AI Improve side-panel (one-click rewrite, tone toggles: Neutral/Impact/Concise).
+
+Step 2 (Details): Category pills (same taxonomy as /campaigns); Funding model radios (donation/reward/equity-sim). If reward chosen → drawer to add tiers (title, amount, perk).
+
+Step 3 (Funding): Goal input with currency select (ETH/MATIC/USDC) + INR helper text; validation hints; fee preview.
+
+Step 4 (Media & Tags): Image uploader with preview; tags chips with suggestions; SEO preview (title/meta).
+
+KYC gate: If not approved, inline gate card with CTA to /kyc; preserve draft.
+
+Eligibility: If flagged, disable Next; popover explains reason.
+
+Acceptance: Field-level errors, Next disabled until valid; autosave feedback; exit-confirmation guard on unsaved changes.
+
+💸 /transactions — History (Avalanche path kept)
+
+Keep: connect-wallet, stats, table, explorer links, refresh.
+Upgrade Prompt
+
+Header: Wallet status (address chip + copy), chain selector (if present), live status dot.
+
+Stats tiles: Total tx, Total contributed, Success rate, Last tx time.
+
+Table: Columns Date/Time, Campaign, Amount (AVAX), Status (pill), Explorer link; sticky header; column sort; CSV export button.
+
+Filters: Status (success/pending/failed), Amount range, Date range.
+
+Empty: “Connect your wallet to view on-chain history.”
+
+Acceptance: Snowtrace links open in new tab; copy feedback; virtualized rows for >500 tx.
+
+⛓️ /contract-demo — Smart Contract Playground
+
+Keep: connect, state, actions, events, campaign select.
+Upgrade Prompt
+
+State panel: Creator, Goal, Current, Balance, Goal reached, Milestones — grid of read-only cards with icons.
+
+Actions panel: Contribute (amount input + Pay), Complete milestone (role-gated); show gas estimate; disable while pending; inline tx feedback with hash + copy + explorer link.
+
+Campaign switcher: Top-right select; state animates on change.
+
+Events log: Live list with icons (Contribution/Withdrawal/Milestone); filter by type; “Pause stream” toggle.
+
+Acceptance: All async states handled (loading/confirmed/failed); errors human-readable; no layout shift when events stream.
+
+⚡ /live-transactions — Real-Time + AI
+
+Keep: live stats, tabs (All/Ethereum/Avalanche/AI Analysis), feed, audio toggle.
+Upgrade Prompt
+
+Header bar: “Live Transactions” + status dot + audio toggle + connection timer (“connected 03:12”).
+
+Stats row: Total tx, Total volume (ETH), Avg amount, Tx/min — count-up; trending arrow if rising vs 5-min avg.
+
+Tabs:
+
+All: Combined stream, chain chip on each card.
+
+Ethereum / Avalanche: chain-specific stream.
+
+AI Analysis: Cards: Network Health %, Anomaly detection, Prediction accuracy, Peak hours, Category trends. Mini charts + one-line insights.
+
+Feed cards: Avatar (campaign/chain), amount big, type color (in/out/contract), relative time, explorer link; enter with slide-up 60ms stagger.
+
+Controls: Pause stream; backfill last 50; “Mark as read”.
+
+Acceptance: Smooth at 60fps ≤ 30 events/min; backpressure handling; ARIA live region for screen readers (polite).
+
+🧰 Admin (bonus polish if time)
+
+Overview: Tiles (Total Campaigns, Total Raised, Active Users, Pending KYC); moderation queue; live activity rail.
+
+AI Alerts: “2 campaigns flagged high-risk — review.”
+
+Blockchain audit widget: last 5 verified tx hashes.
+
+✅ Final Non-Negotiables (for all pages)
+
+Keep all current APIs, forms, and flows unchanged; skin only.
+
+Add loading skeletons, empty states, and error toasts everywhere.
+
+Persist filters in URL; persist tab selection in localStorage.
+
+INR/crypto formatting everywhere (intl APIs).
+
+Lighthouse desktop ≥ 90; no contrast/focus violations; keyboard-first usable.
