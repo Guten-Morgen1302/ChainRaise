@@ -125,13 +125,62 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-teal-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-teal-900/20 relative">
-      <ThreeBackground />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        {/* Floating gradient orbs */}
+        <motion.div 
+          animate={{
+            y: [0, -20, 0],
+            x: [0, 10, 0],
+            scale: [1, 1.1, 1]
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl"
+        />
+        <motion.div 
+          animate={{
+            y: [0, 15, 0],
+            x: [0, -15, 0],
+            scale: [1, 0.9, 1]
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+          className="absolute bottom-20 right-10 w-80 h-80 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur-3xl"
+        />
+        <motion.div 
+          animate={{
+            y: [0, -10, 0],
+            x: [0, 20, 0],
+            scale: [1, 1.2, 1]
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 4
+          }}
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl"
+        />
+        
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-40" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a855f7' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'%3E%3C/circle%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }}></div>
+      </div>
       
       <div className="relative z-10">
         <section className="py-12 min-h-screen flex items-center justify-center">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               
               {/* Hero Section */}
               <motion.div
@@ -141,45 +190,85 @@ export default function AuthPage() {
                 className="space-y-8"
               >
                 <div>
-                  <h1 className="text-4xl md:text-6xl font-black mb-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-600 bg-clip-text text-transparent">
-                    Fund India's Dreams
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="mb-8"
+                  >
+                    <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 mb-6">
+                      <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mr-3 animate-pulse"></div>
+                      <span className="text-purple-300 text-sm font-semibold">India's #1 Crowdfunding Platform</span>
+                    </div>
+                  </motion.div>
+                  
+                  <h1 className="text-5xl md:text-7xl font-black mb-8 bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent leading-tight">
+                    Fund India's
+                    <br />
+                    <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                      Dreams
+                    </span>
                   </h1>
-                  <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Join thousands of Indians building the future. Launch campaigns, support innovation, 
-                    and be part of India's largest crowdfunding community.
+                  <p className="text-xl text-gray-300 leading-relaxed mb-8">
+                    Join thousands of visionaries building tomorrow's India. Launch campaigns, 
+                    support innovation, and be part of the revolution.
                   </p>
+                  
+                  <div className="flex items-center space-x-6 text-sm text-gray-400">
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                      <span>12L+ Active Users</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
+                      <span>₹500C+ Raised</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></div>
+                      <span>Bank Grade Security</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                      <Shield className="w-6 h-6 text-white" />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                  <motion.div 
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className="group cursor-pointer"
+                  >
+                    <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 backdrop-blur-sm hover:border-purple-400/40 transition-all duration-300">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-purple-500/25 transition-all duration-300">
+                        <Shield className="w-8 h-8 text-white" />
+                      </div>
+                      <h3 className="font-bold text-white mb-2">Military-Grade Security</h3>
+                      <p className="text-sm text-gray-400">Blockchain verified & encrypted</p>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">Secure</h3>
-                      <p className="text-sm text-muted-foreground">Blockchain verified</p>
-                    </div>
-                  </div>
+                  </motion.div>
                   
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-cyan-600 flex items-center justify-center">
-                      <Zap className="w-6 h-6 text-white" />
+                  <motion.div 
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className="group cursor-pointer"
+                  >
+                    <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 backdrop-blur-sm hover:border-cyan-400/40 transition-all duration-300">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-cyan-500/25 transition-all duration-300">
+                        <Zap className="w-8 h-8 text-white" />
+                      </div>
+                      <h3 className="font-bold text-white mb-2">Lightning Fast</h3>
+                      <p className="text-sm text-gray-400">Instant settlements & transfers</p>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">Fast</h3>
-                      <p className="text-sm text-muted-foreground">Instant transactions</p>
-                    </div>
-                  </div>
+                  </motion.div>
                   
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-500 to-red-600 flex items-center justify-center">
-                      <Globe className="w-6 h-6 text-white" />
+                  <motion.div 
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className="group cursor-pointer"
+                  >
+                    <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 backdrop-blur-sm hover:border-emerald-400/40 transition-all duration-300">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center mb-4 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300">
+                        <Globe className="w-8 h-8 text-white" />
+                      </div>
+                      <h3 className="font-bold text-white mb-2">Global Reach</h3>
+                      <p className="text-sm text-gray-400">Connect with investors worldwide</p>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">Global</h3>
-                      <p className="text-sm text-muted-foreground">Worldwide access</p>
-                    </div>
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
 
@@ -190,20 +279,39 @@ export default function AuthPage() {
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="w-full max-w-md mx-auto"
               >
-                <Card className="backdrop-blur-md bg-white/30 dark:bg-gray-800/30 border-white/30">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                      Welcome to FundIndia
-                    </CardTitle>
-                    <CardDescription className="text-gray-600 dark:text-gray-300">
-                      Ready to make history? Sign in or create your account
-                    </CardDescription>
+                <Card className="relative backdrop-blur-xl bg-black/20 border border-white/10 shadow-2xl shadow-purple-500/10 overflow-hidden">
+                  {/* Animated border */}
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-cyan-500/20 animate-pulse"></div>
+                  <div className="absolute inset-[1px] rounded-lg bg-black/40 backdrop-blur-xl"></div>
+                  <CardHeader className="text-center relative z-10">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <CardTitle className="text-3xl font-black bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent mb-3">
+                        Welcome to FundIndia
+                      </CardTitle>
+                      <CardDescription className="text-gray-300 text-lg">
+                        Ready to make history? ✨
+                      </CardDescription>
+                    </motion.div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="relative z-10">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="login">Sign In</TabsTrigger>
-                        <TabsTrigger value="register">Sign Up</TabsTrigger>
+                      <TabsList className="grid w-full grid-cols-2 bg-black/30 border border-white/10 p-1">
+                        <TabsTrigger 
+                          value="login" 
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                        >
+                          Sign In
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="register" 
+                          className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white text-gray-300 font-semibold transition-all duration-300"
+                        >
+                          Sign Up
+                        </TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="login">
@@ -214,13 +322,13 @@ export default function AuthPage() {
                               name="username"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Username</FormLabel>
+                                  <FormLabel className="text-gray-200 font-semibold">Username</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                                       <Input
                                         placeholder="Enter your username"
-                                        className="pl-10 form-focus"
+                                        className="pl-10 bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-purple-400 focus:ring-purple-400/20 transition-all duration-300"
                                         {...field}
                                         data-testid="input-username"
                                       />
@@ -235,14 +343,14 @@ export default function AuthPage() {
                               name="password"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Password</FormLabel>
+                                  <FormLabel className="text-gray-200 font-semibold">Password</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                                       <Input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Enter your password"
-                                        className="pl-10 pr-10 form-focus"
+                                        className="pl-10 pr-10 bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-purple-400 focus:ring-purple-400/20 transition-all duration-300"
                                         {...field}
                                         data-testid="input-password"
                                       />
@@ -266,14 +374,17 @@ export default function AuthPage() {
                                 </FormItem>
                               )}
                             />
-                            <Button
-                              type="submit"
-                              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg py-3 rounded-full font-semibold"
-                              disabled={loginMutation.isPending}
-                              data-testid="button-login"
-                            >
-                              {loginMutation.isPending ? "Signing In..." : "Sign In to FundIndia"}
-                            </Button>
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                              <Button
+                                type="submit"
+                                className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-500 hover:via-pink-500 hover:to-purple-500 text-white shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 text-lg py-4 rounded-xl font-bold relative overflow-hidden group"
+                                disabled={loginMutation.isPending}
+                                data-testid="button-login"
+                              >
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                                {loginMutation.isPending ? "Signing In..." : "Sign In to FundIndia"}
+                              </Button>
+                            </motion.div>
                           </form>
                         </Form>
                       </TabsContent>
@@ -287,11 +398,11 @@ export default function AuthPage() {
                                 name="firstName"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>First Name</FormLabel>
+                                    <FormLabel className="text-gray-200 font-semibold">First Name</FormLabel>
                                     <FormControl>
                                       <Input
                                         placeholder="John"
-                                        className="form-focus"
+                                        className="bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20 transition-all duration-300"
                                         {...field}
                                         data-testid="input-firstname"
                                       />
@@ -305,11 +416,11 @@ export default function AuthPage() {
                                 name="lastName"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Last Name</FormLabel>
+                                    <FormLabel className="text-gray-200 font-semibold">Last Name</FormLabel>
                                     <FormControl>
                                       <Input
                                         placeholder="Doe"
-                                        className="form-focus"
+                                        className="bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20 transition-all duration-300"
                                         {...field}
                                         data-testid="input-lastname"
                                       />
@@ -324,13 +435,13 @@ export default function AuthPage() {
                               name="username"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Username *</FormLabel>
+                                  <FormLabel className="text-gray-200 font-semibold">Username *</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                                       <Input
                                         placeholder="Choose a username"
-                                        className="pl-10 form-focus"
+                                        className="pl-10 bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20 transition-all duration-300"
                                         {...field}
                                         data-testid="input-username-register"
                                       />
@@ -345,14 +456,14 @@ export default function AuthPage() {
                               name="email"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Email *</FormLabel>
+                                  <FormLabel className="text-gray-200 font-semibold">Email *</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                                       <Input
                                         type="email"
                                         placeholder="john@example.com"
-                                        className="pl-10 form-focus"
+                                        className="pl-10 bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20 transition-all duration-300"
                                         {...field}
                                         data-testid="input-email"
                                       />
@@ -367,14 +478,14 @@ export default function AuthPage() {
                               name="password"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Password *</FormLabel>
+                                  <FormLabel className="text-gray-200 font-semibold">Password *</FormLabel>
                                   <FormControl>
                                     <div className="relative">
                                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                                       <Input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Choose a strong password"
-                                        className="pl-10 pr-10 form-focus"
+                                        className="pl-10 pr-10 bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-cyan-400 focus:ring-cyan-400/20 transition-all duration-300"
                                         {...field}
                                         data-testid="input-password-register"
                                       />
@@ -398,24 +509,27 @@ export default function AuthPage() {
                                 </FormItem>
                               )}
                             />
-                            <Button
-                              type="submit"
-                              className="w-full bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-700 hover:to-green-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 text-lg py-3 rounded-full font-semibold"
-                              disabled={registerMutation.isPending}
-                              data-testid="button-register"
-                            >
-                              {registerMutation.isPending ? (
-                                <>
-                                  <UserPlus className="w-4 h-4 mr-2 animate-spin" />
-                                  Creating Account...
-                                </>
-                              ) : (
-                                <>
-                                  <UserPlus className="w-4 h-4 mr-2" />
-                                  Join FundIndia
-                                </>
-                              )}
-                            </Button>
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                              <Button
+                                type="submit"
+                                className="w-full bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 hover:from-cyan-500 hover:via-blue-500 hover:to-cyan-500 text-white shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300 text-lg py-4 rounded-xl font-bold relative overflow-hidden group"
+                                disabled={registerMutation.isPending}
+                                data-testid="button-register"
+                              >
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                                {registerMutation.isPending ? (
+                                  <>
+                                    <UserPlus className="w-5 h-5 mr-2 animate-spin" />
+                                    Creating Account...
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserPlus className="w-5 h-5 mr-2" />
+                                    Join FundIndia
+                                  </>
+                                )}
+                              </Button>
+                            </motion.div>
                           </form>
                         </Form>
                       </TabsContent>
