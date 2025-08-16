@@ -30,64 +30,50 @@ export function useWeb3() {
   }, []);
 
   const checkConnection = async () => {
-    if (!window.ethereum) return;
-    
-    try {
-      const ethProvider = new BrowserProvider(window.ethereum);
-      const accounts = await window.ethereum.request?.({ method: 'eth_accounts' }) || [];
-      
-      if (accounts.length > 0) {
-        const account = accounts[0];
-        const network = await ethProvider.getNetwork();
-        const balance = await ethProvider.getBalance(account);
-        
-        setProvider({
-          isConnected: true,
-          account,
-          chainId: Number(network.chainId),
-          balance: formatEther(balance),
-        });
+    // Check if mock wallet is already connected
+    const storedWallet = localStorage.getItem('mock_web3_wallet');
+    if (storedWallet) {
+      try {
+        const walletData = JSON.parse(storedWallet);
+        setProvider(walletData);
+      } catch (error) {
+        console.error('Failed to parse stored wallet:', error);
       }
-    } catch (error) {
-      console.error('Wallet check error:', error);
     }
   };
 
   const connectWallet = async (): Promise<boolean> => {
-    if (!window.ethereum) {
-      toast({
-        title: "MetaMask Required",
-        description: "Please install MetaMask to connect your wallet",
-        variant: "destructive",
-      });
-      return false;
-    }
-
     setIsLoading(true);
     
     try {
-      const ethProvider = new BrowserProvider(window.ethereum);
-      
-      // Request account access
-      const accounts = await window.ethereum.request?.({ method: 'eth_requestAccounts' }) || [];
-      if (!accounts.length) {
-        throw new Error('No accounts found');
+      // Simulate wallet connection process
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Mock connection failure occasionally for realism
+      if (Math.random() < 0.1) {
+        throw new Error("User rejected the connection request");
       }
+
+      // Generate mock wallet data
+      const mockAccount = '0x' + Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      const mockBalance = (Math.random() * 5 + 0.5).toFixed(4); // Random balance between 0.5-5.5 ETH
+      const mockChainId = 43113; // Avalanche Fuji testnet
       
-      const account = accounts[0];
-      const network = await ethProvider.getNetwork();
-      const balance = await ethProvider.getBalance(account);
-      
-      setProvider({
+      const walletData = {
         isConnected: true,
-        account,
-        chainId: Number(network.chainId),
-        balance: formatEther(balance),
-      });
+        account: mockAccount,
+        chainId: mockChainId,
+        balance: mockBalance,
+      };
+      
+      setProvider(walletData);
+      
+      // Store wallet connection
+      localStorage.setItem('mock_web3_wallet', JSON.stringify(walletData));
 
       toast({
         title: "Wallet Connected",
-        description: `Connected to ${account.slice(0, 6)}...${account.slice(-4)}`,
+        description: `Connected to ${mockAccount.slice(0, 6)}...${mockAccount.slice(-4)}`,
       });
 
       return true;
@@ -106,6 +92,7 @@ export function useWeb3() {
 
   const disconnectWallet = async () => {
     setProvider({ isConnected: false });
+    localStorage.removeItem('mock_web3_wallet');
     toast({
       title: "Wallet Disconnected",
       description: "Successfully disconnected from wallet",
@@ -117,7 +104,7 @@ export function useWeb3() {
     amount: string,
     campaignId?: string
   ): Promise<TransactionResult | null> => {
-    if (!provider.isConnected || !window.ethereum) {
+    if (!provider.isConnected) {
       toast({
         title: "Wallet Not Connected",
         description: "Please connect your wallet first",
@@ -129,33 +116,62 @@ export function useWeb3() {
     setIsLoading(true);
     
     try {
-      const ethProvider = new BrowserProvider(window.ethereum);
-      const signer = await ethProvider.getSigner();
-      
-      // Send transaction
-      const tx = await signer.sendTransaction({
-        to,
-        value: parseEther(amount),
-      });
+      // Simulate payment processing time
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Wait for confirmation
-      const receipt = await tx.wait();
-      
-      if (!receipt) {
-        throw new Error('Transaction failed');
+      // Mock transaction failure occasionally for realism
+      if (Math.random() < 0.05) {
+        throw new Error('Transaction failed due to network congestion. Please try again.');
       }
 
+      // Generate mock transaction hash
+      const mockHash = '0x' + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+      
+      // Mock balance update (subtract amount + gas fee)
+      const currentBalance = parseFloat(provider.balance || '0');
+      const paymentAmount = parseFloat(amount);
+      const gasFee = 0.001; // Mock gas fee
+      const newBalance = Math.max(0, currentBalance - paymentAmount - gasFee);
+      
+      const updatedProvider = { ...provider, balance: newBalance.toFixed(6) };
+      setProvider(updatedProvider);
+      localStorage.setItem('mock_web3_wallet', JSON.stringify(updatedProvider));
+
       const result: TransactionResult = {
-        hash: receipt.hash,
+        hash: mockHash,
         status: 'confirmed',
-        blockNumber: receipt.blockNumber?.toString(),
-        gasUsed: receipt.gasUsed?.toString(),
-        gasPrice: receipt.gasPrice?.toString(),
+        blockNumber: Math.floor(Math.random() * 1000000).toString(),
+        gasUsed: '21000',
+        gasPrice: '20',
       };
+
+      // Try to log transaction to database
+      if (campaignId) {
+        try {
+          const response = await fetch('/api/public/transactions/avalanche', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              transactionHash: mockHash,
+              amount: amount,
+              walletAddress: provider.account,
+              campaignId: campaignId,
+              status: 'completed',
+              transactionType: 'funding'
+            })
+          });
+          
+          if (!response.ok) {
+            console.warn('Failed to log transaction to database');
+          }
+        } catch (error) {
+          console.warn('Failed to log transaction to database:', error);
+        }
+      }
 
       toast({
         title: "Transaction Successful",
-        description: `Sent ${amount} ETH successfully`,
+        description: `Sent ${amount} AVAX successfully`,
       });
 
       return result;
@@ -173,15 +189,13 @@ export function useWeb3() {
   };
 
   const switchNetwork = async (chainId: number): Promise<boolean> => {
-    if (!window.ethereum) return false;
-    
     try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: `0x${chainId.toString(16)}` }],
-      });
+      // Simulate network switch
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setProvider(prev => ({ ...prev, chainId }));
+      const updatedProvider = { ...provider, chainId };
+      setProvider(updatedProvider);
+      localStorage.setItem('mock_web3_wallet', JSON.stringify(updatedProvider));
       
       const networkName = getNetworkName(chainId);
       toast({
