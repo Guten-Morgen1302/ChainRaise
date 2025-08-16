@@ -28,7 +28,7 @@ export default function TransactionHistory() {
   const { isConnected } = useWallet();
 
   const { data: transactions = [], isLoading, refetch } = useQuery<AvalancheTransaction[]>({
-    queryKey: ['/api/transactions/avalanche'],
+    queryKey: ['/api/public/transactions/avalanche'],
     enabled: isConnected,
   });
 
@@ -39,13 +39,14 @@ export default function TransactionHistory() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800';
+      case 'confirmed':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted/50 text-muted-foreground border-muted';
     }
   };
 
@@ -62,7 +63,7 @@ export default function TransactionHistory() {
             </CardHeader>
             <CardContent>
               <div className="text-center space-y-4">
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   Connect your Avalanche wallet to view your transaction history
                 </p>
                 <WalletConnection />
@@ -81,7 +82,7 @@ export default function TransactionHistory() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Transaction History</h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-muted-foreground mt-1">
               Your Avalanche blockchain payment history
             </p>
           </div>
@@ -102,7 +103,7 @@ export default function TransactionHistory() {
                 <div className="text-2xl font-bold">
                   {transactions.length}
                 </div>
-                <div className="text-sm text-gray-600">Total Transactions</div>
+                <div className="text-sm text-muted-foreground">Total Transactions</div>
               </div>
             </CardContent>
           </Card>
@@ -118,7 +119,7 @@ export default function TransactionHistory() {
                       .toString()
                   )}
                 </div>
-                <div className="text-sm text-gray-600">Total Contributed (AVAX)</div>
+                <div className="text-sm text-muted-foreground">Total Contributed (AVAX)</div>
               </div>
             </CardContent>
           </Card>
@@ -129,7 +130,7 @@ export default function TransactionHistory() {
                 <div className="text-2xl font-bold">
                   {transactions.filter(t => t.status === 'completed').length}
                 </div>
-                <div className="text-sm text-gray-600">Successful Payments</div>
+                <div className="text-sm text-muted-foreground">Successful Payments</div>
               </div>
             </CardContent>
           </Card>
@@ -143,14 +144,14 @@ export default function TransactionHistory() {
           <CardContent>
             {isLoading ? (
               <div className="text-center py-8">
-                <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400" />
-                <p className="text-gray-600 mt-2">Loading transactions...</p>
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                <p className="text-muted-foreground mt-2">Loading transactions...</p>
               </div>
             ) : transactions.length === 0 ? (
               <div className="text-center py-8">
-                <Wallet className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-600">No transactions found</p>
-                <p className="text-sm text-gray-500 mt-1">
+                <Wallet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-foreground">No transactions found</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   Your Avalanche payments will appear here
                 </p>
               </div>
@@ -173,7 +174,7 @@ export default function TransactionHistory() {
                         <TableCell>
                           <div className="text-sm">
                             {format(new Date(transaction.createdAt), 'MMM dd, yyyy')}
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {format(new Date(transaction.createdAt), 'HH:mm:ss')}
                             </div>
                           </div>
@@ -184,7 +185,7 @@ export default function TransactionHistory() {
                             <div className="font-medium truncate">
                               {transaction.campaign?.title || 'Unknown Campaign'}
                             </div>
-                            <div className="text-xs text-gray-500 font-mono">
+                            <div className="text-xs text-muted-foreground font-mono">
                               ID: {transaction.campaignId.slice(0, 8)}...
                             </div>
                           </div>
@@ -211,7 +212,7 @@ export default function TransactionHistory() {
                             {transaction.transactionHash.slice(-8)}
                           </div>
                           {transaction.blockNumber && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               Block: {transaction.blockNumber}
                             </div>
                           )}
