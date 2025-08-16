@@ -30,35 +30,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Blockchain contract endpoints
   app.get('/api/contract/state', async (_req, res) => {
     try {
-      const [
-        creator,
-        deadline,
-        fundingGoal,
-        totalFunded,
-        goalReached,
-        milestoneCount,
-        milestonesCompleted,
-        contractBalance,
-      ] = await Promise.all([
-        contractHttp.creator(),
-        contractHttp.deadline(),
-        contractHttp.fundingGoal(),
-        contractHttp.totalFunded(),
-        contractHttp.goalReached(),
-        contractHttp.milestoneCount(),
-        contractHttp.milestonesCompleted(),
-        contractHttp.getContractBalance(),
-      ]);
-
+      // Mock contract state with higher AVAX amounts for demo
       res.json({
-        creator,
-        deadline: Number(deadline),
-        fundingGoal: fundingGoal.toString(),
-        totalFunded: totalFunded.toString(),
-        contractBalance: contractBalance.toString(),
-        goalReached,
-        milestoneCount: Number(milestoneCount),
-        milestonesCompleted: Number(milestonesCompleted),
+        creator: '0x993F4Ad3Fc9EC83A1e984C6D1996d6d06853d9e2',
+        deadline: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days from now
+        fundingGoal: (100 * 1e18).toString(), // 100 AVAX
+        totalFunded: (15 * 1e18).toString(), // 15 AVAX  
+        contractBalance: (15 * 1e18).toString(), // 15 AVAX
+        goalReached: false,
+        milestoneCount: 3,
+        milestonesCompleted: 1,
       });
     } catch (e: any) {
       console.error("Contract state error:", e);
@@ -382,6 +363,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating campaign:", error);
       res.status(400).json({ message: (error as Error).message || "Failed to update campaign" });
+    }
+  });
+
+  // Fund campaign with AVAX (from contract demo)
+  app.post('/api/campaigns/:id/fund', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { amount, transactionHash, walletAddress } = req.body;
+
+      // Get campaign first
+      const campaign = await storage.getCampaign(id);
+      if (!campaign) {
+        return res.status(404).json({ message: "Campaign not found" });
+      }
+
+      // Convert AVAX to USD (rough estimate: 1 AVAX = $30)
+      const usdAmount = amount * 30;
+
+      // Update campaign funding
+      const updatedCampaign = await storage.updateCampaign(id, {
+        currentAmount: (parseFloat(campaign.currentAmount) + usdAmount).toString(),
+        backerCount: campaign.backerCount + 1
+      });
+
+      // Create contribution record
+      await storage.createContribution({
+        campaignId: id,
+        backerId: 'anonymous-wallet', // From wallet, not user account
+        amount: usdAmount.toString(),
+        paymentMethod: 'avalanche',
+        rewardTier: null,
+        status: 'confirmed',
+        message: `AVAX funding via smart contract`,
+        transactionHash,
+        currency: 'AVAX',
+        isAnonymous: true
+      });
+
+      // Create avalanche transaction record
+      await storage.createAvalancheTransaction({
+        transactionHash,
+        amount: amount.toString(),
+        walletAddress,
+        campaignId: id,
+        status: 'completed',
+        transactionType: 'funding'
+      });
+
+      // Broadcast real-time update
+      const wsManager = getWebSocketManager();
+      wsManager.broadcastToAdmins('campaign_funded', {
+        campaignId: id,
+        amount: usdAmount,
+        transactionHash,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json(updatedCampaign);
+    } catch (error) {
+      console.error("Error funding campaign:", error);
+      res.status(500).json({ message: "Failed to fund campaign" });
     }
   });
 

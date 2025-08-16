@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { fetchStateFromServer, fund, refund, completeMilestone, subscribeEvents, getBackerAmount } from '../lib/contract';
+import { fetchStateFromServer, fund, completeMilestone, subscribeEvents, getBackerAmount } from '../lib/contract';
 import { getProviderAndSigner } from '../lib/contract';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Wallet, TrendingUp, CheckCircle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,18 +21,27 @@ export default function ContractDemo() {
   const [log, setLog] = useState<string[]>([]);
   const [myContribution, setMyContribution] = useState<string>('0');
   const [loading, setLoading] = useState(false);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
     const load = async () => {
       try {
-        const s = await fetchStateFromServer();
+        const [s, campaignsRes] = await Promise.all([
+          fetchStateFromServer(),
+          fetch('/api/campaigns').then(r => r.json())
+        ]);
         setState(s);
+        setCampaigns(campaignsRes);
+        if (campaignsRes.length > 0) {
+          setSelectedCampaign(campaignsRes[0].id);
+        }
       } catch (error) {
-        console.error('Failed to load contract state:', error);
+        console.error('Failed to load data:', error);
         toast({
           title: "Error",
-          description: "Failed to load contract state",
+          description: "Failed to load contract state or campaigns",
           variant: "destructive",
         });
       }
@@ -92,12 +102,42 @@ export default function ContractDemo() {
 
   const handleFund = async () => {
     try {
+      if (!selectedCampaign) {
+        toast({
+          title: "No Campaign Selected",
+          description: "Please select a campaign to fund",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setLoading(true);
       const receipt = await fund(amount);
-      toast({
-        title: "Funding Successful",
-        description: `Funded ${amount} AVAX successfully! Transaction: ${receipt.hash}`,
-      });
+      
+      // Update the campaign funding immediately after successful transaction
+      try {
+        const response = await fetch(`/api/campaigns/${selectedCampaign}/fund`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: parseFloat(amount),
+            transactionHash: receipt.hash,
+            walletAddress: account
+          })
+        });
+        
+        if (response.ok) {
+          toast({
+            title: "Funding Successful",
+            description: `Funded ${amount} AVAX to campaign successfully! Transaction: ${receipt.hash}`,
+          });
+        } else {
+          console.warn('Failed to update campaign funding');
+        }
+      } catch (updateError) {
+        console.warn('Failed to update campaign:', updateError);
+      }
+      
       // Add to log for immediate feedback
       setLog(prev => [`${new Date().toLocaleTimeString()}: Fund transaction ${receipt.hash}`, ...prev].slice(0, 10));
     } catch (error: any) {
@@ -132,26 +172,7 @@ export default function ContractDemo() {
     }
   };
 
-  const handleRefund = async () => {
-    try {
-      setLoading(true);
-      const receipt = await refund();
-      toast({
-        title: "Refund Successful",
-        description: `Refund processed successfully! Transaction: ${receipt.hash}`,
-      });
-      // Add to log for immediate feedback
-      setLog(prev => [`${new Date().toLocaleTimeString()}: Refund transaction ${receipt.hash}`, ...prev].slice(0, 10));
-    } catch (error: any) {
-      toast({
-        title: "Refund Failed",
-        description: error.message || "Failed to process refund",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -279,27 +300,45 @@ export default function ContractDemo() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-end">
-              <div className="flex-1">
-                <label className="text-sm text-muted-foreground">Amount (AVAX)</label>
-                <Input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.01"
-                  step="0.01"
-                  min="0"
-                />
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm text-muted-foreground">Select Campaign to Fund</label>
+                <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a campaign" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {campaigns.map((campaign) => (
+                      <SelectItem key={campaign.id} value={campaign.id}>
+                        {campaign.title} - Goal: ${campaign.goalAmount}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleFund}
-                  disabled={!account || loading}
-                  className="flex items-center gap-2"
-                >
-                  {loading && <RefreshCw className="h-4 w-4 animate-spin" />}
-                  Fund
-                </Button>
+              
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-1">
+                  <label className="text-sm text-muted-foreground">Amount (AVAX)</label>
+                  <Input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.01"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleFund}
+                    disabled={!account || loading || !selectedCampaign}
+                    className="flex items-center gap-2"
+                  >
+                    {loading && <RefreshCw className="h-4 w-4 animate-spin" />}
+                    Fund Campaign
+                  </Button>
+                </div>
               </div>
             </div>
             
@@ -314,19 +353,11 @@ export default function ContractDemo() {
                 <CheckCircle className="h-4 w-4" />
                 Complete Milestone
               </Button>
-              <Button 
-                onClick={handleRefund}
-                disabled={!account || loading}
-                variant="destructive"
-                className="flex items-center gap-2"
-              >
-                {loading && <RefreshCw className="h-4 w-4 animate-spin" />}
-                Request Refund
-              </Button>
+
             </div>
             
             <p className="text-xs text-muted-foreground">
-              Note: completeMilestone/refund permissions depend on contract logic (creator, goal reached, deadline, etc.).
+              Note: Funding will be added to the selected campaign automatically. Complete milestone permissions depend on contract logic.
             </p>
           </div>
         </CardContent>

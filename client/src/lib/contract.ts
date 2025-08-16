@@ -208,42 +208,6 @@ export async function completeMilestone() {
   }
 }
 
-export async function refund() {
-  // Demo refund function - creates a mock transaction for demonstration
-  // This avoids complex smart contract refund conditions that may fail
-  
-  const walletAddress = `0x${Math.random().toString(16).substr(2, 40)}`;
-  const mockTransactionHash = `0x${Date.now().toString(16).padEnd(64, '0').slice(0, 64)}`;
-  
-  // Create demo receipt
-  const receipt = {
-    hash: mockTransactionHash,
-    blockNumber: Math.floor(Math.random() * 1000000) + 20000000,
-    gasUsed: '21000',
-    status: 1
-  };
-  
-  // Save to database for live transactions feed
-  const response = await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      transactionHash: receipt.hash,
-      amount: '0.1',
-      walletAddress,
-      campaignId: null,
-      status: 'completed',
-      transactionType: 'refund'
-    })
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to process refund - please try again');
-  }
-  
-  return receipt;
-}
-
 // Views
 export async function fetchStateFromServer() {
   const res = await fetch(`${window.location.origin}/api/contract/state`);
@@ -261,7 +225,6 @@ export async function getBackerAmount(addr: string) {
 export function subscribeEvents(onEvent: (type: string, payload: any) => void) {
   const es = new EventSource(`${window.location.origin}/api/contract/events`);
   es.addEventListener('Funded', (e: MessageEvent) => onEvent('Funded', JSON.parse(e.data)));
-  es.addEventListener('Refunded', (e: MessageEvent) => onEvent('Refunded', JSON.parse(e.data)));
   es.addEventListener('MilestoneCompleted', (e: MessageEvent) => onEvent('MilestoneCompleted', JSON.parse(e.data)));
   es.addEventListener('error', (e) => {
     console.error('SSE Error:', e);
