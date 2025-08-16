@@ -82,11 +82,10 @@ const port = parseInt(process.env.PORT || '5000', 10);
     serveStatic(app);
   }
 
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  // Windows compatibility: use localhost for local development, 0.0.0.0 for production
+  const host = process.env.NODE_ENV === 'production' ? "0.0.0.0" : "localhost";
+  
+  server.listen(port, host, () => {
+    log(`serving on ${host}:${port}`);
   });
 })();
