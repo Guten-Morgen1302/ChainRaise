@@ -42,9 +42,9 @@ export function MainNavigation() {
     { href: "/create", icon: PlusCircle, label: "Create" },
     { href: "/dashboard", icon: TrendingUp, label: "Dashboard" },
     { href: "/transactions", icon: Wallet, label: "My Payments" },
-    { href: "/explorer", icon: Brain, label: "AI Explorer" },
+
     { href: "/contract-demo", icon: Shield, label: "Blockchain Demo" },
-    { href: "/live-transactions", icon: TrendingUp, label: "Live Tx" }
+    { href: "/live-transactions", icon: Brain, label: "Live Tx + AI" }
   ];
 
   return (

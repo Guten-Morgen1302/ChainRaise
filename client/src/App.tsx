@@ -15,7 +15,7 @@ import AccessGuide from "@/pages/AccessGuide";
 import Dashboard from "@/pages/dashboard";
 import Profile from "@/pages/profile";
 import KYC from "@/pages/kyc";
-import Explorer from "./pages/explorer";
+
 import ContractDemo from "./pages/contract-demo";
 import LiveTransactions from "./pages/live-transactions";
 import AdminDashboard from "./components/admin/AdminDashboard";
@@ -41,7 +41,7 @@ function Router() {
       <Route path="/kyc-verification" component={KYCVerification} />
       <Route path="/features" component={FeatureShowcase} />
       <Route path="/access-guide" component={AccessGuide} />
-      <Route path="/explorer" component={Explorer} />
+
       <Route path="/live-transactions" component={LiveTransactions} />
       <Route path="/contract-demo" component={ContractDemo} />
       <Route path="/auth" component={AuthPage} />
