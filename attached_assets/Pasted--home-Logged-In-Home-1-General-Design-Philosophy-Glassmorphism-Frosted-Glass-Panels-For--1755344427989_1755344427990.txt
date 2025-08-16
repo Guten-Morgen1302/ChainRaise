@@ -1,0 +1,119 @@
+🏠 /home — Logged-In Home
+
+1️⃣ General Design Philosophy
+
+Glassmorphism + Frosted Glass Panels: For all cards, quick actions, and stat tiles
+
+Animated Micro-interactions: Buttons, tiles, progress bars, and chips respond smoothly on hover/focus
+
+Gradient / Neumorphic Accents: Subtle glowing outlines and soft shadows to guide attention
+
+Responsiveness: Adaptive grid layouts for desktop, tablet, and mobile
+
+Accessibility: Proper keyboard focus, aria labels, and smooth animation that doesn’t cause CLS (Cumulative Layout Shift < 0.05)
+
+Motion: Use Framer Motion for subtle entrance animations, count-up numbers, and progress bars
+
+2️⃣ Hero Row
+
+Welcome back, {FirstName} headline → bold gradient text with subtle drop shadow
+
+Subtext → smaller font, semi-transparent white
+
+KYC Badge: Inline chip with hover tooltip showing status
+
+Animate headline and badge with fade-in + slide-up when page loads
+
+3️⃣ Quick Actions
+
+3 large glass buttons:
+
+Create Campaign
+
+Browse Campaigns
+
+My Dashboard
+
+Icons: SVG or Lottie animated icons for each action
+
+Hover Effect: Glow + slight scale-up + smooth shadow
+
+Click Animation: Ripple effect or button “press” feedback
+
+4️⃣ KYC Banner
+
+Contextual copy: concise, status-based
+
+Background: blurred semi-transparent glass panel
+
+Buttons: start/resume/view → gradient hover + shadow
+
+Entrance: Slide-down from top when status is pending
+
+5️⃣ Stat Tiles (4)
+
+Tiles: Contributions, Total Raised, Active Campaigns, Success Rate
+
+Count-Up Animation: Framer Motion number animation on view
+
+Sparkline Chart: Tiny SVG/Canvas sparkline for last 7 days
+
+Delta Pill: Small pill with + / - delta, animates in with fade & slide
+
+Hover: Slight lift and shadow change
+
+6️⃣ Featured Grid (≤6)
+
+Larger Cards: Progressive image loading
+
+Progress Bar: Animated gradient fill showing funding
+
+Time-Left Chip: Floating chip with subtle glow
+
+Buttons: “View / Contribute” → hover animations, smooth scale-up
+
+Entrance: Staggered fade-in + slide-up on scroll (Framer Motion whileInView)
+
+7️⃣ Personal Feed (“Recent Activity”)
+
+Vertical timeline layout with avatars, icons, and timestamps
+
+Each activity animates in slide-right + fade
+
+Optionally add micro-interaction on hover: expand card, subtle shadow
+
+8️⃣ Performance & Accessibility
+
+Ensure CLS < 0.05:
+
+Pre-allocate space for all images, chips, charts, and stat tiles
+
+Tiles animate once on view
+
+Keyboard focus order: left→right, top→bottom
+
+Aria labels for interactive elements
+
+Smooth scroll + hover animations without layout shifts
+
+9️⃣ Technology Stack for UI Enhancements
+
+TailwindCSS → rapid modern styling, glassmorphism, gradients
+
+Framer Motion → count-up numbers, tile entrance, progress bar animation
+
+GSAP → optional advanced scroll-linked effects for featured cards
+
+React Icons / Lottie → animated icons for quick actions
+
+React-Sparklines → mini sparkline charts in tiles
+
+✅ Summary
+
+Functionality: Keep exactly as-is — no changes to stats, quick actions, KYC, featured cards, or feed logic
+
+UI: Premium, MIT-grade, glassmorphic, responsive, motion-rich, accessible
+
+Animations: Smooth fade-in, slide, scale, count-up, hover glow — all subtle, non-distracting
+
+Performance: CLS < 0.05, entrance animations triggered once on scroll

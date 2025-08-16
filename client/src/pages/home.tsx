@@ -4,13 +4,156 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KYCBadge } from "@/components/ui/kyc-badge";
-import { MainNavigation } from "@/components/navigation/MainNavigation";
-import { ThreeBackground } from "@/components/three/ThreeBackground";
+import { PageLayout } from "@/components/layout/PageLayout";
 import CampaignCard from "@/components/campaign/campaign-card";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, TrendingUp, Users, Wallet, Eye, Heart, ArrowUp } from "lucide-react";
+import { Plus, TrendingUp, Users, Wallet, Eye, Heart, ArrowUp, Star, Clock, Activity, Target } from "lucide-react";
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
 import type { Campaign, Contribution } from "@shared/schema";
+
+// Animation variants for staggered animations
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.25, 0.46, 0.45, 0.94]
+    }
+  }
+};
+
+// Count-up animation hook
+function useCountUp(target: number, duration: number = 2000) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number;
+    let animationFrame: number;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      
+      setCount(Math.floor(target * progress));
+      
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [target, duration]);
+
+  return count;
+}
+
+// Stat Tile Component with count-up animation
+function StatTile({ 
+  title, 
+  value, 
+  icon: Icon, 
+  trend, 
+  sparklineData,
+  delay = 0 
+}: {
+  title: string;
+  value: number;
+  icon: any;
+  trend?: string;
+  sparklineData?: number[];
+  delay?: number;
+}) {
+  const animatedValue = useCountUp(value, 2000);
+
+  return (
+    <motion.div
+      variants={itemVariants}
+      whileHover={{ 
+        y: -5, 
+        transition: { duration: 0.2 } 
+      }}
+      className="relative group"
+    >
+      <Card className="glass-morphism border-white/10 overflow-hidden h-full">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm">
+              <Icon className="w-5 h-5 text-primary" />
+            </div>
+            {trend && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: delay + 0.5, duration: 0.3 }}
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  trend.startsWith('+') 
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                }`}
+              >
+                {trend}
+              </motion.div>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <motion.h3 
+              className="text-3xl font-bold gradient-text"
+              key={animatedValue}
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              {title === 'Total Raised' ? `$${animatedValue.toLocaleString()}` : animatedValue.toLocaleString()}
+            </motion.h3>
+            <p className="text-sm text-muted-foreground font-medium">{title}</p>
+          </div>
+          
+          {sparklineData && (
+            <div className="mt-4 h-8">
+              <svg width="100%" height="100%" className="overflow-visible">
+                <defs>
+                  <linearGradient id={`gradient-${title}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.8" />
+                  </linearGradient>
+                </defs>
+                <motion.polyline
+                  fill="none"
+                  stroke={`url(#gradient-${title})`}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={sparklineData.map((value, index) => 
+                    `${(index / (sparklineData.length - 1)) * 100},${32 - (value / Math.max(...sparklineData)) * 24}`
+                  ).join(' ')}
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ delay: delay + 1, duration: 1.5, ease: "easeInOut" }}
+                />
+              </svg>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const { user } = useAuth();
@@ -35,442 +178,294 @@ export default function Home() {
     retry: false,
   });
 
+  // Mock sparkline data for demonstration
+  const sparklineData = {
+    contributions: [12, 19, 15, 27, 32, 28, 35],
+    raised: [1200, 1900, 1500, 2700, 3200, 2800, 3500],
+    campaigns: [3, 4, 3, 5, 6, 5, 7],
+    success: [45, 52, 48, 61, 67, 63, 72]
+  };
+
+  // Featured campaigns (limit to 6)
+  const featuredCampaigns = campaigns.slice(0, 6);
+
+  // Recent activity data
+  const recentActivity = [
+    {
+      type: 'contribution',
+      message: 'You contributed $500 to "Blockchain Gaming Platform"',
+      time: '2 hours ago',
+      icon: Wallet
+    },
+    {
+      type: 'campaign',
+      message: 'Your campaign "DeFi Protocol" received a new backer',
+      time: '1 day ago',
+      icon: Heart
+    },
+    {
+      type: 'milestone',
+      message: 'Campaign "Sustainable Fashion" reached 75% funding',
+      time: '2 days ago',
+      icon: Target
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="hero-bg mesh-gradient min-h-screen">
-        <div className="floating-orb"></div>
-        <div className="floating-orb"></div>
-        <div className="floating-orb"></div>
-      </div>
-      <ThreeBackground />
-      <MainNavigation />
-      
-      <div className="relative z-10">
+    <PageLayout>
+      <div className="relative z-10 pt-20 pb-16">
         {/* Hero Section */}
-        <section className="py-20 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="text-center mb-16"
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="flex flex-col items-center gap-6 mb-8"
-              >
-                <div className="relative">
-                  <h1 className="text-5xl md:text-8xl heading-display leading-tight">
-                    Welcome back,{" "}
-                    <span className="relative inline-block">
-                      <span className="gradient-text animate-glow">
-                        {user?.firstName || "Creator"}
-                      </span>
-                      <motion.div
-                        className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-lg blur-xl"
-                        animate={{
-                          scale: [1, 1.1, 1],
-                          opacity: [0.5, 0.8, 0.5],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      />
-                    </span>
-                  </h1>
-                </div>
-                {user?.kycStatus && (
-                  <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ duration: 0.6, delay: 0.6, type: "spring" }}
-                  >
-                    <KYCBadge status={user.kycStatus as "approved" | "pending" | "rejected"} />
-                  </motion.div>
-                )}
-              </motion.div>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="text-2xl body-text max-w-3xl mx-auto opacity-90 leading-relaxed"
-              >
-                Ready to launch your next{" "}
-                <span className="text-primary font-semibold">revolutionary project</span>{" "}
-                or discover{" "}
-                <span className="text-accent font-semibold">amazing campaigns</span>?
-              </motion.p>
+        <motion.section 
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="py-12 relative overflow-hidden"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Welcome Header */}
+            <motion.div variants={itemVariants} className="text-center mb-12">
+              <div className="relative inline-block">
+                <motion.h1 
+                  className="text-4xl md:text-6xl font-black gradient-text mb-4"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                  Welcome back, <span className="relative">
+                    {user?.firstName || "Creator"}
+                    <motion.div
+                      className="absolute -inset-2 bg-gradient-to-r from-primary/20 to-accent/20 rounded-lg blur-xl"
+                      animate={{
+                        scale: [1, 1.05, 1],
+                        opacity: [0.3, 0.6, 0.3],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </span>
+                </motion.h1>
+                
+                <motion.p 
+                  className="text-xl text-muted-foreground/80 mb-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.6 }}
+                >
+                  Ready to bring your next big idea to life?
+                </motion.p>
+                
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  className="inline-flex items-center gap-3"
+                >
+                  <KYCBadge status={user?.kycStatus || "pending"} />
+                  {user?.kycStatus === 'approved' && (
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                      <Star className="w-3 h-3 mr-1" />
+                      Verified Creator
+                    </Badge>
+                  )}
+                </motion.div>
+              </div>
             </motion.div>
 
             {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.7 }}
-              className="grid md:grid-cols-3 gap-8 mb-20 max-w-5xl mx-auto"
-            >
-              <Link href="/create">
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.8 }}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    y: -10,
-                    rotateY: 5,
-                    transition: { duration: 0.3 }
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  className="card-mega p-8 text-center group cursor-pointer relative overflow-hidden"
-                >
+            <motion.div variants={itemVariants} className="mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {[
+                  { 
+                    title: "Create Campaign", 
+                    icon: Plus, 
+                    href: "/create",
+                    gradient: "from-primary to-accent",
+                    description: "Launch your next project"
+                  },
+                  { 
+                    title: "Browse Campaigns", 
+                    icon: Eye, 
+                    href: "/campaigns",
+                    gradient: "from-accent to-success",
+                    description: "Discover amazing projects"
+                  },
+                  { 
+                    title: "My Dashboard", 
+                    icon: Activity, 
+                    href: "/dashboard",
+                    gradient: "from-success to-primary",
+                    description: "Track your progress"
+                  }
+                ].map((action, index) => (
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '100%' }}
-                    transition={{ duration: 0.6 }}
-                  />
-                  <motion.div
-                    className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-2xl flex items-center justify-center group-hover:bg-primary/30 transition-all duration-300 relative"
+                    key={action.title}
+                    variants={itemVariants}
                     whileHover={{ 
-                      rotate: [0, -10, 10, 0],
-                      scale: 1.1
+                      scale: 1.05,
+                      transition: { duration: 0.2 }
                     }}
-                    transition={{ duration: 0.4 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <Plus className="w-8 h-8 text-primary" />
-                    <motion.div
-                      className="absolute inset-0 bg-primary/20 rounded-2xl"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0, 0.5, 0]
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
+                    <Link href={action.href}>
+                      <Card className="glass-morphism border-white/10 overflow-hidden cursor-pointer group h-full">
+                        <CardContent className="p-8 text-center relative">
+                          <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                          
+                          <div className="relative z-10">
+                            <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${action.gradient} p-4 group-hover:scale-110 transition-transform duration-300`}>
+                              <action.icon className="w-full h-full text-white" />
+                            </div>
+                            
+                            <h3 className="text-xl font-bold mb-2 gradient-text">
+                              {action.title}
+                            </h3>
+                            <p className="text-muted-foreground text-sm">
+                              {action.description}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   </motion.div>
-                  <h3 className="heading-display text-2xl mb-3">Create Campaign</h3>
-                  <p className="body-text opacity-80 text-lg">Launch your revolutionary project</p>
-                </motion.div>
-              </Link>
-              
-              <Link href="/campaigns">
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.9 }}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    y: -10,
-                    rotateY: 5,
-                    transition: { duration: 0.3 }
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  className="card-mega p-8 text-center group cursor-pointer relative overflow-hidden"
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '100%' }}
-                    transition={{ duration: 0.6 }}
-                  />
-                  <motion.div
-                    className="w-16 h-16 mx-auto mb-6 bg-accent/20 rounded-2xl flex items-center justify-center group-hover:bg-accent/30 transition-all duration-300 relative"
-                    whileHover={{ 
-                      rotate: [0, -10, 10, 0],
-                      scale: 1.1
-                    }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <Eye className="w-8 h-8 text-accent" />
-                    <motion.div
-                      className="absolute inset-0 bg-accent/20 rounded-2xl"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0, 0.5, 0]
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  </motion.div>
-                  <h3 className="heading-display text-2xl mb-3">Browse</h3>
-                  <p className="body-text opacity-80 text-lg">Discover amazing campaigns</p>
-                </motion.div>
-              </Link>
-              
-              <Link href="/dashboard">
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 1.0 }}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    y: -10,
-                    rotateY: 5,
-                    transition: { duration: 0.3 }
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  className="card-mega p-8 text-center group cursor-pointer relative overflow-hidden"
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '100%' }}
-                    transition={{ duration: 0.6 }}
-                  />
-                  <motion.div
-                    className="w-16 h-16 mx-auto mb-6 bg-success/20 rounded-2xl flex items-center justify-center group-hover:bg-success/30 transition-all duration-300 relative"
-                    whileHover={{ 
-                      rotate: [0, -10, 10, 0],
-                      scale: 1.1
-                    }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <Users className="w-8 h-8 text-success" />
-                    <motion.div
-                      className="absolute inset-0 bg-success/20 rounded-2xl"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0, 0.5, 0]
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  </motion.div>
-                  <h3 className="heading-display text-2xl mb-3">My Dashboard</h3>
-                  <p className="body-text opacity-80 text-lg">Manage your campaigns</p>
-                </motion.div>
-              </Link>
+                ))}
+              </div>
             </motion.div>
 
-            {/* KYC Status Banner */}
-            {user?.kycStatus !== "approved" && (
+            {/* KYC Banner (if needed) */}
+            {user?.kycStatus === 'pending' && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
+                variants={itemVariants}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
                 className="mb-12"
               >
-                <div className="card-premium p-6 border-warning/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center">
-                        <div className="w-3 h-3 bg-warning rounded-full animate-pulse"></div>
-                      </div>
+                <Card className="glass-morphism border-amber-500/30 bg-amber-500/5">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="heading-display text-lg text-warning mb-1">
-                          {user?.kycStatus === 'pending' ? 'KYC Under Review' : 'Complete KYC Verification'}
+                        <h3 className="text-lg font-semibold text-amber-400 mb-2">
+                          Complete Your Verification
                         </h3>
-                        <p className="body-text text-sm opacity-80">
-                          {user?.kycStatus === 'pending' 
-                            ? 'Your verification is being processed. You\'ll be notified once approved.'
-                            : 'Verify your identity to create campaigns and unlock all features'
-                          }
+                        <p className="text-muted-foreground">
+                          Verify your identity to unlock full campaign creation features and build trust with backers.
                         </p>
                       </div>
+                      <Link href="/kyc">
+                        <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
+                          Continue KYC
+                        </Button>
+                      </Link>
                     </div>
-                    <Link href="/kyc">
-                      <Button className="bg-warning text-background hover:bg-warning/90 font-medium">
-                        {user?.kycStatus === 'pending' ? 'View Status' : 'Start KYC'}
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             )}
-          </div>
-        </section>
 
-        {/* Stats Overview */}
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0 }}
-                className="card-premium p-6"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                    <Wallet className="w-5 h-5 text-primary" />
-                  </div>
-                  <Badge className="bg-success/20 text-success border-success/30">
-                    <ArrowUp className="w-3 h-3 mr-1" />
-                    +12%
-                  </Badge>
-                </div>
-                <h3 className="body-text text-sm opacity-70 mb-1">Contributions</h3>
-                <p className="heading-display text-3xl mb-2">
-                  {userContributions.length}
-                </p>
-                <div className="h-8 bg-gradient-to-r from-primary/20 to-transparent rounded" />
-              </motion.div>
+            {/* Stats Grid */}
+            <motion.div variants={itemVariants} className="mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatTile 
+                  title="Contributions" 
+                  value={userContributions.length}
+                  icon={Heart}
+                  trend="+12%"
+                  sparklineData={sparklineData.contributions}
+                  delay={0}
+                />
+                <StatTile 
+                  title="Total Raised" 
+                  value={parseInt(stats?.totalRaised || "0")}
+                  icon={TrendingUp}
+                  trend="+24%"
+                  sparklineData={sparklineData.raised}
+                  delay={0.1}
+                />
+                <StatTile 
+                  title="Active Campaigns" 
+                  value={stats?.activeCampaigns || 0}
+                  icon={Activity}
+                  trend="+8%"
+                  sparklineData={sparklineData.campaigns}
+                  delay={0.2}
+                />
+                <StatTile 
+                  title="Success Rate" 
+                  value={Math.round(stats?.successRate || 0)}
+                  icon={Target}
+                  trend="+15%"
+                  sparklineData={sparklineData.success}
+                  delay={0.3}
+                />
+              </div>
+            </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="card-premium p-6"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-success" />
-                  </div>
-                  <Badge className="bg-success/20 text-success border-success/30">
-                    <ArrowUp className="w-3 h-3 mr-1" />
-                    +8%
-                  </Badge>
-                </div>
-                <h3 className="body-text text-sm opacity-70 mb-1">Total Raised (Platform)</h3>
-                <p className="heading-display text-3xl mb-2">
-                  {parseFloat(stats?.totalRaised || "0").toFixed(1)} ETH
-                </p>
-                <div className="h-8 bg-gradient-to-r from-success/20 to-transparent rounded" />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="card-premium p-6"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-accent" />
-                  </div>
-                  <Badge className="bg-warning/20 text-warning border-warning/30">
-                    <ArrowUp className="w-3 h-3 mr-1" />
-                    +3%
-                  </Badge>
-                </div>
-                <h3 className="body-text text-sm opacity-70 mb-1">Active Campaigns</h3>
-                <p className="heading-display text-3xl mb-2">
-                  {stats?.activeCampaigns || "0"}
-                </p>
-                <div className="h-8 bg-gradient-to-r from-accent/20 to-transparent rounded" />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="card-premium p-6"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center">
-                    <Heart className="w-5 h-5 text-success" />
-                  </div>
-                  <Badge className="bg-success/20 text-success border-success/30">
-                    <ArrowUp className="w-3 h-3 mr-1" />
-                    +5%
-                  </Badge>
-                </div>
-                <h3 className="body-text text-sm opacity-70 mb-1">Success Rate</h3>
-                <p className="heading-display text-3xl mb-2">
-                  {stats?.successRate || "0"}%
-                </p>
-                <div className="h-8 bg-gradient-to-r from-success/20 to-transparent rounded" />
-              </motion.div>
-            </div>
-
-            {/* Featured Campaigns */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="flex items-center justify-between mb-12">
-                <h2 className="text-4xl heading-display gradient-text">Featured Campaigns</h2>
+            {/* Featured Campaigns Grid */}
+            <motion.div variants={itemVariants} className="mb-16">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold gradient-text">Featured Campaigns</h2>
                 <Link href="/campaigns">
-                  <Button variant="outline" className="btn-glass">
-                    View All
+                  <Button variant="ghost" className="text-primary hover:text-primary/80">
+                    View All <ArrowUp className="w-4 h-4 ml-2 rotate-45" />
                   </Button>
                 </Link>
               </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {campaigns.slice(0, 6).map((campaign, index) => (
+                {featuredCampaigns.map((campaign, index) => (
                   <motion.div
                     key={campaign.id}
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    transition={{ 
+                      delay: index * 0.1, 
+                      duration: 0.6,
+                      ease: [0.25, 0.46, 0.45, 0.94]
+                    }}
+                    viewport={{ once: true, margin: "-50px" }}
                   >
                     <CampaignCard campaign={campaign} />
                   </motion.div>
                 ))}
               </div>
             </motion.div>
-            
+
             {/* Recent Activity Feed */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="mt-20"
-            >
-              <h2 className="text-3xl heading-display gradient-text mb-8">Recent Activity</h2>
-              <div className="card-premium p-8">
-                <div className="space-y-6">
-                  {userContributions.slice(0, 5).map((contribution, index) => (
-                    <motion.div
-                      key={contribution.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
-                      className="flex items-center gap-4 p-4 rounded-lg glass border border-white/5"
-                    >
-                      <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                        <Heart className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="body-text font-medium">
-                          You backed a campaign
-                        </p>
-                        <p className="body-text text-sm opacity-70">
-                          {contribution.amount} ETH contribution
-                        </p>
-                      </div>
-                      <Badge className="bg-primary/20 text-primary border-primary/30">
-                        {contribution.createdAt ? new Date(contribution.createdAt).toLocaleDateString() : 'Unknown'}
-                      </Badge>
-                    </motion.div>
-                  ))}
-                  {userContributions.length === 0 && (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Heart className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <h3 className="heading-display text-lg mb-2">No activity yet</h3>
-                      <p className="body-text opacity-70">Start exploring campaigns to see your activity here</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+            <motion.div variants={itemVariants}>
+              <h2 className="text-2xl font-bold gradient-text mb-6">Recent Activity</h2>
+              <Card className="glass-morphism border-white/10">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {recentActivity.map((activity, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                        viewport={{ once: true }}
+                        className="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors duration-200"
+                      >
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20">
+                          <activity.icon className="w-4 h-4 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium mb-1">{activity.message}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {activity.time}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           </div>
-        </section>
+        </motion.section>
       </div>
-    </div>
+    </PageLayout>
   );
 }
