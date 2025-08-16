@@ -92,7 +92,7 @@ function LiveStatusIndicator() {
   const config = getStatusConfig(connectionStatus);
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${config.bg} ${config.border}`}>
+    <div className={`flex items-center gap-2 px-4 py-2 rounded-lg backdrop-blur-sm bg-gray-800/40 border border-gray-600/30 shadow-xl ${config.color}`}>
       <div className={config.color}>
         {config.icon}
       </div>
@@ -100,8 +100,8 @@ function LiveStatusIndicator() {
         {config.label}
       </span>
       {lastUpdate && (
-        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-          Last update: {new Date(lastUpdate).toLocaleTimeString()}
+        <span className="text-xs text-gray-400 ml-2">
+          {new Date(lastUpdate).toLocaleTimeString()}
         </span>
       )}
       {!isConnected && (
@@ -109,7 +109,7 @@ function LiveStatusIndicator() {
           size="sm"
           variant="outline"
           onClick={reconnect}
-          className="ml-2 h-6 px-2 text-xs"
+          className="ml-2 h-6 px-2 text-xs bg-gray-700/50 border-gray-600 hover:bg-gray-600/50"
         >
           Retry
         </Button>
@@ -206,123 +206,121 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Status Bar */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">System Status</h2>
+        <h2 className="text-3xl font-bold text-white drop-shadow-sm">System Overview</h2>
         <LiveStatusIndicator />
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Registered accounts</p>
-          </CardContent>
-        </Card>
+      {/* Glassmorphism Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="backdrop-blur-xl bg-gray-800/40 border border-gray-600/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:bg-gray-800/50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-gray-300">Total Users</h3>
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <Users className="h-5 w-5 text-white" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-white mb-1">{users.length}</div>
+          <p className="text-xs text-gray-400">Registered accounts</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{(stats as any)?.activeCampaigns || 0}</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Currently running</p>
-          </CardContent>
-        </Card>
+        <div className="backdrop-blur-xl bg-gray-800/40 border border-gray-600/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:bg-gray-800/50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-gray-300">Active Campaigns</h3>
+            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-white mb-1">{(stats as any)?.activeCampaigns || 0}</div>
+          <p className="text-xs text-gray-400">Currently running</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Raised</CardTitle>
-            <DollarSign className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${(stats as any)?.totalRaised || '0'}</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">All time</p>
-          </CardContent>
-        </Card>
+        <div className="backdrop-blur-xl bg-gray-800/40 border border-gray-600/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:bg-gray-800/50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-gray-300">Total Raised</h3>
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+              <DollarSign className="h-5 w-5 text-white" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-white mb-1">${(stats as any)?.totalRaised || '0'}</div>
+          <p className="text-xs text-gray-400">All time</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending KYC</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.filter(u => u.kycStatus === 'pending').length}</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Awaiting review</p>
-          </CardContent>
-        </Card>
+        <div className="backdrop-blur-xl bg-gray-800/40 border border-gray-600/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:bg-gray-800/50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-gray-300">Pending KYC</h3>
+            <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/25">
+              <AlertTriangle className="h-5 w-5 text-white" />
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-white mb-1">{users.filter(u => u.kycStatus === 'pending').length}</div>
+          <p className="text-xs text-gray-400">Awaiting review</p>
+        </div>
       </div>
 
-      {/* Main Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="kyc">KYC</TabsTrigger>
-          <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
-        </TabsList>
+      {/* Glassmorphism Main Tabs */}
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-8">
+        <div className="backdrop-blur-xl bg-gray-800/40 border border-gray-600/30 rounded-2xl p-2 shadow-xl">
+          <TabsList className="grid w-full grid-cols-5 bg-transparent gap-1">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-gray-700/70 data-[state=active]:text-white text-gray-400 transition-all duration-200">Overview</TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-gray-700/70 data-[state=active]:text-white text-gray-400 transition-all duration-200">Users</TabsTrigger>
+            <TabsTrigger value="campaigns" className="data-[state=active]:bg-gray-700/70 data-[state=active]:text-white text-gray-400 transition-all duration-200">Campaigns</TabsTrigger>
+            <TabsTrigger value="kyc" className="data-[state=active]:bg-gray-700/70 data-[state=active]:text-white text-gray-400 transition-all duration-200">KYC</TabsTrigger>
+            <TabsTrigger value="blockchain" className="data-[state=active]:bg-gray-700/70 data-[state=active]:text-white text-gray-400 transition-all duration-200">Blockchain</TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Users */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Users</CardTitle>
-                <CardDescription>Latest user registrations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {users.slice(0, 5).map((user) => (
-                    <div key={user.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                          <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{user.username}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                        </div>
+        <TabsContent value="overview" className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Recent Users - Glassmorphism */}
+            <div className="backdrop-blur-xl bg-gray-800/40 border border-gray-600/30 rounded-2xl p-6 shadow-xl">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-white">Recent Users</h3>
+                <p className="text-gray-400 text-sm">Latest user registrations</p>
+              </div>
+              <div className="space-y-4">
+                {users.slice(0, 5).map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-700/30 border border-gray-600/20 hover:bg-gray-700/50 transition-all duration-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/25">
+                        <Users className="h-5 w-5 text-white" />
                       </div>
-                      {getStatusBadge(user.kycStatus || 'pending')}
+                      <div>
+                        <p className="text-sm font-medium text-white">{user.username}</p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    {getStatusBadge(user.kycStatus || 'pending')}
+                  </div>
+                ))}
+              </div>
+            </div>
 
-            {/* Recent Campaigns */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Campaigns</CardTitle>
-                <CardDescription>Latest campaign submissions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {campaigns.slice(0, 5).map((campaign) => (
-                    <div key={campaign.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                          <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{campaign.title}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">${campaign.goalAmount} goal</p>
-                        </div>
+            {/* Recent Campaigns - Glassmorphism */}
+            <div className="backdrop-blur-xl bg-gray-800/40 border border-gray-600/30 rounded-2xl p-6 shadow-xl">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-white">Recent Campaigns</h3>
+                <p className="text-gray-400 text-sm">Latest campaign submissions</p>
+              </div>
+              <div className="space-y-4">
+                {campaigns.slice(0, 5).map((campaign) => (
+                  <div key={campaign.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-700/30 border border-gray-600/20 hover:bg-gray-700/50 transition-all duration-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg shadow-green-500/25">
+                        <TrendingUp className="h-5 w-5 text-white" />
                       </div>
-                      {getStatusBadge(campaign.status)}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">{campaign.title}</p>
+                        <p className="text-xs text-gray-400">${campaign.goalAmount} goal</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    {getStatusBadge(campaign.status)}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </TabsContent>
 
