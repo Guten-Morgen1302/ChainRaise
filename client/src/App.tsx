@@ -26,9 +26,11 @@ import NotFound from "@/pages/not-found";
 
 
 function Router() {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={isAuthenticated ? Home : Landing} />
       <Route path="/home" component={Home} />
       <Route path="/campaigns" component={Campaigns} />
       <Route path="/campaigns/:id" component={CampaignDetail} />

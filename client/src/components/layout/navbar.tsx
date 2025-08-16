@@ -12,19 +12,19 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = isAuthenticated ? [
-    { href: "/", label: "Home" },
-    { href: "/campaigns", label: "Campaigns" },
+    { href: "/home", label: "Home" },
+    { href: "/campaigns", label: "Explore" },
     { href: "/create", label: "Create" },
-    { href: "/explorer", label: "Explorer" },
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/kyc", label: "KYC" },
-    { href: "/switch-user", label: "Switch User" },
+    { href: "/transactions", label: "My Payments" },
+    { href: "/contract-demo", label: "Blockchain Demo" },
+    { href: "/live-transactions", label: "Live Tx + AI" },
   ] : [
-    { href: "#home", label: "Home" },
-    { href: "/features", label: "Features" },
-    { href: "#campaigns", label: "Campaigns" },
-    { href: "#create", label: "Create" },
-    { href: "#explorer", label: "Explorer" },
+    { href: "#hero", label: "Home" },
+    { href: "#features", label: "Features" },
+    { href: "#campaigns", label: "Explore" },
+    { href: "#about", label: "About" },
+    { href: "#contact", label: "Contact" },
   ];
 
   return (
@@ -39,7 +39,7 @@ export default function Navbar() {
             className="flex items-center space-x-4"
           >
             <div className="text-2xl font-bold gradient-text">
-              CryptoFund
+              FundIndia
             </div>
           </motion.div>
           
