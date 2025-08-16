@@ -292,14 +292,14 @@ export default function LiveTransactions() {
                             
                             <div className="flex justify-between items-center">
                               <div className="font-mono text-lg font-bold">
-                                {parseFloat(tx.amount || "0").toFixed(4)} {tx.transactionHash ? 'AVAX' : 'ETH'}
+                                {parseFloat(tx.amount || "0").toFixed(4)} {'transactionHash' in tx ? 'AVAX' : 'ETH'}
                               </div>
                               
                               <Button 
                                 variant="ghost" 
                                 size="sm"
                                 onClick={() => {
-                                  const explorerUrl = tx.transactionHash 
+                                  const explorerUrl = 'transactionHash' in tx 
                                     ? `https://testnet.snowtrace.io/tx/${tx.transactionHash}`
                                     : `https://etherscan.io/tx/${tx.id}`;
                                   window.open(explorerUrl, '_blank');

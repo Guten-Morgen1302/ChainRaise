@@ -118,7 +118,7 @@ export async function fund(amountEth: string) {
     try {
       const walletAddress = await signer.getAddress();
       
-      await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
+      const response = await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -126,9 +126,14 @@ export async function fund(amountEth: string) {
           amount: amountEth,
           walletAddress,
           campaignId: 'contract-demo',
-          status: 'completed'
+          status: 'completed',
+          transactionType: 'funding'
         })
       });
+      
+      if (!response.ok) {
+        console.warn('Failed to save transaction to database:', await response.text());
+      }
     } catch (error) {
       console.warn('Failed to save transaction to database:', error);
       // Don't throw here - transaction succeeded even if DB save failed
@@ -166,7 +171,7 @@ export async function completeMilestone() {
       const { signer } = await getProviderAndSigner();
       const walletAddress = await signer.getAddress();
       
-      await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
+      const response = await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -174,9 +179,14 @@ export async function completeMilestone() {
           amount: '0',
           walletAddress,
           campaignId: 'milestone-completion',
-          status: 'completed'
+          status: 'completed',
+          transactionType: 'milestone'
         })
       });
+      
+      if (!response.ok) {
+        console.warn('Failed to save transaction to database:', await response.text());
+      }
     } catch (error) {
       console.warn('Failed to save transaction to database:', error);
     }
@@ -197,44 +207,70 @@ export async function completeMilestone() {
 
 export async function refund() {
   try {
+    // First check if user has any contributions to refund
+    const { signer } = await getProviderAndSigner();
+    const walletAddress = await signer.getAddress();
+    
+    // Check user's contribution amount from the contract
+    const backerInfo = await getBackerAmount(walletAddress);
+    const contributionAmount = backerInfo.amount;
+    
+    if (!contributionAmount || contributionAmount === '0') {
+      throw new Error('No contributions found to refund. You must contribute first before requesting a refund.');
+    }
+
     const c = await getWriteContract();
-    const tx = await c.refund({ gasLimit: 100000 });
-    const receipt = await tx.wait();
     
-    if (!receipt || !receipt.hash) {
-      throw new Error('Transaction failed - no receipt received');
-    }
-    
-    // Save transaction to database
+    // Estimate gas before sending transaction
     try {
-      const { signer } = await getProviderAndSigner();
-      const walletAddress = await signer.getAddress();
+      const gasEstimate = await c.refund.estimateGas();
+      const gasLimit = Math.floor(Number(gasEstimate) * 1.5); // Add 50% buffer
       
-      await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionHash: receipt.hash,
-          amount: '0',
-          walletAddress,
-          campaignId: 'refund-request',
-          status: 'completed'
-        })
-      });
-    } catch (error) {
-      console.warn('Failed to save transaction to database:', error);
+      const tx = await c.refund({ gasLimit });
+      const receipt = await tx.wait();
+      
+      if (!receipt || !receipt.hash) {
+        throw new Error('Transaction failed - no receipt received');
+      }
+      
+      // Save transaction to database
+      try {
+        await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transactionHash: receipt.hash,
+            amount: contributionAmount,
+            walletAddress,
+            campaignId: 'refund-request',
+            status: 'completed',
+            transactionType: 'refund'
+          })
+        });
+      } catch (error) {
+        console.warn('Failed to save transaction to database:', error);
+      }
+      
+      return receipt;
+    } catch (gasError: any) {
+      if (gasError.reason) {
+        throw new Error(`Cannot process refund: ${gasError.reason}`);
+      }
+      throw gasError;
     }
-    
-    return receipt;
   } catch (error: any) {
+    console.error('Refund error details:', error);
+    
     if (error.code === 4001) {
       throw new Error('Transaction was rejected by user');
+    } else if (error.code === -32603) {
+      throw new Error('Refund not available - campaign may still be active or you may not have contributed to this campaign');
     } else if (error.reason) {
       throw new Error(`Smart contract error: ${error.reason}`);
     } else if (error.message) {
       throw error;
     } else {
-      throw new Error('Refund failed - unknown error occurred');
+      throw new Error('Refund failed - please check if the campaign allows refunds and you have contributed funds');
     }
   }
 }

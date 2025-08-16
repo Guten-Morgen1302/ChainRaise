@@ -118,6 +118,7 @@ export const avalancheTransactions = pgTable("avalanche_transactions", {
   transactionHash: varchar("transaction_hash").unique().notNull(),
   amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
   walletAddress: varchar("wallet_address").notNull(),
+  transactionType: varchar("transaction_type").default("avalanche"), // funding, refund, milestone, avalanche
   status: varchar("status").default("completed"), // pending, completed, failed
   blockNumber: varchar("block_number"),
   gasUsed: varchar("gas_used"),

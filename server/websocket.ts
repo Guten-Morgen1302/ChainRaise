@@ -47,8 +47,7 @@ class AdminWebSocketManager {
   private handleMessage(ws: AuthenticatedWebSocket, data: any) {
     switch (data.type) {
       case 'authenticate':
-        // In a real app, you'd verify the session/token
-        // For now, we'll accept admin authentication
+        // Accept both admin and user connections for live transactions
         if (data.role === 'admin') {
           ws.isAdmin = true;
           ws.isAuthenticated = true;
@@ -61,6 +60,17 @@ class AdminWebSocketManager {
           }));
           
           console.log('Admin authenticated via WebSocket');
+        } else if (data.role === 'user') {
+          ws.isAuthenticated = true;
+          ws.userId = data.userId || 'anonymous';
+          this.adminClients.add(ws); // Add users to broadcast list for live transactions
+          
+          ws.send(JSON.stringify({
+            type: 'authenticated',
+            success: true
+          }));
+          
+          console.log('User authenticated via WebSocket for live updates');
         }
         break;
 

@@ -169,6 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         walletAddress: req.body.walletAddress,
         campaignId: req.body.campaignId,
         status: req.body.status,
+        transactionType: req.body.transactionType || 'avalanche',
         userId: 'anonymous-contract-demo', // Special ID for contract demo transactions
       };
 
