@@ -6,9 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MainNavigation } from "@/components/navigation/MainNavigation";
-import { ThreeBackground } from "@/components/three/ThreeBackground";
-import Footer from "@/components/layout/footer";
+import { PageLayout } from "@/components/layout/PageLayout";
 import { useToast } from "@/hooks/use-toast";
 import type { Transaction } from "@shared/schema";
 import { 
@@ -48,7 +46,7 @@ export default function LiveTransactions() {
 
   const { data: transactions = [] } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
-    refetchInterval: 1000, // Update every second for real-time feel
+    refetchInterval: 30000, // Update every 30 seconds - less aggressive
   });
 
   interface AvalancheTransaction {
@@ -71,7 +69,7 @@ export default function LiveTransactions() {
 
   const { data: avalancheTransactions = [] } = useQuery<AvalancheTransaction[]>({
     queryKey: ["/api/public/transactions/avalanche"],
-    refetchInterval: 1000,
+    refetchInterval: 15000, // Update every 15 seconds
   });
 
   // WebSocket connection for instant updates (with error handling)
@@ -80,7 +78,7 @@ export default function LiveTransactions() {
     
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws/admin`;
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
       
       ws = new WebSocket(wsUrl);
       
@@ -157,10 +155,7 @@ export default function LiveTransactions() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <ThreeBackground />
-      <MainNavigation />
-      
+    <PageLayout>
       <div className="relative z-10 pt-20 pb-10">
         <section className="py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -608,8 +603,6 @@ export default function LiveTransactions() {
           </div>
         </section>
       </div>
-
-      <Footer />
-    </div>
+    </PageLayout>
   );
 }

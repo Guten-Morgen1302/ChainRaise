@@ -192,6 +192,87 @@ export async function seedDatabase() {
       ), 0)
     `);
 
+    // Create sample transactions for live display
+    const sampleTransactions = [
+      {
+        hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        campaignId: createdCampaigns[0].id,
+        fromAddress: "0x742d35Cc6e1B5b5e8b8E2Be2B8D8B8B8B8B8B8B8",
+        toAddress: createdCampaigns[0].smartContractAddress,
+        amount: "5000.0",
+        gasUsed: "21000",
+        gasPrice: "0.02",
+        blockNumber: "18567432",
+        transactionType: "contribution" as const,
+        status: "confirmed" as const,
+      },
+      {
+        hash: "0x9876543210987654321098765432109876543210987654321098765432109876",
+        campaignId: createdCampaigns[1].id,
+        fromAddress: "0x1234567890123456789012345678901234567890",
+        toAddress: createdCampaigns[1].smartContractAddress,
+        amount: "1000.0",
+        gasUsed: "21000",
+        gasPrice: "0.018",
+        blockNumber: "18567445",
+        transactionType: "contribution" as const,
+        status: "confirmed" as const,
+      },
+      {
+        hash: "0x5678901234567890567890123456789056789012345678905678901234567890",
+        campaignId: createdCampaigns[2].id,
+        fromAddress: "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
+        toAddress: createdCampaigns[2].smartContractAddress,
+        amount: "2500.0",
+        gasUsed: "21000",
+        gasPrice: "0.025",
+        blockNumber: "18567456",
+        transactionType: "contribution" as const,
+        status: "confirmed" as const,
+      }
+    ];
+
+    for (const transactionData of sampleTransactions) {
+      const transaction = await storage.createTransaction(transactionData);
+      console.log(`Created transaction: ${transaction.hash.substring(0, 10)}...`);
+    }
+
+    // Create sample Avalanche transactions for the blockchain demo
+    const sampleAvalancheTransactions = [
+      {
+        transactionHash: "0xa1b2c3d4e5f6789012345678901234567890123456789012345678901234567890",
+        amount: "15.5",
+        walletAddress: "0x742d35Cc6e1B5b5e8b8E2Be2B8D8B8B8B8B8B8B8",
+        campaignId: createdCampaigns[0].id,
+        transactionType: "funding" as const,
+        status: "confirmed" as const,
+        userId: createdUsers[0].id,
+      },
+      {
+        transactionHash: "0xb2c3d4e5f67890123456789012345678901234567890123456789012345678901",
+        amount: "8.25",
+        walletAddress: "0x1234567890123456789012345678901234567890",
+        campaignId: createdCampaigns[1].id,
+        transactionType: "funding" as const,
+        status: "confirmed" as const,
+        userId: createdUsers[1].id,
+      },
+      {
+        transactionHash: "0xc3d4e5f6789012345678901234567890123456789012345678901234567890123",
+        amount: "22.75",
+        walletAddress: "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
+        campaignId: createdCampaigns[2].id,
+        transactionType: "funding" as const,
+        status: "confirmed" as const,
+        userId: createdUsers[0].id,
+      }
+    ];
+
+    for (const avalancheTransactionData of sampleAvalancheTransactions) {
+      const avalancheTransaction = await storage.createAvalancheTransaction(avalancheTransactionData);
+      console.log(`Created Avalanche transaction: ${avalancheTransaction.transactionHash.substring(0, 10)}...`);
+    }
+
     console.log("Database seeding completed successfully!");
   } catch (error) {
     console.error("Error seeding database:", error);
