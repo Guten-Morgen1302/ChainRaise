@@ -37,32 +37,52 @@ export default function AvalancheTransactionsPage() {
     queryKey: ['/api/admin/campaigns'],
   });
 
-  // Real-time updates via WebSocket
+  // Real-time updates via WebSocket (with error handling)
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    let ws: WebSocket | null = null;
     
-    const ws = new WebSocket(wsUrl);
-    
-    ws.onopen = () => {
-      console.log('Connected to admin WebSocket for transaction updates');
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    try {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
       
-      if (data.event === 'transaction_created') {
-        // Refresh transaction data when new transactions come in
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions/avalanche'] });
-      }
-    };
-    
-    ws.onclose = () => {
-      console.log('Disconnected from admin WebSocket');
-    };
+      ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('Connected to admin WebSocket for transaction updates');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.event === 'transaction_created') {
+            // Refresh transaction data when new transactions come in
+            queryClient.invalidateQueries({ queryKey: ['/api/admin/transactions/avalanche'] });
+          }
+        } catch (error) {
+          console.warn('Failed to parse WebSocket message:', error);
+        }
+      };
+      
+      ws.onclose = () => {
+        console.log('Disconnected from admin WebSocket');
+      };
+      
+      ws.onerror = (error) => {
+        console.warn('WebSocket connection failed:', error);
+      };
+    } catch (error) {
+      console.warn('Failed to create WebSocket connection:', error);
+    }
     
     return () => {
-      ws.close();
+      if (ws) {
+        try {
+          ws.close();
+        } catch (error) {
+          console.warn('Failed to close WebSocket:', error);
+        }
+      }
     };
   }, [queryClient]);
 

@@ -69,41 +69,63 @@ export default function LiveTransactions() {
     refetchInterval: 1000,
   });
 
-  // WebSocket connection for instant updates
+  // WebSocket connection for instant updates (with error handling)
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws/admin`;
+    let ws: WebSocket | null = null;
     
-    const ws = new WebSocket(wsUrl);
-    
-    ws.onopen = () => {
-      setIsConnected(true);
-      ws.send(JSON.stringify({ type: 'authenticate', role: 'user' }));
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    try {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws/admin`;
       
-      if (data.event === 'transaction_created') {
-        if (soundEnabled) {
-          // Play notification sound
-          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmocBjOL0fPTgCwELYPJ8N2LoQgVXLfn6a1UEAl/m/H0vWgcBTiS3/DSfC0EL4HM8N+HKgcWhc6v54xYGgxHneDyvGgXBzOL0vLYfysFMYPQ6+SLKAoTa7no7a1REQxMo+Ps0mEhCjyN2/LCcikFKn3I8+GNPAkR5cvl7qxTEAl+lOnyxW0cCDuJ3+/KdSwJLn3N7uOKKQgSc7ny6qlREQxMo+Pu02IgCjaP1vLIeCkGKn3K9uGNOQgRUK/k7apTEAp/lOzyyW8ZCzuJ3/DKdSsFLn3N8eMIOAkTc7rz7KlREAxNpePv02IgCzSO1vLJeCkGKn3K9uCSOwoQ5c/k5qxTEAl/lOztyW4aCzuK4O7KdCsFLnzN8+OHMAgSabrv6qpVEQxJo+Rv0mEiCjuM3fHMfOEfD3nJ8OWPVQwGXrXl6qxYGAhBmeDwvF8cBjOL0fLYfysFMYPR6+SLKAoTY7rw7qpUEAl/lOnyxm8cCTqJ3u3IdiwGJn3M9OKJOgcSbLz36qNFEwxNo+Du02IgDDOJ1/LHeSgFLYDI5eSNQAoOY7fw5KNDEAhBmeDxu2EdBzSK0fXXfysFMYPQ6+KLKgoTY7rz7KpTEQp/lOnyxm8cCTuJ3u3IdiwHJX3M8+OJOgYSabn26aJFEwxOo+Dt02MhCzOJ1/PKeSgGLX/I5uWOQAoOY7fu5qJEFAhBmeDxu2AcBzWK0fXWfiwGMYPR6+KLKgoSYbrz7qpTEQp/lOnyx28cCTuJ3u7JdiwHJXzM8+OJOgYSabn26aJGEwxOo+Dt0mIiCzOO2PKJeCgGJ4DI9OeOQAoOU7rw5aNGFgdBmeHyx2AcBzSK0fTXfisGMYPR6uSLKAgSYbz27qlSEQp/lOnzx3AcCjmI3u7JdSsGJXzN9OOJOAcSa7r16aNGFgdAneLvvVwbBzSKz/jWfysGMIPR6+SLKQkSYbz27qlSEQl/lOnzx3AcCjmJ3e7JdSsFJXzN9OOJOAcSa7r16aNEFgdBneLwvVwbBzSKz/rVfyoGMYPR6+SLLA==');
-          audio.volume = 0.1;
-          audio.play().catch(() => {}); // Ignore errors if audio can't play
+      ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        setIsConnected(true);
+        ws?.send(JSON.stringify({ type: 'authenticate', role: 'user' }));
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.event === 'transaction_created') {
+            if (soundEnabled) {
+              // Play notification sound
+              const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmocBjOL0fPTgCwELYPJ8N2LoQgVXLfn6a1UEAl/m/H0vWgcBTiS3/DSfC0EL4HM8N+HKgcWhc6v54xYGgxHneDyvGgXBzOL0vLYfysFMYPQ6+SLKAoTa7no7a1REQxMo+Ps0mEhCjyN2/LCcikFKn3I8+GNPAkR5cvl7qxTEAl+lOnyxW0cCDuJ3+/KdSwJLn3N7uOKKQgSc7ny6qlREQxMo+Pu02IgCjaP1vLIeCkGKn3K9uGNOQgRUK/k7apTEAp/lOzyyW8ZCzuJ3/DKdSsFLn3N8eMIOAkTc7rz7KlREAxNpePv02IgCzSO1vLJeCkGKn3K9uCSOwoQ5c/k5qxTEAl/lOztyW4aCzuK4O7KdCsFLnzN8+OHMAgSabrv6qpVEQxJo+Rv0mEiCjuM3fHMfOEfD3nJ8OWPVQwGXrXl6qxYGAhBmeDwvF8cBjOL0fLYfysFMYPR6+SLKAoTY7rw7qpUEAl/lOnyxm8cCTqJ3u3IdiwGJn3M9OKJOgcSbLz36qNFEwxNo+Du02IgDDOJ1/LHeSgFLYDI5eSNQAoOY7fw5KNDEAhBmeDxu2EdBzSK0fXXfysFMYPQ6+KLKgoTY7rz7KpTEQp/lOnyxm8cCTuJ3u3IdiwHJX3M8+OJOgYSabn26aJFEwxOo+Dt02MhCzOJ1/PKeSgGLX/I5uWOQAoOY7fu5qJEFAhBmeDxu2AcBzWK0fXWfiwGMYPR6+KLKgoSYbrz7qpTEQp/lOnyx28cCTuJ3u7JdiwHJXzM8+OJOgYSabn26aJGEwxOo+Dt0mIiCzOO2PKJeCgGJ4DI9OeOQAoOU7rw5aNGFgdBmeHyx2AcBzSK0fTXfisGMYPR6uSLKAgSYbz27qlSEQp/lOnzx3AcCjmI3u7JdSsGJXzN9OOJOAcSa7r16aNGFgdAneLvvVwbBzSKz/jWfysGMIPR6+SLKQkSYbz27qlSEQl/lOnzx3AcCjmJ3e7JdSsFJXzN9OOJOAcSa7r16aNEFgdBneLwvVwbBzSKz/rVfyoGMYPR6+SLLA==');
+              audio.volume = 0.1;
+              audio.play().catch(() => {}); // Ignore errors if audio can't play
+            }
+            
+            toast({
+              title: "New Transaction!",
+              description: `${data.data?.transactionType?.toUpperCase() || 'TRANSACTION'} - ${data.data?.amount || '0'} ETH`,
+              className: "border-cyber-green",
+            });
+          }
+        } catch (error) {
+          console.warn('Failed to parse WebSocket message:', error);
         }
-        
-        toast({
-          title: "New Transaction!",
-          description: `${data.data.transactionType.toUpperCase()} - ${data.data.amount} ETH`,
-          className: "border-cyber-green",
-        });
+      };
+      
+      ws.onclose = () => setIsConnected(false);
+      ws.onerror = (error) => {
+        console.warn('WebSocket connection failed:', error);
+        setIsConnected(false);
+      };
+    } catch (error) {
+      console.warn('Failed to create WebSocket connection:', error);
+      setIsConnected(false);
+    }
+    
+    return () => {
+      if (ws) {
+        try {
+          ws.close();
+        } catch (error) {
+          console.warn('Failed to close WebSocket:', error);
+        }
       }
     };
-    
-    ws.onclose = () => setIsConnected(false);
-    ws.onerror = () => setIsConnected(false);
-    
-    return () => ws.close();
   }, [soundEnabled, toast]);
 
   // Calculate live stats

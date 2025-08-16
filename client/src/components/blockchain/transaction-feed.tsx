@@ -14,27 +14,47 @@ export default function TransactionFeed() {
     refetchInterval: 2000, // Faster refresh for more real-time feel
   });
 
-  // Add WebSocket connection for instant updates
+  const queryClient = useQueryClient();
+  
+  // Add WebSocket connection for instant updates (with error handling)
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws/admin`;
-    
-    const ws = new WebSocket(wsUrl);
-    
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: 'authenticate', role: 'user' }));
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.event === 'transaction_created' || data.event === 'avalanche_transaction_created') {
-        // Instantly refresh when new transactions come in
-        queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      }
-    };
-    
-    return () => ws.close();
-  }, []);
+    try {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws/admin`;
+      
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'authenticate', role: 'user' }));
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.event === 'transaction_created' || data.event === 'avalanche_transaction_created') {
+            // Instantly refresh when new transactions come in
+            queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+          }
+        } catch (error) {
+          console.warn('Failed to parse WebSocket message:', error);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.warn('WebSocket connection failed:', error);
+      };
+      
+      return () => {
+        try {
+          ws.close();
+        } catch (error) {
+          console.warn('Failed to close WebSocket:', error);
+        }
+      };
+    } catch (error) {
+      console.warn('Failed to create WebSocket connection:', error);
+    }
+  }, [queryClient]);
 
   const getTransactionTypeColor = (type: string) => {
     const colors: Record<string, string> = {
