@@ -127,7 +127,11 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
   
-  .glass-morphism * {
+  .glass-morphism {
+    color: rgba(255, 255, 255, 0.95);
+  }
+  
+  .glass-morphism .text-white {
     color: rgba(255, 255, 255, 0.95) !important;
   }
   
@@ -201,11 +205,13 @@
     font-family: var(--font-display);
     letter-spacing: -0.025em;
     font-weight: 700;
+    color: var(--foreground); /* Ensure text is visible */
   }
   
   .body-text {
     font-family: var(--font-sans);
     opacity: 0.9;
+    color: var(--foreground); /* Ensure text is visible */
   }
   
   /* Status indicators */
@@ -294,6 +300,16 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    /* Fallback for better accessibility */
+    color: #7C3AED;
+  }
+  
+  /* Ensure gradient text is readable */
+  @supports not (-webkit-background-clip: text) {
+    .gradient-text {
+      color: #7C3AED !important;
+      background: none !important;
+    }
   }
   
   /* Advanced background effects */
@@ -570,12 +586,21 @@
   box-shadow: 0 25px 50px -12px hsla(196, 100%, 50%, 0.25);
 }
 
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple));
+/* Gradient text with fallback */
+.gradient-text-alt {
+  background: linear-gradient(45deg, #22D3EE, #7C3AED);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: #22D3EE; /* Fallback */
+}
+
+/* Ensure gradient text is readable */
+@supports not (-webkit-background-clip: text) {
+  .gradient-text-alt {
+    color: #22D3EE !important;
+    background: none !important;
+  }
 }
 
 /* Dot pattern background */

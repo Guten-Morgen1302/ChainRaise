@@ -109,16 +109,15 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
 
           <CardContent className="p-6 relative z-10">
             <motion.h3 
-              className="text-xl font-bold mb-2 transition-colors duration-300"
+              className="text-xl font-bold mb-2 transition-colors duration-300 text-foreground"
               whileHover={{ 
                 color: "hsl(var(--primary))",
                 transition: { duration: 0.2 }
               }}
-              style={{ color: 'rgba(255, 255, 255, 0.95)' }}
             >
               {campaign.title}
             </motion.h3>
-            <p className="mb-4 text-sm line-clamp-2" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>
+            <p className="mb-4 text-sm line-clamp-2 text-muted-foreground">
               {campaign.description}
             </p>
 
@@ -130,18 +129,12 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               <div className="flex justify-between text-sm mb-2">
-                <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Progress</span>
+                <span className="text-muted-foreground">Progress</span>
                 <motion.span 
-                  className="font-mono font-bold"
+                  className="font-mono font-bold gradient-text"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
-                  style={{
-                    background: 'linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                  }}
                 >
                   {campaign.currentAmount} / {campaign.goalAmount} {campaign.currency}
                 </motion.span>
@@ -167,8 +160,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
               transition={{ duration: 0.4, delay: 0.2 }}
             >
               <motion.div 
-                className="flex items-center gap-2 group-hover:text-accent transition-colors duration-300"
-                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                className="flex items-center gap-2 text-muted-foreground hover:text-accent transition-colors duration-300"
                 whileHover={{ scale: 1.05 }}
               >
                 <motion.div
@@ -180,8 +172,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
                 <span className="font-mono">{campaign.backerCount} backers</span>
               </motion.div>
               <motion.div 
-                className="flex items-center gap-2 group-hover:text-primary transition-colors duration-300"
-                style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-300"
                 whileHover={{ scale: 1.05 }}
               >
                 <motion.div

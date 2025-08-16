@@ -47,7 +47,7 @@ export default function Navbar() {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
-              <span className="relative z-10">FundIndia</span>
+              <span className="relative z-10 text-foreground">FundIndia</span>
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg blur-xl opacity-0 group-hover:opacity-30"
                 whileHover={{ scale: 1.2 }}
