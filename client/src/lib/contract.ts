@@ -55,19 +55,91 @@ export async function getWriteContract() {
 export async function fund(amountEth: string) {
   const c = await getWriteContract();
   const tx = await c.fund({ value: parseEther(amountEth) });
-  return await tx.wait();
+  const receipt = await tx.wait();
+  
+  // Save transaction to database
+  if (receipt && receipt.hash) {
+    try {
+      const { signer } = await getProviderAndSigner();
+      const walletAddress = await signer.getAddress();
+      
+      await fetch(`${window.location.origin}/api/transactions/avalanche`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionHash: receipt.hash,
+          amount: amountEth,
+          walletAddress,
+          campaignId: 'contract-demo',
+          status: 'completed'
+        })
+      });
+    } catch (error) {
+      console.warn('Failed to save transaction to database:', error);
+    }
+  }
+  
+  return receipt;
 }
 
 export async function completeMilestone() {
   const c = await getWriteContract();
   const tx = await c.completeMilestone();
-  return await tx.wait();
+  const receipt = await tx.wait();
+  
+  // Save transaction to database
+  if (receipt && receipt.hash) {
+    try {
+      const { signer } = await getProviderAndSigner();
+      const walletAddress = await signer.getAddress();
+      
+      await fetch(`${window.location.origin}/api/transactions/avalanche`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionHash: receipt.hash,
+          amount: '0',
+          walletAddress,
+          campaignId: 'milestone-completion',
+          status: 'completed'
+        })
+      });
+    } catch (error) {
+      console.warn('Failed to save transaction to database:', error);
+    }
+  }
+  
+  return receipt;
 }
 
 export async function refund() {
   const c = await getWriteContract();
   const tx = await c.refund();
-  return await tx.wait();
+  const receipt = await tx.wait();
+  
+  // Save transaction to database
+  if (receipt && receipt.hash) {
+    try {
+      const { signer } = await getProviderAndSigner();
+      const walletAddress = await signer.getAddress();
+      
+      await fetch(`${window.location.origin}/api/transactions/avalanche`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionHash: receipt.hash,
+          amount: '0',
+          walletAddress,
+          campaignId: 'refund-request',
+          status: 'completed'
+        })
+      });
+    } catch (error) {
+      console.warn('Failed to save transaction to database:', error);
+    }
+  }
+  
+  return receipt;
 }
 
 // Views

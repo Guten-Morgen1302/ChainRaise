@@ -93,11 +93,13 @@ export default function ContractDemo() {
   const handleFund = async () => {
     try {
       setLoading(true);
-      await fund(amount);
+      const receipt = await fund(amount);
       toast({
         title: "Funding Successful",
-        description: `Funded ${amount} AVAX successfully`,
+        description: `Funded ${amount} AVAX successfully! Transaction: ${receipt.hash}`,
       });
+      // Add to log for immediate feedback
+      setLog(prev => [`${new Date().toLocaleTimeString()}: Fund transaction ${receipt.hash}`, ...prev].slice(0, 10));
     } catch (error: any) {
       toast({
         title: "Funding Failed",
@@ -112,11 +114,13 @@ export default function ContractDemo() {
   const handleCompleteMilestone = async () => {
     try {
       setLoading(true);
-      await completeMilestone();
+      const receipt = await completeMilestone();
       toast({
         title: "Milestone Completed",
-        description: "Milestone completed successfully",
+        description: `Milestone completed successfully! Transaction: ${receipt.hash}`,
       });
+      // Add to log for immediate feedback
+      setLog(prev => [`${new Date().toLocaleTimeString()}: Milestone transaction ${receipt.hash}`, ...prev].slice(0, 10));
     } catch (error: any) {
       toast({
         title: "Milestone Failed",
@@ -131,11 +135,13 @@ export default function ContractDemo() {
   const handleRefund = async () => {
     try {
       setLoading(true);
-      await refund();
+      const receipt = await refund();
       toast({
         title: "Refund Successful",
-        description: "Refund processed successfully",
+        description: `Refund processed successfully! Transaction: ${receipt.hash}`,
       });
+      // Add to log for immediate feedback
+      setLog(prev => [`${new Date().toLocaleTimeString()}: Refund transaction ${receipt.hash}`, ...prev].slice(0, 10));
     } catch (error: any) {
       toast({
         title: "Refund Failed",

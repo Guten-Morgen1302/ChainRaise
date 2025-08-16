@@ -292,10 +292,19 @@ export default function LiveTransactions() {
                             
                             <div className="flex justify-between items-center">
                               <div className="font-mono text-lg font-bold">
-                                {parseFloat(tx.amount || "0").toFixed(4)} ETH
+                                {parseFloat(tx.amount || "0").toFixed(4)} {tx.transactionHash ? 'AVAX' : 'ETH'}
                               </div>
                               
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  const explorerUrl = tx.transactionHash 
+                                    ? `https://testnet.snowtrace.io/tx/${tx.transactionHash}`
+                                    : `https://etherscan.io/tx/${tx.id}`;
+                                  window.open(explorerUrl, '_blank');
+                                }}
+                              >
                                 <ExternalLink className="w-4 h-4" />
                               </Button>
                             </div>
@@ -342,6 +351,16 @@ export default function LiveTransactions() {
                               <div className="font-mono text-lg font-bold">
                                 {parseFloat(tx.amount || "0").toFixed(4)} ETH
                               </div>
+                              
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  window.open(`https://etherscan.io/tx/${tx.id}`, '_blank');
+                                }}
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </Button>
                             </div>
                           </motion.div>
                         ))
@@ -379,6 +398,16 @@ export default function LiveTransactions() {
                               <div className="font-mono text-lg font-bold">
                                 {parseFloat(tx.amount || "0").toFixed(4)} AVAX
                               </div>
+                              
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  window.open(`https://testnet.snowtrace.io/tx/${tx.transactionHash}`, '_blank');
+                                }}
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </Button>
                             </div>
                           </motion.div>
                         ))
