@@ -118,6 +118,30 @@
                 0 0 0 1px rgba(255, 255, 255, 0.05);
   }
   
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+                0 0 0 1px rgba(255, 255, 255, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  
+  .glass-morphism * {
+    color: rgba(255, 255, 255, 0.95) !important;
+  }
+  
+  .glass-morphism .text-muted-foreground {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+  
+  .glass-morphism .gradient-text {
+    background: linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
   /* Premium card styles */
   .card-premium {
     @apply glass-card transition-all duration-500 hover:shadow-2xl;

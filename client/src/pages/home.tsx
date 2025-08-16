@@ -113,15 +113,21 @@ function StatTile({
           
           <div className="space-y-2">
             <motion.h3 
-              className="text-3xl font-bold gradient-text"
+              className="text-3xl font-bold"
               key={animatedValue}
               initial={{ scale: 1.1 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.2 }}
+              style={{
+                background: 'linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
             >
               {title === 'Total Raised' ? `$${animatedValue.toLocaleString()}` : animatedValue.toLocaleString()}
             </motion.h3>
-            <p className="text-sm text-muted-foreground font-medium">{title}</p>
+            <p className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>{title}</p>
           </div>
           
           {sparklineData && (
@@ -226,10 +232,17 @@ export default function Home() {
             <motion.div variants={itemVariants} className="text-center mb-12">
               <div className="relative inline-block">
                 <motion.h1 
-                  className="text-4xl md:text-6xl font-black gradient-text mb-4"
+                  className="text-4xl md:text-6xl font-black mb-4 text-white"
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
+                  style={{ 
+                    background: 'linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 30px rgba(124, 58, 237, 0.5)'
+                  }}
                 >
                   Welcome back, <span className="relative">
                     {user?.firstName || "Creator"}
@@ -249,7 +262,8 @@ export default function Home() {
                 </motion.h1>
                 
                 <motion.p 
-                  className="text-xl text-muted-foreground/80 mb-6"
+                  className="text-xl mb-6"
+                  style={{ color: 'rgba(255, 255, 255, 0.8)' }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.6 }}
@@ -319,10 +333,15 @@ export default function Home() {
                               <action.icon className="w-full h-full text-white" />
                             </div>
                             
-                            <h3 className="text-xl font-bold mb-2 gradient-text">
+                            <h3 className="text-xl font-bold mb-2" style={{
+                              background: 'linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%)',
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text'
+                            }}>
                               {action.title}
                             </h3>
-                            <p className="text-muted-foreground text-sm">
+                            <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                               {action.description}
                             </p>
                           </div>
@@ -349,7 +368,7 @@ export default function Home() {
                         <h3 className="text-lg font-semibold text-amber-400 mb-2">
                           Complete Your Verification
                         </h3>
-                        <p className="text-muted-foreground">
+                        <p style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                           Verify your identity to unlock full campaign creation features and build trust with backers.
                         </p>
                       </div>
@@ -405,7 +424,12 @@ export default function Home() {
             {/* Featured Campaigns Grid */}
             <motion.div variants={itemVariants} className="mb-16">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold gradient-text">Featured Campaigns</h2>
+                <h2 className="text-3xl font-bold" style={{
+                  background: 'linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>Featured Campaigns</h2>
                 <Link href="/campaigns">
                   <Button variant="ghost" className="text-primary hover:text-primary/80">
                     View All <ArrowUp className="w-4 h-4 ml-2 rotate-45" />
@@ -434,7 +458,12 @@ export default function Home() {
 
             {/* Recent Activity Feed */}
             <motion.div variants={itemVariants}>
-              <h2 className="text-2xl font-bold gradient-text mb-6">Recent Activity</h2>
+              <h2 className="text-2xl font-bold mb-6" style={{
+                background: 'linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>Recent Activity</h2>
               <Card className="glass-morphism border-white/10">
                 <CardContent className="p-6">
                   <div className="space-y-4">
@@ -451,8 +480,8 @@ export default function Home() {
                           <activity.icon className="w-4 h-4 text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium mb-1">{activity.message}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <p className="text-sm font-medium mb-1" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{activity.message}</p>
+                          <p className="text-xs flex items-center gap-1" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
                             <Clock className="w-3 h-3" />
                             {activity.time}
                           </p>
