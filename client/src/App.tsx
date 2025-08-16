@@ -18,7 +18,7 @@ import KYC from "@/pages/kyc";
 
 import ContractDemo from "./pages/contract-demo";
 import LiveTransactions from "./pages/live-transactions";
-import AdminDashboard from "./components/admin/AdminDashboard";
+import { AdminDashboard } from "./components/admin/AdminDashboard";
 import AdminPage from "@/pages/admin";
 import TransactionHistory from "@/pages/TransactionHistory";
 import AuthPage from "@/pages/auth-page";
