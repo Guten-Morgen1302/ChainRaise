@@ -63,26 +63,26 @@ function LiveStatusIndicator() {
     switch (status) {
       case 'connected': 
         return { 
-          color: 'text-green-600', 
-          bg: 'bg-green-50', 
-          border: 'border-green-200',
+          color: 'text-green-400 dark:text-green-300', 
+          bg: 'bg-green-50 dark:bg-green-900/20', 
+          border: 'border-green-200 dark:border-green-700',
           icon: <Wifi className="h-4 w-4" />,
           label: 'Online'
         };
       case 'connecting': 
         return { 
-          color: 'text-yellow-600', 
-          bg: 'bg-yellow-50', 
-          border: 'border-yellow-200',
+          color: 'text-yellow-500 dark:text-yellow-300', 
+          bg: 'bg-yellow-50 dark:bg-yellow-900/20', 
+          border: 'border-yellow-200 dark:border-yellow-700',
           icon: <RefreshCw className="h-4 w-4 animate-spin" />,
           label: 'Connecting'
         };
       case 'disconnected': 
       default:
         return { 
-          color: 'text-red-600', 
-          bg: 'bg-red-50', 
-          border: 'border-red-200',
+          color: 'text-red-500 dark:text-red-400', 
+          bg: 'bg-red-50 dark:bg-red-900/20', 
+          border: 'border-red-200 dark:border-red-700',
           icon: <WifiOff className="h-4 w-4" />,
           label: 'Offline'
         };
@@ -100,7 +100,7 @@ function LiveStatusIndicator() {
         {config.label}
       </span>
       {lastUpdate && (
-        <span className="text-xs text-gray-500 ml-2">
+        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
           Last update: {new Date(lastUpdate).toLocaleTimeString()}
         </span>
       )}
@@ -195,11 +195,11 @@ export function AdminDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-green-100 text-green-800 border-green-300">Approved</Badge>;
+        return <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700">Approved</Badge>;
       case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>;
+        return <Badge className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700">Pending</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-800 border-red-300">Rejected</Badge>;
+        return <Badge className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-300 dark:border-red-700">Rejected</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -218,44 +218,44 @@ export function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
+            <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.length}</div>
-            <p className="text-xs text-gray-500">Registered accounts</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Registered accounts</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.activeCampaigns || 0}</div>
-            <p className="text-xs text-gray-500">Currently running</p>
+            <div className="text-2xl font-bold">{(stats as any)?.activeCampaigns || 0}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Currently running</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Raised</CardTitle>
-            <DollarSign className="h-4 w-4 text-purple-600" />
+            <DollarSign className="h-4 w-4 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats?.totalRaised || '0'}</div>
-            <p className="text-xs text-gray-500">All time</p>
+            <div className="text-2xl font-bold">${(stats as any)?.totalRaised || '0'}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">All time</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending KYC</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.filter(u => u.kycStatus === 'pending').length}</div>
-            <p className="text-xs text-gray-500">Awaiting review</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Awaiting review</p>
           </CardContent>
         </Card>
       </div>
@@ -283,12 +283,12 @@ export function AdminDashboard() {
                   {users.slice(0, 5).map((user) => (
                     <div key={user.id} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Users className="h-4 w-4 text-blue-600" />
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                          <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
                           <p className="text-sm font-medium">{user.username}</p>
-                          <p className="text-xs text-gray-500">{user.email}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
                         </div>
                       </div>
                       {getStatusBadge(user.kycStatus || 'pending')}
@@ -309,12 +309,12 @@ export function AdminDashboard() {
                   {campaigns.slice(0, 5).map((campaign) => (
                     <div key={campaign.id} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <TrendingUp className="h-4 w-4 text-green-600" />
+                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                          <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{campaign.title}</p>
-                          <p className="text-xs text-gray-500">${campaign.fundingGoal} goal</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">${campaign.goalAmount} goal</p>
                         </div>
                       </div>
                       {getStatusBadge(campaign.status)}
@@ -412,12 +412,12 @@ export function AdminDashboard() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{campaign.title}</p>
-                          <p className="text-sm text-gray-500 max-w-xs truncate">{campaign.description}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">{campaign.description}</p>
                         </div>
                       </TableCell>
                       <TableCell>{campaign.creatorId}</TableCell>
-                      <TableCell>${campaign.fundingGoal}</TableCell>
-                      <TableCell>{getStatusBadge(campaign.status)}</TableCell>
+                      <TableCell>${campaign.goalAmount}</TableCell>
+                      <TableCell>{getStatusBadge(campaign.status || 'pending')}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <Button
