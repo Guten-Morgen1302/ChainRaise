@@ -16,8 +16,23 @@ export default function AdminPage() {
     return () => clearInterval(timer);
   }, []);
   
+  // Debug log
+  console.log("Admin page - User:", user, "Loading:", isLoading);
+  
+  // Show loading state first
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
   // Show clean login prompt if not authenticated
-  if (!isLoading && !user) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-6">
         <motion.div 
@@ -57,15 +72,8 @@ export default function AdminPage() {
     );
   }
   
-  // Redirect if logged in but not admin
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      setLocation("/");
-    }
-  }, [user, setLocation]);
-  
   // Show clean access denied if not admin
-  if (!user || user.role !== 'admin') {
+  if (user && user.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-6">
         <motion.div 
