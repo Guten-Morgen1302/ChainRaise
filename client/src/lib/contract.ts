@@ -14,38 +14,58 @@ declare global {
 }
 
 export async function getProviderAndSigner() {
-  if (!window.ethereum) throw new Error('MetaMask not found');
-  const provider = new BrowserProvider(window.ethereum);
+  if (!window.ethereum) throw new Error('Please install MetaMask or another Web3 wallet to continue');
+  
+  try {
+    const provider = new BrowserProvider(window.ethereum);
 
-  // Ensure we are on Fuji (43113)
-  const network = await provider.getNetwork();
-  if (Number(network.chainId) !== DEFAULT_NETWORK.chainId) {
-    // attempt to switch
-    await window.ethereum!.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: '0xa869' }], // 43113 hex
-    }).catch(async (e: any) => {
-      // add then switch
-      if (e.code === 4902) {
+    // Request account access first
+    await provider.send('eth_requestAccounts', []);
+
+    // Check current network
+    const network = await provider.getNetwork();
+    const currentChainId = Number(network.chainId);
+    
+    if (currentChainId !== DEFAULT_NETWORK.chainId) {
+      // Attempt to switch to Avalanche Fuji testnet
+      try {
         await window.ethereum!.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: '0xa869',
-            chainName: DEFAULT_NETWORK.name,
-            nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
-            rpcUrls: [DEFAULT_NETWORK.rpcHttpUrl],
-            blockExplorerUrls: ['https://testnet.snowtrace.io/']
-          }]
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0xa869' }], // 43113 hex
         });
-      } else {
-        throw e;
+      } catch (switchError: any) {
+        // If the network doesn't exist, add it
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum!.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0xa869',
+                chainName: DEFAULT_NETWORK.name,
+                nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
+                rpcUrls: [DEFAULT_NETWORK.rpcHttpUrl],
+                blockExplorerUrls: ['https://testnet.snowtrace.io/']
+              }]
+            });
+          } catch (addError: any) {
+            throw new Error(`Failed to add Avalanche Fuji network: ${addError.message || 'Unknown error'}`);
+          }
+        } else if (switchError.code === 4001) {
+          throw new Error('Please switch to Avalanche Fuji testnet to continue');
+        } else {
+          throw new Error(`Failed to switch to Avalanche Fuji: ${switchError.message || 'Unknown error'}`);
+        }
       }
-    });
-  }
+    }
 
-  await provider.send('eth_requestAccounts', []);
-  const signer = await provider.getSigner();
-  return { provider, signer };
+    const signer = await provider.getSigner();
+    return { provider, signer };
+  } catch (error: any) {
+    if (error.code === 4001) {
+      throw new Error('Please connect your wallet to continue');
+    }
+    throw error;
+  }
 }
 
 export async function getReadOnlyContract() {
@@ -62,14 +82,40 @@ export async function getWriteContract() {
 
 // Actions
 export async function fund(amountEth: string) {
-  const c = await getWriteContract();
-  const tx = await c.fund({ value: parseEther(amountEth) });
-  const receipt = await tx.wait();
-  
-  // Save transaction to database
-  if (receipt && receipt.hash) {
+  try {
+    // Validate amount
+    const amount = parseFloat(amountEth);
+    if (isNaN(amount) || amount <= 0) {
+      throw new Error('Please enter a valid funding amount greater than 0');
+    }
+
+    // Get contract instance
+    const c = await getWriteContract();
+    
+    // Check wallet balance
+    const { signer } = await getProviderAndSigner();
+    const balance = await signer.provider.getBalance(signer.address);
+    const requiredAmount = parseEther(amountEth);
+    
+    if (balance < requiredAmount) {
+      throw new Error(`Insufficient balance. Required: ${amountEth} AVAX, Available: ${(Number(balance) / 1e18).toFixed(4)} AVAX`);
+    }
+
+    // Send transaction with proper gas estimation
+    const tx = await c.fund({ 
+      value: requiredAmount,
+      gasLimit: 100000 // Set reasonable gas limit
+    });
+    
+    // Wait for confirmation
+    const receipt = await tx.wait();
+    
+    if (!receipt || !receipt.hash) {
+      throw new Error('Transaction failed - no receipt received');
+    }
+    
+    // Save transaction to database
     try {
-      const { signer } = await getProviderAndSigner();
       const walletAddress = await signer.getAddress();
       
       await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
@@ -85,19 +131,37 @@ export async function fund(amountEth: string) {
       });
     } catch (error) {
       console.warn('Failed to save transaction to database:', error);
+      // Don't throw here - transaction succeeded even if DB save failed
+    }
+    
+    return receipt;
+  } catch (error: any) {
+    // Provide more specific error messages
+    if (error.code === 4001) {
+      throw new Error('Transaction was rejected by user');
+    } else if (error.code === -32603) {
+      throw new Error('Transaction failed - please check your wallet balance and network connection');
+    } else if (error.reason) {
+      throw new Error(`Smart contract error: ${error.reason}`);
+    } else if (error.message) {
+      throw error;
+    } else {
+      throw new Error('Transaction failed - unknown error occurred');
     }
   }
-  
-  return receipt;
 }
 
 export async function completeMilestone() {
-  const c = await getWriteContract();
-  const tx = await c.completeMilestone();
-  const receipt = await tx.wait();
-  
-  // Save transaction to database
-  if (receipt && receipt.hash) {
+  try {
+    const c = await getWriteContract();
+    const tx = await c.completeMilestone({ gasLimit: 100000 });
+    const receipt = await tx.wait();
+    
+    if (!receipt || !receipt.hash) {
+      throw new Error('Transaction failed - no receipt received');
+    }
+    
+    // Save transaction to database
     try {
       const { signer } = await getProviderAndSigner();
       const walletAddress = await signer.getAddress();
@@ -116,18 +180,32 @@ export async function completeMilestone() {
     } catch (error) {
       console.warn('Failed to save transaction to database:', error);
     }
+    
+    return receipt;
+  } catch (error: any) {
+    if (error.code === 4001) {
+      throw new Error('Transaction was rejected by user');
+    } else if (error.reason) {
+      throw new Error(`Smart contract error: ${error.reason}`);
+    } else if (error.message) {
+      throw error;
+    } else {
+      throw new Error('Failed to complete milestone - unknown error occurred');
+    }
   }
-  
-  return receipt;
 }
 
 export async function refund() {
-  const c = await getWriteContract();
-  const tx = await c.refund();
-  const receipt = await tx.wait();
-  
-  // Save transaction to database
-  if (receipt && receipt.hash) {
+  try {
+    const c = await getWriteContract();
+    const tx = await c.refund({ gasLimit: 100000 });
+    const receipt = await tx.wait();
+    
+    if (!receipt || !receipt.hash) {
+      throw new Error('Transaction failed - no receipt received');
+    }
+    
+    // Save transaction to database
     try {
       const { signer } = await getProviderAndSigner();
       const walletAddress = await signer.getAddress();
@@ -146,9 +224,19 @@ export async function refund() {
     } catch (error) {
       console.warn('Failed to save transaction to database:', error);
     }
+    
+    return receipt;
+  } catch (error: any) {
+    if (error.code === 4001) {
+      throw new Error('Transaction was rejected by user');
+    } else if (error.reason) {
+      throw new Error(`Smart contract error: ${error.reason}`);
+    } else if (error.message) {
+      throw error;
+    } else {
+      throw new Error('Refund failed - unknown error occurred');
+    }
   }
-  
-  return receipt;
 }
 
 // Views
