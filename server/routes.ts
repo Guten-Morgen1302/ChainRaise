@@ -159,6 +159,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint for contract demo transactions (no authentication required)
+  app.post('/api/public/transactions/avalanche', async (req: any, res) => {
+    try {
+      // For contract demo transactions, we use a special anonymous user ID
+      const transactionData = {
+        transactionHash: req.body.transactionHash,
+        amount: req.body.amount,
+        walletAddress: req.body.walletAddress,
+        campaignId: req.body.campaignId,
+        status: req.body.status,
+        userId: 'anonymous-contract-demo', // Special ID for contract demo transactions
+      };
+
+      const transaction = await storage.createAvalancheTransaction(transactionData);
+
+      // Broadcast real-time update to admin clients and live-transactions page
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.transactionCreated(transaction);
+      }
+
+      res.status(201).json(transaction);
+    } catch (error) {
+      console.error("Error creating public Avalanche transaction:", error);
+      res.status(400).json({ message: (error as Error).message || "Failed to create transaction" });
+    }
+  });
+
   app.get('/api/admin/transactions/avalanche', requireAdmin, async (req, res) => {
     try {
       const { userId, campaignId, startDate, endDate, limit, offset } = req.query;

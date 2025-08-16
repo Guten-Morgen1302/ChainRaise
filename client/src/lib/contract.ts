@@ -2,7 +2,15 @@ import { BrowserProvider, Contract, parseEther } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, DEFAULT_NETWORK } from '../../../shared/contract';
 
 declare global {
-  interface Window { ethereum?: any }
+  interface Window { 
+    ethereum?: {
+      isMetaMask?: boolean;
+      request: (args: { method: string; params?: any[] | Record<string, any> }) => Promise<any>;
+      send?: (method: string, params?: any[]) => Promise<any>;
+      on?: (event: string, callback: (data: any) => void) => void;
+      removeListener?: (event: string, callback: (data: any) => void) => void;
+    }
+  }
 }
 
 export async function getProviderAndSigner() {
@@ -13,13 +21,13 @@ export async function getProviderAndSigner() {
   const network = await provider.getNetwork();
   if (Number(network.chainId) !== DEFAULT_NETWORK.chainId) {
     // attempt to switch
-    await window.ethereum.request({
+    await window.ethereum!.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: '0xa869' }], // 43113 hex
     }).catch(async (e: any) => {
       // add then switch
       if (e.code === 4902) {
-        await window.ethereum.request({
+        await window.ethereum!.request({
           method: 'wallet_addEthereumChain',
           params: [{
             chainId: '0xa869',
@@ -42,7 +50,8 @@ export async function getProviderAndSigner() {
 
 export async function getReadOnlyContract() {
   // Read via your backend (recommended) OR direct RPC:
-  const provider = new BrowserProvider(window.ethereum ?? null);
+  if (!window.ethereum) throw new Error('MetaMask not found');
+  const provider = new BrowserProvider(window.ethereum);
   return new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 }
 
@@ -63,7 +72,7 @@ export async function fund(amountEth: string) {
       const { signer } = await getProviderAndSigner();
       const walletAddress = await signer.getAddress();
       
-      await fetch(`${window.location.origin}/api/transactions/avalanche`, {
+      await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,7 +102,7 @@ export async function completeMilestone() {
       const { signer } = await getProviderAndSigner();
       const walletAddress = await signer.getAddress();
       
-      await fetch(`${window.location.origin}/api/transactions/avalanche`, {
+      await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -123,7 +132,7 @@ export async function refund() {
       const { signer } = await getProviderAndSigner();
       const walletAddress = await signer.getAddress();
       
-      await fetch(`${window.location.origin}/api/transactions/avalanche`, {
+      await fetch(`${window.location.origin}/api/public/transactions/avalanche`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
