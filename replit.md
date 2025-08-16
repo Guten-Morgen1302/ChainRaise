@@ -1,7 +1,7 @@
 # Overview
 
 CryptoFund is a full-stack Web3 crowdfunding platform that combines the features of Kickstarter, GoFundMe, and AngelList with blockchain transparency and a cyberpunk-styled glassmorphism UI. The platform enables creators to launch fundraising campaigns after KYC verification and allows backers to contribute using both cryptocurrency and fiat payments, with all transactions recorded on-chain for transparency.
-
+ 
 ## Migration Status
 **COMPLETED** - Successfully migrated from Replit Agent to standard Replit environment (August 16, 2025)
 - ✅ Fixed cross-env dependency issue and installed missing packages
