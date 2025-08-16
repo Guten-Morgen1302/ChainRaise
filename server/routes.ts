@@ -162,15 +162,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public endpoint for contract demo transactions (no authentication required)
   app.post('/api/public/transactions/avalanche', async (req: any, res) => {
     try {
-      // For contract demo transactions, we use a special anonymous user ID
+      // For contract demo transactions, we don't require userId (nullable)
       const transactionData = {
         transactionHash: req.body.transactionHash,
         amount: req.body.amount,
         walletAddress: req.body.walletAddress,
-        campaignId: req.body.campaignId,
+        campaignId: req.body.campaignId || null, // Allow null for demo
         status: req.body.status,
         transactionType: req.body.transactionType || 'avalanche',
-        userId: 'anonymous-contract-demo', // Special ID for contract demo transactions
+        userId: null, // Anonymous demo transactions
       };
 
       const transaction = await storage.createAvalancheTransaction(transactionData);

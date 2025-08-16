@@ -113,8 +113,8 @@ export const transactions = pgTable("transactions", {
 // Avalanche wallet transactions table
 export const avalancheTransactions = pgTable("avalanche_transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  campaignId: varchar("campaign_id").references(() => campaigns.id).notNull(),
+  userId: varchar("user_id").references(() => users.id), // Made nullable for anonymous demo transactions
+  campaignId: varchar("campaign_id").references(() => campaigns.id), // Made nullable for demo transactions
   transactionHash: varchar("transaction_hash").unique().notNull(),
   amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
   walletAddress: varchar("wallet_address").notNull(),
