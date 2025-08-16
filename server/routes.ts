@@ -169,6 +169,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint to fetch Avalanche transactions (no authentication required)
+  app.get('/api/public/transactions/avalanche', async (req, res) => {
+    try {
+      const { limit = 50, offset = 0 } = req.query;
+      const transactions = await storage.getAllAvalancheTransactions({
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+      });
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching public Avalanche transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
   app.get('/api/admin/transactions/avalanche', requireAdmin, async (req, res) => {
     try {
       const { userId, campaignId, startDate, endDate, limit, offset } = req.query;

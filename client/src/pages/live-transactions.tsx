@@ -215,8 +215,8 @@ export default function LiveTransactions() {
                   <div className="flex items-center gap-3">
                     <TrendingUp className="w-8 h-8 text-cyber-blue" />
                     <div>
-                      <div className="text-2xl font-bold">{liveStats.totalVolume.toFixed(2)}</div>
-                      <div className="text-sm text-muted-foreground">Total Volume (ETH)</div>
+                      <div className="text-2xl font-bold">{liveStats.totalVolume.toFixed(4)}</div>
+                      <div className="text-sm text-muted-foreground">Total Contributed (AVAX)</div>
                     </div>
                   </div>
                 </CardContent>
@@ -227,8 +227,8 @@ export default function LiveTransactions() {
                   <div className="flex items-center gap-3">
                     <Zap className="w-8 h-8 text-cyber-purple" />
                     <div>
-                      <div className="text-2xl font-bold">{liveStats.averageAmount.toFixed(4)}</div>
-                      <div className="text-sm text-muted-foreground">Avg Amount (ETH)</div>
+                      <div className="text-2xl font-bold">{avalancheTransactions.length}</div>
+                      <div className="text-sm text-muted-foreground">Successful Payments</div>
                     </div>
                   </div>
                 </CardContent>

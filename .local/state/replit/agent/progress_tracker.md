@@ -4,5 +4,7 @@
 [x] 4. Fix campaign funding errors and insufficient funds handling
 [x] 5. Enhanced blockchain transaction error messages
 [x] 6. Added proper gas fee estimation and validation
-[x] 7. Verify the project is working using the feedback tool
-[x] 8. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
+[x] 7. Fixed transaction visibility issue - added missing GET endpoint for public Avalanche transactions
+[x] 8. Updated live-transactions page to show correct AVAX amounts and successful payment counts
+[x] 9. Verify the project is working using the feedback tool
+[x] 10. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
