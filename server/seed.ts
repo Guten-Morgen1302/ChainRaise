@@ -30,8 +30,8 @@ export async function seedDatabase() {
         flaggedReason: null,
         flaggedBy: null,
         flaggedAt: null,
-        createdAt: null,
-        updatedAt: null,
+        profileCompletion: 100,
+        joinDate: new Date(),
       },
       {
         username: "sarahdesign",
@@ -47,8 +47,8 @@ export async function seedDatabase() {
         flaggedReason: null,
         flaggedBy: null,
         flaggedAt: null,
-        createdAt: null,
-        updatedAt: null,
+        profileCompletion: 90,
+        joinDate: new Date(),
       },
       {
         username: "admin",
@@ -65,8 +65,8 @@ export async function seedDatabase() {
         flaggedReason: null,
         flaggedBy: null,
         flaggedAt: null,
-        createdAt: null,
-        updatedAt: null,
+        profileCompletion: 100,
+        joinDate: new Date(),
       },
     ];
 

@@ -15,14 +15,24 @@ if (!process.env.DATABASE_URL) {
 let db: any;
 let pool: Pool | null = null;
 
-// Use SQLite for local development if DATABASE_URL contains 'sqlite'
-if (process.env.DATABASE_URL.includes('sqlite')) {
-  const sqlite = new Database(process.env.DATABASE_URL.replace('sqlite:', ''));
-  db = drizzleSqlite(sqlite, { schema });
-  pool = null; // Not needed for SQLite
-} else {
-  pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  db = drizzle({ client: pool, schema });
+try {
+  // Use SQLite for local development if DATABASE_URL contains 'sqlite'
+  if (process.env.DATABASE_URL.includes('sqlite')) {
+    const sqlite = new Database(process.env.DATABASE_URL.replace('sqlite:', ''));
+    db = drizzleSqlite(sqlite, { schema });
+    pool = null; // Not needed for SQLite
+  } else {
+    pool = new Pool({ 
+      connectionString: process.env.DATABASE_URL,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
+    db = drizzle({ client: pool, schema });
+  }
+} catch (error) {
+  console.error('Database connection error:', error);
+  throw new Error('Failed to connect to database');
 }
 
 export { db, pool };
