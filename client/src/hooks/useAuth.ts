@@ -26,11 +26,19 @@ export function useAuth() {
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
-      window.location.replace("/");
+      // Force reload to home page
+      window.location.href = "/";
+    },
+    onError: () => {
+      // Even if API fails, clear local state and redirect
+      queryClient.setQueryData(["/api/user"], null);
+      queryClient.clear();
+      window.location.href = "/";
     },
   });
 
   const logout = () => {
+    console.log("Logout clicked!"); // Debug log
     logoutMutation.mutate();
   };
 
