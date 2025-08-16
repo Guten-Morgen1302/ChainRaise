@@ -52,6 +52,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// ALWAYS serve the app on the port specified in the environment variable PORT
+// Other ports are firewalled. Default to 5000 for development.
+const port = parseInt(process.env.PORT || '5000', 10);
+
 (async () => {
   // Seed the database with sample data
   await seedDatabase();
@@ -78,11 +82,6 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 80 for Replit compatibility.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '80', 10);
   server.listen({
     port,
     host: "0.0.0.0",
