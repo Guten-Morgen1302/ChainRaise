@@ -12,5 +12,6 @@
 [x] 12. Fixed white text visibility issues in TransactionHistory page and WalletConnection component
 [x] 13. Added disconnect wallet feature to compact wallet view
 [x] 14. Fixed useWeb3 hook to use mock transactions instead of real eth1Sign blockchain calls
-[x] 15. Verify the project is working using the feedback tool
-[x] 16. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
+[x] 15. Fixed logout redirect to go to home page instead of sign-in page
+[x] 16. Verify the project is working using the feedback tool
+[x] 17. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool

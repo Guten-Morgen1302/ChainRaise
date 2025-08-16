@@ -26,7 +26,7 @@ export function useAuth() {
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
-      window.location.replace("/auth");
+      window.location.replace("/");
     },
   });
 
