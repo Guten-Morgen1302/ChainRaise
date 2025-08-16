@@ -383,8 +383,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update campaign funding
       const updatedCampaign = await storage.updateCampaign(id, {
-        currentAmount: (parseFloat(campaign.currentAmount) + usdAmount).toString(),
-        backerCount: campaign.backerCount + 1
+        currentAmount: (parseFloat(campaign.currentAmount || "0") + usdAmount).toString(),
+        backerCount: (campaign.backerCount || 0) + 1
       });
 
       // Create contribution record
@@ -407,13 +407,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: amount.toString(),
         walletAddress,
         campaignId: id,
-        status: 'completed',
         transactionType: 'funding'
       });
 
       // Broadcast real-time update
       const wsManager = getWebSocketManager();
-      wsManager.broadcastToAdmins('campaign_funded', {
+      wsManager?.broadcastToAdmins('campaign_funded', {
         campaignId: id,
         amount: usdAmount,
         transactionHash,
@@ -1506,7 +1505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transaction = await storage.createAvalancheTransaction(transactionData);
       
       // Update campaign funding if transaction is successful
-      if (transaction.status === 'completed') {
+      if (transaction.status === 'completed' && transaction.campaignId) {
         await storage.updateCampaignFunding(transaction.campaignId, transaction.amount);
       }
 
@@ -1544,8 +1543,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedTransactions = await Promise.all(
         transactions.map(async (transaction) => {
           const [user, campaign] = await Promise.all([
-            storage.getUser(transaction.userId),
-            storage.getCampaign(transaction.campaignId),
+            transaction.userId ? storage.getUser(transaction.userId) : null,
+            transaction.campaignId ? storage.getCampaign(transaction.campaignId) : null,
           ]);
           
           return {
@@ -1593,7 +1592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Enrich with campaign data for public display (no user data for privacy)
       const enrichedTransactions = await Promise.all(
         transactions.map(async (transaction) => {
-          const campaign = await storage.getCampaign(transaction.campaignId);
+          const campaign = transaction.campaignId ? await storage.getCampaign(transaction.campaignId) : null;
           
           return {
             ...transaction,

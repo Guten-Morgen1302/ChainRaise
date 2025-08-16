@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration Test</title>
+</head>
+<body>
+    <h1>Test Registration</h1>
+    <form id="registrationForm">
+        <div>
+            <label>Username:</label>
+            <input type="text" id="username" required>
+        </div>
+        <div>
+            <label>Email:</label>
+            <input type="email" id="email" required>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" id="password" required>
+        </div>
+        <div>
+            <label>First Name:</label>
+            <input type="text" id="firstName">
+        </div>
+        <div>
+            <label>Last Name:</label>
+            <input type="text" id="lastName">
+        </div>
+        <button type="submit">Register</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        <h3>Success!</h3>
+                        <p>User created: ${JSON.stringify(result, null, 2)}</p>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <h3>Error!</h3>
+                        <p>${result.message || 'Registration failed'}</p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>Network Error!</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        });
+    </script>
+
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        div { margin: 10px 0; }
+        label { display: inline-block; width: 100px; }
+        input { padding: 5px; }
+        button { padding: 10px 20px; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</body>
+</html>
