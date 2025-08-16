@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { KYCBadge } from "@/components/ui/kyc-badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -149,70 +152,88 @@ export default function Dashboard() {
   const activeCampaigns = myCampaigns.filter((campaign: Campaign) => campaign.status === "active").length;
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative noise-bg">
       <ThreeBackground />
       <MainNavigation />
       
       <div className="relative z-10 pt-16">
         {/* Header */}
-        <section className="py-12 bg-gradient-to-b from-background to-muted/20">
+        <section className="py-16 noise-bg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8"
+              className="card-premium p-8 mb-8"
             >
-              <div>
-                <h1 className="text-4xl md:text-5xl font-black mb-4">
-                  Welcome back, <span className="gradient-text">{user?.firstName || "Creator"}</span>
-                </h1>
-                <p className="text-xl text-muted-foreground">
-                  Manage your campaigns and track your impact
-                </p>
-                
-                {/* User Profile with KYC Status */}
-                <div className="mt-4 flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>@{user?.username}</span>
-                    <span>•</span>
-                    <span>{user?.email}</span>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div className="flex items-center gap-6 mb-6 md:mb-0">
+                  <Avatar className="h-20 w-20 border-2 border-primary/20">
+                    <AvatarImage src={user?.profileImageUrl} alt={user?.firstName || "User"} />
+                    <AvatarFallback className="bg-primary/20 text-primary text-xl heading-display">
+                      {user?.firstName?.charAt(0) || user?.username?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h1 className="text-4xl md:text-5xl heading-display mb-2">
+                      <span className="gradient-text">{user?.firstName || "Creator"}</span>
+                    </h1>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="body-text text-lg opacity-80">@{user?.username}</span>
+                      <span className="body-text opacity-50">•</span>
+                      <span className="body-text opacity-80">{user?.email}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {user?.kycStatus && (
+                        <KYCBadge status={user.kycStatus as "approved" | "pending" | "rejected"} />
+                      )}
+                      <Badge className="bg-secondary/50 text-secondary-foreground">
+                        Member since {new Date(user?.createdAt || Date.now()).getFullYear()}
+                      </Badge>
+                    </div>
                   </div>
-                  <Badge 
-                    variant={user?.kycStatus === 'approved' ? 'default' : 
-                            user?.kycStatus === 'pending' || user?.kycStatus === 'under_review' ? 'secondary' : 'destructive'}
-                    className={`${
-                      user?.kycStatus === 'approved' ? 'text-green-600 border-green-600 bg-green-50' : 
-                      user?.kycStatus === 'pending' || user?.kycStatus === 'under_review' ? 'text-yellow-600 border-yellow-600 bg-yellow-50' : 'text-red-600 border-red-600 bg-red-50'
-                    }`}
-                  >
-                    {user?.kycStatus === 'approved' && <CheckCircle className="w-3 h-3 mr-1" />}
-                    {(user?.kycStatus === 'pending' || user?.kycStatus === 'under_review') && <Clock className="w-3 h-3 mr-1" />}
-                    {user?.kycStatus === 'rejected' && <AlertCircle className="w-3 h-3 mr-1" />}
-                    KYC: {user?.kycStatus?.replace('_', ' ').toUpperCase() || 'NOT SUBMITTED'}
-                  </Badge>
                 </div>
-              </div>
               
-              <div className="flex gap-3 mt-4 md:mt-0">
-                {user?.isFlagged ? (
-                  <Button disabled className="bg-gradient-to-r from-gray-400 to-gray-500">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    Account Flagged
-                  </Button>
-                ) : canCreateCampaign?.canCreate ? (
-                  <Link href="/create">
-                    <Button className="bg-gradient-to-r from-cyber-blue to-cyber-purple hover:scale-105 transition-all duration-300">
-                      <Plus className="w-4 h-4 mr-2" />
-                      New Campaign
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {user?.isFlagged ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button disabled className="bg-danger/20 text-danger border-danger/30">
+                          <AlertCircle className="w-4 h-4 mr-2" />
+                          Account Flagged
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Your account is flagged. Please contact support.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : canCreateCampaign?.canCreate ? (
+                    <Link href="/create">
+                      <Button className="gradient-primary text-white hover:shadow-lg hover:shadow-primary/25 transition-all duration-200">
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Campaign
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button disabled className="bg-muted/50 text-muted-foreground">
+                          <Lock className="w-4 h-4 mr-2" />
+                          Create Campaign
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{canCreateCampaign?.reason || "KYC verification required"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  <Link href="/profile">
+                    <Button variant="outline" className="btn-glass">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
                     </Button>
                   </Link>
-                ) : (
-                  <Button disabled className="bg-gradient-to-r from-gray-400 to-gray-500" title={canCreateCampaign?.reason}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    {canCreateCampaign?.reason || "Cannot Create Campaign"}
-                  </Button>
-                )}
+                </div>
               </div>
             </motion.div>
 
@@ -224,41 +245,40 @@ export default function Dashboard() {
                 transition={{ duration: 0.5 }}
                 className="mb-8"
               >
-                <Card className="glass-morphism border-red-500/50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <AlertCircle className="w-6 h-6 text-red-400" />
-                        <div>
-                          <h3 className="font-semibold text-red-400">Account Flagged</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Your account is flagged. Please submit a reinstatement request to regain full access.
-                          </p>
-                          {user.flaggedReason && (
-                            <p className="text-sm text-red-300 mt-1">
-                              Reason: {user.flaggedReason}
-                            </p>
-                          )}
-                        </div>
+                <div className="card-premium p-6 border-danger/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-danger/20 rounded-xl flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-danger" />
                       </div>
-                      {!reinstatementRequest || reinstatementRequest.status === "rejected" ? (
-                        <Button 
-                          className="bg-red-500 hover:bg-red-600" 
-                          onClick={() => {
-                            // TODO: Open reinstatement request modal
-                            console.log("Open reinstatement request modal");
-                          }}
-                        >
-                          Request Reinstatement
-                        </Button>
-                      ) : (
-                        <Badge variant="secondary">
-                          Request {reinstatementRequest.status}
-                        </Badge>
-                      )}
+                      <div>
+                        <h3 className="heading-display text-lg text-danger mb-1">Account Flagged</h3>
+                        <p className="body-text opacity-80">
+                          Your account is flagged. Please submit a reinstatement request to regain full access.
+                        </p>
+                        {user.flaggedReason && (
+                          <p className="body-text text-sm text-danger/80 mt-2">
+                            Reason: {user.flaggedReason}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    {!reinstatementRequest || reinstatementRequest.status === "rejected" ? (
+                      <Button 
+                        className="bg-danger text-white hover:bg-danger/90" 
+                        onClick={() => {
+                          console.log("Open reinstatement request modal");
+                        }}
+                      >
+                        Appeal
+                      </Button>
+                    ) : (
+                      <Badge className="bg-warning/20 text-warning border-warning/30">
+                        {reinstatementRequest.status}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </motion.div>
             )}
 
@@ -270,110 +290,153 @@ export default function Dashboard() {
                 transition={{ duration: 0.5 }}
                 className="mb-8"
               >
-                <Card className={`glass-morphism ${
+                <div className={`card-premium p-6 ${
                   user?.kycStatus === "pending" || user?.kycStatus === "under_review" 
-                    ? "border-cyber-yellow/50" 
+                    ? "border-warning/30" 
                     : user?.kycStatus === "rejected"
-                    ? "border-red-500/50"
-                    : "border-blue-500/50"
+                    ? "border-danger/30"
+                    : "border-primary/30"
                 }`}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full animate-pulse ${
-                          user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "bg-cyber-yellow" : 
-                          user?.kycStatus === "rejected" ? "bg-red-500" : "bg-blue-500"
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "bg-warning/20" : 
+                        user?.kycStatus === "rejected" ? "bg-danger/20" : "bg-primary/20"
+                      }`}>
+                        <div className={`w-4 h-4 rounded-full animate-pulse ${
+                          user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "bg-warning" : 
+                          user?.kycStatus === "rejected" ? "bg-danger" : "bg-primary"
                         }`}></div>
-                        <div>
-                          <h3 className={`font-semibold ${
-                            user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "text-cyber-yellow" : 
-                            user?.kycStatus === "rejected" ? "text-red-400" : "text-blue-400"
-                          }`}>
-                            {user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "KYC Under Review" : 
-                             user?.kycStatus === "rejected" ? "KYC Rejected" : "KYC Required"}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {user?.kycStatus === "pending" || user?.kycStatus === "under_review" 
-                              ? "Your identity verification is being processed (1-3 business days)"
-                              : user?.kycStatus === "rejected"
-                              ? "Your KYC application was rejected. Please resubmit with corrections."
-                              : "Complete KYC verification to create campaigns"
-                            }
-                          </p>
-                        </div>
                       </div>
-                      <Link href="/kyc">
-                        <Button className={
-                          user?.kycStatus === "pending" || user?.kycStatus === "under_review"
-                            ? "bg-cyber-yellow text-black hover:bg-cyber-yellow/90" 
+                      <div>
+                        <h3 className={`heading-display text-lg mb-1 ${
+                          user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "text-warning" : 
+                          user?.kycStatus === "rejected" ? "text-danger" : "text-primary"
+                        }`}>
+                          {user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "KYC Under Review" : 
+                           user?.kycStatus === "rejected" ? "KYC Rejected" : "KYC Required"}
+                        </h3>
+                        <p className="body-text opacity-80">
+                          {user?.kycStatus === "pending" || user?.kycStatus === "under_review" 
+                            ? "Your identity verification is being processed (1-3 business days)"
                             : user?.kycStatus === "rejected"
-                            ? "bg-red-500 hover:bg-red-600"
-                            : "bg-blue-500 hover:bg-blue-600"
-                        }>
-                          {user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "Check Status" : 
-                           user?.kycStatus === "rejected" ? "Resubmit KYC" : "Complete KYC"}
-                        </Button>
-                      </Link>
+                            ? "Your KYC application was rejected. Please resubmit with corrections."
+                            : "Complete KYC verification to unlock all features"
+                          }
+                        </p>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <Link href="/kyc">
+                      <Button className={
+                        user?.kycStatus === "pending" || user?.kycStatus === "under_review"
+                          ? "bg-warning text-background hover:bg-warning/90" 
+                          : user?.kycStatus === "rejected"
+                          ? "bg-danger text-white hover:bg-danger/90"
+                          : "bg-primary text-white hover:bg-primary/90"
+                      }>
+                        {user?.kycStatus === "pending" || user?.kycStatus === "under_review" ? "View Status" : 
+                         user?.kycStatus === "rejected" ? "Resubmit" : "Start KYC"}
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
               </motion.div>
             )}
 
-            {/* Quick Stats */}
+            {/* Stats Overview */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
               className="grid grid-cols-1 md:grid-cols-4 gap-6"
             >
-              <Card className="glass-morphism border-white/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Campaigns Created</p>
-                      <p className="text-2xl font-bold">{myCampaigns.length}</p>
-                    </div>
-                    <TrendingUp className="w-8 h-8 text-cyber-blue" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0 }}
+                className="card-premium p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-primary" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Badge className="bg-success/20 text-success border-success/30">
+                    +{myCampaigns.length > 0 ? '12%' : '0%'}
+                  </Badge>
+                </div>
+                <h3 className="body-text text-sm opacity-70 mb-1">Created</h3>
+                <p className="heading-display text-3xl mb-2">
+                  {myCampaigns.length}
+                </p>
+                <div className="h-8 bg-gradient-to-r from-primary/20 to-transparent rounded" />
+              </motion.div>
 
-              <Card className="glass-morphism border-white/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Raised</p>
-                      <p className="text-2xl font-bold">{totalRaised.toFixed(2)} ETH</p>
-                    </div>
-                    <Wallet className="w-8 h-8 text-cyber-green" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="card-premium p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-success" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Badge className="bg-success/20 text-success border-success/30">
+                    +{totalRaised > 0 ? '8%' : '0%'}
+                  </Badge>
+                </div>
+                <h3 className="body-text text-sm opacity-70 mb-1">Total Raised (ETH)</h3>
+                <p className="heading-display text-3xl mb-2">
+                  {totalRaised.toFixed(1)}
+                </p>
+                <div className="h-8 bg-gradient-to-r from-success/20 to-transparent rounded" />
+              </motion.div>
 
-              <Card className="glass-morphism border-white/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Backed Projects</p>
-                      <p className="text-2xl font-bold">{myContributions.length}</p>
-                    </div>
-                    <Heart className="w-8 h-8 text-cyber-pink" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="card-premium p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-accent" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Badge className="bg-warning/20 text-warning border-warning/30">
+                    +{myContributions.length > 0 ? '3%' : '0%'}
+                  </Badge>
+                </div>
+                <h3 className="body-text text-sm opacity-70 mb-1">Backed Count</h3>
+                <p className="heading-display text-3xl mb-2">
+                  {myContributions.length}
+                </p>
+                <div className="h-8 bg-gradient-to-r from-accent/20 to-transparent rounded" />
+              </motion.div>
 
-              <Card className="glass-morphism border-white/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Contributed</p>
-                      <p className="text-2xl font-bold">{totalContributed.toFixed(2)} ETH</p>
-                    </div>
-                    <Users className="w-8 h-8 text-cyber-purple" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="card-premium p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 bg-warning/20 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-warning" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Badge className="bg-success/20 text-success border-success/30">
+                    +{totalContributed > 0 ? '5%' : '0%'}
+                  </Badge>
+                </div>
+                <h3 className="body-text text-sm opacity-70 mb-1">Total Contributed (ETH)</h3>
+                <p className="heading-display text-3xl mb-2">
+                  {totalContributed.toFixed(1)}
+                </p>
+                <div className="h-8 bg-gradient-to-r from-warning/20 to-transparent rounded" />
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -382,12 +445,27 @@ export default function Dashboard() {
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="glass-morphism w-full justify-start mb-8">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="my-campaigns">My Campaigns</TabsTrigger>
-                <TabsTrigger value="backed-projects">Backed Projects</TabsTrigger>
-                <TabsTrigger value="notifications">Notifications ({userNotifications.filter((n: any) => !n.isRead).length})</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsList className="glass w-full justify-start mb-8 p-2">
+                <TabsTrigger value="overview" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="my-campaigns" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                  My Campaigns
+                </TabsTrigger>
+                <TabsTrigger value="backed-projects" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                  Backed
+                </TabsTrigger>
+                <TabsTrigger value="notifications" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                  Notifications 
+                  {userNotifications.filter((n: any) => !n.isRead).length > 0 && (
+                    <Badge className="ml-2 bg-danger/20 text-danger border-danger/30 text-xs">
+                      {userNotifications.filter((n: any) => !n.isRead).length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                  Analytics
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview">

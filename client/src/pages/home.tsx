@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { KYCBadge } from "@/components/ui/kyc-badge";
 import { MainNavigation } from "@/components/navigation/MainNavigation";
 import { ThreeBackground } from "@/components/three/ThreeBackground";
 import CampaignCard from "@/components/campaign/campaign-card";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, TrendingUp, Users, Wallet } from "lucide-react";
+import { Plus, TrendingUp, Users, Wallet, Eye, Heart, ArrowUp } from "lucide-react";
 import { Link } from "wouter";
 import type { Campaign, Contribution } from "@shared/schema";
 
@@ -35,24 +36,29 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative noise-bg">
       <ThreeBackground />
       <MainNavigation />
       
       <div className="relative z-10">
-        {/* Welcome Section */}
-        <section className="py-12 bg-gradient-to-b from-background to-muted/20">
+        {/* Hero Section */}
+        <section className="py-16 noise-bg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-center mb-8"
+              className="text-center mb-12"
             >
-              <h1 className="text-4xl md:text-6xl font-black mb-4">
-                Welcome back, <span className="gradient-text">{user?.firstName || "Creator"}</span>
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <h1 className="text-4xl md:text-6xl heading-display">
+                  Welcome back, <span className="gradient-text">{user?.firstName || "Creator"}</span>
+                </h1>
+                {user?.kycStatus && (
+                  <KYCBadge status={user.kycStatus as "approved" | "pending" | "rejected"} />
+                )}
+              </div>
+              <p className="text-xl body-text max-w-2xl mx-auto opacity-90">
                 Ready to launch your next revolutionary project or discover amazing campaigns?
               </p>
             </motion.div>
@@ -62,113 +68,179 @@ export default function Home() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex flex-wrap justify-center gap-4 mb-12"
+              className="grid md:grid-cols-3 gap-6 mb-16 max-w-4xl mx-auto"
             >
               <Link href="/create">
-                <Button size="lg" className="bg-gradient-to-r from-cyber-blue to-cyber-purple hover:scale-105 transform transition-all duration-300">
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Campaign
-                </Button>
+                <motion.div
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className="card-premium p-6 text-center group cursor-pointer"
+                >
+                  <div className="w-12 h-12 mx-auto mb-4 bg-primary/20 rounded-xl flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                    <Plus className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="heading-display text-lg mb-2">Create Campaign</h3>
+                  <p className="body-text text-sm opacity-70">Launch your revolutionary project</p>
+                </motion.div>
               </Link>
               <Link href="/campaigns">
-                <Button variant="outline" size="lg" className="glass-morphism hover:bg-white/20">
-                  <TrendingUp className="w-5 h-5 mr-2" />
-                  Browse Campaigns
-                </Button>
+                <motion.div
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className="card-premium p-6 text-center group cursor-pointer"
+                >
+                  <div className="w-12 h-12 mx-auto mb-4 bg-accent/20 rounded-xl flex items-center justify-center group-hover:bg-accent/30 transition-colors">
+                    <Eye className="w-6 h-6 text-accent" />
+                  </div>
+                  <h3 className="heading-display text-lg mb-2">Browse</h3>
+                  <p className="body-text text-sm opacity-70">Discover amazing campaigns</p>
+                </motion.div>
               </Link>
               <Link href="/dashboard">
-                <Button variant="outline" size="lg" className="glass-morphism hover:bg-white/20">
-                  <Users className="w-5 h-5 mr-2" />
-                  My Dashboard
-                </Button>
+                <motion.div
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className="card-premium p-6 text-center group cursor-pointer"
+                >
+                  <div className="w-12 h-12 mx-auto mb-4 bg-success/20 rounded-xl flex items-center justify-center group-hover:bg-success/30 transition-colors">
+                    <Users className="w-6 h-6 text-success" />
+                  </div>
+                  <h3 className="heading-display text-lg mb-2">My Dashboard</h3>
+                  <p className="body-text text-sm opacity-70">Manage your campaigns</p>
+                </motion.div>
               </Link>
             </motion.div>
 
-            {/* KYC Status Alert */}
+            {/* KYC Status Banner */}
             {user?.kycStatus !== "approved" && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="mb-8"
+                className="mb-12"
               >
-                <Card className="glass-morphism border-cyber-yellow/50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-cyber-yellow rounded-full animate-pulse"></div>
-                        <div>
-                          <h3 className="font-semibold text-cyber-yellow">Complete KYC Verification</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Verify your identity to create campaigns and unlock all features
-                          </p>
-                        </div>
+                <div className="card-premium p-6 border-warning/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center">
+                        <div className="w-3 h-3 bg-warning rounded-full animate-pulse"></div>
                       </div>
-                      <Link href="/kyc">
-                        <Button className="bg-cyber-yellow text-black hover:bg-cyber-yellow/90">
-                          Start KYC
-                        </Button>
-                      </Link>
+                      <div>
+                        <h3 className="heading-display text-lg text-warning mb-1">
+                          {user?.kycStatus === 'pending' ? 'KYC Under Review' : 'Complete KYC Verification'}
+                        </h3>
+                        <p className="body-text text-sm opacity-80">
+                          {user?.kycStatus === 'pending' 
+                            ? 'Your verification is being processed. You\'ll be notified once approved.'
+                            : 'Verify your identity to create campaigns and unlock all features'
+                          }
+                        </p>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    <Link href="/kyc">
+                      <Button className="bg-warning text-background hover:bg-warning/90 font-medium">
+                        {user?.kycStatus === 'pending' ? 'View Status' : 'Start KYC'}
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
               </motion.div>
             )}
           </div>
         </section>
 
-        {/* Dashboard Overview */}
-        <section className="py-16">
+        {/* Stats Overview */}
+        <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-              <Card className="glass-morphism border-white/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Your Contributions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-5 h-5 text-cyber-blue" />
-                    <span className="text-2xl font-bold">{userContributions.length}</span>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0 }}
+                className="card-premium p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-primary" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Badge className="bg-success/20 text-success border-success/30">
+                    <ArrowUp className="w-3 h-3 mr-1" />
+                    +12%
+                  </Badge>
+                </div>
+                <h3 className="body-text text-sm opacity-70 mb-1">Contributions</h3>
+                <p className="heading-display text-3xl mb-2">
+                  {userContributions.length}
+                </p>
+                <div className="h-8 bg-gradient-to-r from-primary/20 to-transparent rounded" />
+              </motion.div>
 
-              <Card className="glass-morphism border-white/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Raised</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-cyber-green" />
-                    <span className="text-2xl font-bold">{stats?.totalRaised || "0"} ETH</span>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="card-premium p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-success" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Badge className="bg-success/20 text-success border-success/30">
+                    <ArrowUp className="w-3 h-3 mr-1" />
+                    +8%
+                  </Badge>
+                </div>
+                <h3 className="body-text text-sm opacity-70 mb-1">Total Raised (Platform)</h3>
+                <p className="heading-display text-3xl mb-2">
+                  {parseFloat(stats?.totalRaised || "0").toFixed(1)} ETH
+                </p>
+                <div className="h-8 bg-gradient-to-r from-success/20 to-transparent rounded" />
+              </motion.div>
 
-              <Card className="glass-morphism border-white/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Active Campaigns</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-cyber-purple" />
-                    <span className="text-2xl font-bold">{stats?.activeCampaigns || "0"}</span>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="card-premium p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-accent" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Badge className="bg-warning/20 text-warning border-warning/30">
+                    <ArrowUp className="w-3 h-3 mr-1" />
+                    +3%
+                  </Badge>
+                </div>
+                <h3 className="body-text text-sm opacity-70 mb-1">Active Campaigns</h3>
+                <p className="heading-display text-3xl mb-2">
+                  {stats?.activeCampaigns || "0"}
+                </p>
+                <div className="h-8 bg-gradient-to-r from-accent/20 to-transparent rounded" />
+              </motion.div>
 
-              <Card className="glass-morphism border-white/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Success Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="bg-cyber-green/20 text-cyber-green">
-                      {stats?.successRate || "0"}%
-                    </Badge>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="card-premium p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-success" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Badge className="bg-success/20 text-success border-success/30">
+                    <ArrowUp className="w-3 h-3 mr-1" />
+                    +5%
+                  </Badge>
+                </div>
+                <h3 className="body-text text-sm opacity-70 mb-1">Success Rate</h3>
+                <p className="heading-display text-3xl mb-2">
+                  {stats?.successRate || "0"}%
+                </p>
+                <div className="h-8 bg-gradient-to-r from-success/20 to-transparent rounded" />
+              </motion.div>
             </div>
 
             {/* Featured Campaigns */}
@@ -178,7 +250,14 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-3xl font-bold mb-8 gradient-text">Featured Campaigns</h2>
+              <div className="flex items-center justify-between mb-12">
+                <h2 className="text-4xl heading-display gradient-text">Featured Campaigns</h2>
+                <Link href="/campaigns">
+                  <Button variant="outline" className="btn-glass">
+                    View All
+                  </Button>
+                </Link>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {campaigns.slice(0, 6).map((campaign, index) => (
                   <motion.div
@@ -191,6 +270,55 @@ export default function Home() {
                     <CampaignCard campaign={campaign} />
                   </motion.div>
                 ))}
+              </div>
+            </motion.div>
+            
+            {/* Recent Activity Feed */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="mt-20"
+            >
+              <h2 className="text-3xl heading-display gradient-text mb-8">Recent Activity</h2>
+              <div className="card-premium p-8">
+                <div className="space-y-6">
+                  {userContributions.slice(0, 5).map((contribution, index) => (
+                    <motion.div
+                      key={contribution.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      className="flex items-center gap-4 p-4 rounded-lg glass border border-white/5"
+                    >
+                      <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                        <Heart className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="body-text font-medium">
+                          You backed a campaign
+                        </p>
+                        <p className="body-text text-sm opacity-70">
+                          {contribution.amount} ETH contribution
+                        </p>
+                      </div>
+                      <Badge className="bg-primary/20 text-primary border-primary/30">
+                        {contribution.createdAt ? new Date(contribution.createdAt).toLocaleDateString() : 'Unknown'}
+                      </Badge>
+                    </motion.div>
+                  ))}
+                  {userContributions.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Heart className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="heading-display text-lg mb-2">No activity yet</h3>
+                      <p className="body-text opacity-70">Start exploring campaigns to see your activity here</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>

@@ -28,7 +28,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 glass-morphism border-b border-white/10">
+    <nav className="fixed top-0 w-full z-50 glass border-b border-white/10 noise-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -38,7 +38,7 @@ export default function Navbar() {
             transition={{ duration: 0.5 }}
             className="flex items-center space-x-4"
           >
-            <div className="text-2xl font-bold gradient-text">
+            <div className="text-2xl font-bold heading-display gradient-text">
               FundIndia
             </div>
           </motion.div>
@@ -49,10 +49,10 @@ export default function Navbar() {
               <Link key={item.href} href={item.href}>
                 <Button
                   variant="ghost"
-                  className={`text-sm font-medium transition-colors duration-300 ${
+                  className={`text-sm font-medium transition-all duration-200 ${
                     location === item.href 
-                      ? "text-indigo-600 dark:text-indigo-400" 
-                      : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
+                      ? "text-primary" 
+                      : "text-muted-foreground hover:text-primary"
                   }`}
                 >
                   {item.label}
@@ -70,7 +70,7 @@ export default function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                  className="btn-glass"
                   onClick={() => window.location.href = '/profile'}
                 >
                   <Wallet className="w-4 h-4 mr-2" />
@@ -85,7 +85,7 @@ export default function Navbar() {
                   variant="outline"
                   size="sm"
                   onClick={() => window.location.href = '/api/logout'}
-                  className="backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                  className="btn-glass"
                 >
                   Logout
                 </Button>
@@ -94,13 +94,13 @@ export default function Navbar() {
               <>
                 <Button
                   variant="outline"
-                  className="backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                  className="btn-glass"
                   onClick={() => window.location.href = '/campaigns'}
                 >
                   Explore
                 </Button>
                 <Button
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                  className="gradient-primary text-white hover:shadow-lg hover:shadow-primary/25 transition-all duration-200"
                   onClick={() => window.location.href = '/auth'}
                 >
                   Get Started
@@ -128,7 +128,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden border-t border-white/10 py-4"
+            className="md:hidden border-t border-white/10 py-4 glass"
           >
             <div className="flex flex-col space-y-2">
               {!isLoading && navItems.map((item) => (
@@ -149,7 +149,7 @@ export default function Navbar() {
                   <>
                     <Button
                       variant="outline"
-                      className="w-full backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30"
+                      className="w-full btn-glass"
                       onClick={() => window.location.href = '/profile'}
                     >
                       <Wallet className="w-4 h-4 mr-2" />
@@ -169,13 +169,13 @@ export default function Navbar() {
                   <>
                     <Button
                       variant="outline"
-                      className="w-full backdrop-blur-md bg-white/20 dark:bg-gray-800/20 border-white/30"
+                      className="w-full btn-glass"
                       onClick={() => window.location.href = '/campaigns'}
                     >
                       Explore Campaigns
                     </Button>
                     <Button
-                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
+                      className="w-full gradient-primary text-white"
                       onClick={() => window.location.href = '/auth'}
                     >
                       Get Started

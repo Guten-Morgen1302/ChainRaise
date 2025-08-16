@@ -5,67 +5,74 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(222.2, 84%, 4.9%);
+  /* Core theme colors matching spec */
+  --background: #0B0F14;
   --foreground: hsl(210, 40%, 98%);
-  --card: hsl(222.2, 84%, 4.9%);
+  --card: #111827;
   --card-foreground: hsl(210, 40%, 98%);
-  --popover: hsl(222.2, 84%, 4.9%);
+  --popover: #111827;
   --popover-foreground: hsl(210, 40%, 98%);
-  --primary: hsl(196, 100%, 50%);
-  --primary-foreground: hsl(222.2, 84%, 4.9%);
-  --secondary: hsl(217.2, 32.6%, 17.5%);
+  --primary: #7C3AED;
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: #1F2937;
   --secondary-foreground: hsl(210, 40%, 98%);
-  --muted: hsl(217.2, 32.6%, 17.5%);
-  --muted-foreground: hsl(215, 20.2%, 65.1%);
-  --accent: hsl(217.2, 32.6%, 17.5%);
-  --accent-foreground: hsl(210, 40%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
+  --muted: #1F2937;
+  --muted-foreground: hsl(210, 40%, 90%);
+  --accent: #22D3EE;
+  --accent-foreground: #0B0F14;
+  --destructive: #EF4444;
   --destructive-foreground: hsl(210, 40%, 98%);
-  --border: hsl(217.2, 32.6%, 17.5%);
-  --input: hsl(217.2, 32.6%, 17.5%);
-  --ring: hsl(196, 100%, 50%);
-  --chart-1: hsl(196, 100%, 50%);
-  --chart-2: hsl(159, 78%, 37%);
-  --chart-3: hsl(42, 93%, 56%);
-  --chart-4: hsl(147, 79%, 42%);
-  --chart-5: hsl(341, 75%, 51%);
+  --border: #1F2937;
+  --input: #1F2937;
+  --ring: #7C3AED;
   
-  /* Cyberpunk colors */
-  --cyber-blue: hsl(196, 100%, 50%);
-  --cyber-purple: hsl(262, 73%, 65%);
-  --cyber-green: hsl(160, 78%, 37%);
-  --cyber-pink: hsl(330, 81%, 60%);
-  --cyber-yellow: hsl(42, 93%, 56%);
+  /* Design system colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  
+  /* Chart colors */
+  --chart-1: #7C3AED;
+  --chart-2: #22D3EE;
+  --chart-3: #10B981;
+  --chart-4: #F59E0B;
+  --chart-5: #EF4444;
   
   /* Glass morphism */
-  --glass-white: hsla(0, 0%, 100%, 0.1);
-  --glass-dark: hsla(222, 47%, 11%, 0.8);
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
   
+  /* Typography */
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --radius: 0.75rem;
+  --font-display: 'Inter', system-ui, sans-serif;
+  
+  /* Layout */
+  --radius: 1rem;
+  --radius-lg: 1.25rem;
 }
 
 .dark {
-  --background: hsl(222.2, 84%, 4.9%);
+  /* Dark theme inherits root colors */
+  --background: #0B0F14;
   --foreground: hsl(210, 40%, 98%);
-  --card: hsl(222.2, 84%, 4.9%);
+  --card: #111827;
   --card-foreground: hsl(210, 40%, 98%);
-  --popover: hsl(222.2, 84%, 4.9%);
+  --popover: #111827;
   --popover-foreground: hsl(210, 40%, 98%);
-  --primary: hsl(196, 100%, 50%);
-  --primary-foreground: hsl(222.2, 84%, 4.9%);
-  --secondary: hsl(217.2, 32.6%, 17.5%);
+  --primary: #7C3AED;
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: #1F2937;
   --secondary-foreground: hsl(210, 40%, 98%);
-  --muted: hsl(217.2, 32.6%, 17.5%);
-  --muted-foreground: hsl(215, 20.2%, 65.1%);
-  --accent: hsl(217.2, 32.6%, 17.5%);
-  --accent-foreground: hsl(210, 40%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
+  --muted: #1F2937;
+  --muted-foreground: hsl(210, 40%, 90%);
+  --accent: #22D3EE;
+  --accent-foreground: #0B0F14;
+  --destructive: #EF4444;
   --destructive-foreground: hsl(210, 40%, 98%);
-  --border: hsl(217.2, 32.6%, 17.5%);
-  --input: hsl(217.2, 32.6%, 17.5%);
-  --ring: hsl(196, 100%, 50%);
+  --border: #1F2937;
+  --input: #1F2937;
+  --ring: #7C3AED;
 }
 
 @layer base {
@@ -80,28 +87,98 @@
 }
 
 @layer components {
-  .glass-morphism {
-    background: var(--glass-white);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+  /* Glass morphism surfaces */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
   }
   
-  .cyber-gradient {
-    background: linear-gradient(135deg, hsl(222.2, 84%, 4.9%) 0%, hsl(217.2, 32.6%, 17.5%) 50%, hsl(215, 20.2%, 20%) 100%);
+  .glass-card {
+    @apply glass rounded-2xl shadow-2xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 
+                0 0 0 1px rgba(255, 255, 255, 0.05);
   }
   
-  .glow-text {
-    text-shadow: 0 0 10px var(--cyber-blue);
+  /* Premium card styles */
+  .card-premium {
+    @apply glass-card transition-all duration-300 hover:shadow-2xl;
+    background: linear-gradient(135deg, var(--glass) 0%, rgba(124, 58, 237, 0.05) 100%);
   }
   
-  .progress-glow {
-    box-shadow: 0 0 20px hsla(160, 78%, 37%, 0.6);
+  .card-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(124, 58, 237, 0.2);
   }
   
-  .neon-border {
-    border: 1px solid transparent;
-    background: linear-gradient(45deg, var(--cyber-blue), var(--cyber-purple)) border-box;
-    border-radius: var(--radius);
+  /* Typography */
+  .heading-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+  
+  .body-text {
+    font-family: var(--font-sans);
+    opacity: 0.9;
+  }
+  
+  /* Status indicators */
+  .status-dot {
+    @apply w-2 h-2 rounded-full animate-pulse;
+  }
+  
+  .status-online {
+    @apply bg-green-500;
+  }
+  
+  .status-warning {
+    @apply bg-yellow-500;
+  }
+  
+  .status-offline {
+    @apply bg-red-500;
+  }
+  
+  /* Interactive elements */
+  .btn-glass {
+    @apply glass rounded-xl px-6 py-3 font-medium transition-all duration-200;
+    background: linear-gradient(135deg, var(--glass) 0%, rgba(124, 58, 237, 0.1) 100%);
+  }
+  
+  .btn-glass:hover {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.2) 100%);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+  }
+  
+  /* Utility gradients */
+  .gradient-primary {
+    background: linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%);
+  }
+  
+  .gradient-text {
+    background: linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Noise texture overlay */
+  .noise-bg {
+    position: relative;
+  }
+  
+  .noise-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    pointer-events: none;
   }
 }
 
