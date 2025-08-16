@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { BrowserProvider, formatEther, parseEther } from 'ethers';
 
-// Mock Web3 provider for development
 export interface Web3Provider {
   isConnected: boolean;
   account?: string;
@@ -24,35 +24,78 @@ export function useWeb3() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Simulate MetaMask connection
+  // Check if already connected on mount
+  useEffect(() => {
+    checkConnection();
+  }, []);
+
+  const checkConnection = async () => {
+    if (!window.ethereum) return;
+    
+    try {
+      const ethProvider = new BrowserProvider(window.ethereum);
+      const accounts = await window.ethereum.request?.({ method: 'eth_accounts' }) || [];
+      
+      if (accounts.length > 0) {
+        const account = accounts[0];
+        const network = await ethProvider.getNetwork();
+        const balance = await ethProvider.getBalance(account);
+        
+        setProvider({
+          isConnected: true,
+          account,
+          chainId: Number(network.chainId),
+          balance: formatEther(balance),
+        });
+      }
+    } catch (error) {
+      console.error('Wallet check error:', error);
+    }
+  };
+
   const connectWallet = async (): Promise<boolean> => {
+    if (!window.ethereum) {
+      toast({
+        title: "MetaMask Required",
+        description: "Please install MetaMask to connect your wallet",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     setIsLoading(true);
     
     try {
-      // Simulate connection delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const ethProvider = new BrowserProvider(window.ethereum);
       
-      // Mock successful connection
-      const mockAccount = `0x${Math.random().toString(16).substr(2, 40)}`;
-      const mockBalance = (Math.random() * 10 + 1).toFixed(3);
+      // Request account access
+      const accounts = await window.ethereum.request?.({ method: 'eth_requestAccounts' }) || [];
+      if (!accounts.length) {
+        throw new Error('No accounts found');
+      }
+      
+      const account = accounts[0];
+      const network = await ethProvider.getNetwork();
+      const balance = await ethProvider.getBalance(account);
       
       setProvider({
         isConnected: true,
-        account: mockAccount,
-        chainId: 80001, // Polygon Mumbai Testnet
-        balance: mockBalance,
+        account,
+        chainId: Number(network.chainId),
+        balance: formatEther(balance),
       });
 
       toast({
         title: "Wallet Connected",
-        description: `Connected to ${mockAccount.slice(0, 6)}...${mockAccount.slice(-4)}`,
+        description: `Connected to ${account.slice(0, 6)}...${account.slice(-4)}`,
       });
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Connection error:', error);
       toast({
         title: "Connection Failed",
-        description: "Failed to connect wallet. Please try again.",
+        description: error.message || "Failed to connect wallet. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -74,7 +117,7 @@ export function useWeb3() {
     amount: string,
     campaignId?: string
   ): Promise<TransactionResult | null> => {
-    if (!provider.isConnected) {
+    if (!provider.isConnected || !window.ethereum) {
       toast({
         title: "Wallet Not Connected",
         description: "Please connect your wallet first",
@@ -86,31 +129,41 @@ export function useWeb3() {
     setIsLoading(true);
     
     try {
-      // Simulate transaction processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const ethProvider = new BrowserProvider(window.ethereum);
+      const signer = await ethProvider.getSigner();
       
-      // Generate mock transaction hash
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      const mockBlockNumber = Math.floor(Math.random() * 1000000 + 12000000).toString();
+      // Send transaction
+      const tx = await signer.sendTransaction({
+        to,
+        value: parseEther(amount),
+      });
+
+      // Wait for confirmation
+      const receipt = await tx.wait();
       
+      if (!receipt) {
+        throw new Error('Transaction failed');
+      }
+
       const result: TransactionResult = {
-        hash: mockTxHash,
+        hash: receipt.hash,
         status: 'confirmed',
-        blockNumber: mockBlockNumber,
-        gasUsed: '21000',
-        gasPrice: '0.02',
+        blockNumber: receipt.blockNumber?.toString(),
+        gasUsed: receipt.gasUsed?.toString(),
+        gasPrice: receipt.gasPrice?.toString(),
       };
 
       toast({
         title: "Transaction Successful",
-        description: `Sent ${amount} ETH to campaign`,
+        description: `Sent ${amount} ETH successfully`,
       });
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Transaction error:', error);
       toast({
         title: "Transaction Failed",
-        description: "Transaction was rejected or failed",
+        description: error.message || "Transaction was rejected or failed",
         variant: "destructive",
       });
       return null;
@@ -120,23 +173,28 @@ export function useWeb3() {
   };
 
   const switchNetwork = async (chainId: number): Promise<boolean> => {
+    if (!window.ethereum) return false;
+    
     try {
-      // Simulate network switch
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: `0x${chainId.toString(16)}` }],
+      });
       
       setProvider(prev => ({ ...prev, chainId }));
       
-      const networkName = chainId === 80001 ? 'Polygon Mumbai' : 'Ethereum Mainnet';
+      const networkName = getNetworkName(chainId);
       toast({
         title: "Network Switched",
         description: `Switched to ${networkName}`,
       });
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Network switch error:', error);
       toast({
         title: "Network Switch Failed",
-        description: "Failed to switch network",
+        description: error.message || "Failed to switch network",
         variant: "destructive",
       });
       return false;
@@ -146,9 +204,14 @@ export function useWeb3() {
   const getNetworkName = (chainId?: number): string => {
     switch (chainId) {
       case 1: return 'Ethereum Mainnet';
+      case 11155111: return 'Sepolia Testnet';
       case 137: return 'Polygon Mainnet';
-      case 80001: return 'Polygon Mumbai Testnet';
-      default: return 'Unknown Network';
+      case 80001: return 'Polygon Mumbai';
+      case 43114: return 'Avalanche Mainnet';
+      case 43113: return 'Avalanche Fuji';
+      case 56: return 'BSC Mainnet';
+      case 97: return 'BSC Testnet';
+      default: return `Chain ID: ${chainId || 'Unknown'}`;
     }
   };
 
