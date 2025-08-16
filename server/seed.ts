@@ -39,6 +39,7 @@ export async function seedDatabase() {
         password: "$scrypt$N=16384,r=8,p=1$8f8c4e6a9b8d7c5e$a8f5f167f44f4964e6c998dee827110c",
         firstName: "Sarah",
         lastName: "Design",
+        role: "user" as const,
         kycStatus: "approved" as const,
         profileImageUrl: null,
         walletAddress: "0x1234567890123456789012345678901234567890",
