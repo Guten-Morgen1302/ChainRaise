@@ -390,7 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create contribution record
       await storage.createContribution({
         campaignId: id,
-        backerId: 'anonymous-wallet', // From wallet, not user account
+        backerId: null, // Anonymous wallet contribution - no user account
         amount: usdAmount.toString(),
         paymentMethod: 'avalanche',
         rewardTier: null,
