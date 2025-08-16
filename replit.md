@@ -77,6 +77,7 @@ CryptoFund is a full-stack Web3 crowdfunding platform that combines the features
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+UI/UX styling preference: Dark mode for admin interface - clean, professional dark theme without hacker/cyberpunk aesthetics.
 
 # System Architecture
 
