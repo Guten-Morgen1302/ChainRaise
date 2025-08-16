@@ -16,8 +16,7 @@ export default function AdminPage() {
     return () => clearInterval(timer);
   }, []);
   
-  // Debug log
-  console.log("Admin page - User:", user, "Loading:", isLoading);
+
   
   // Show loading state first
   if (isLoading) {
