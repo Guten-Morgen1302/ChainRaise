@@ -872,7 +872,7 @@ export function AdminDashboard() {
                           )}
                         </TableCell>
                         <TableCell className="text-gray-300">
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
@@ -968,7 +968,7 @@ export function AdminDashboard() {
                           <div className="flex items-center space-x-3 mb-3">
                             <h3 className="text-xl font-bold text-white">{campaign.title}</h3>
                             <Badge variant={campaign.status === "active" ? "default" : campaign.status === "pending_approval" ? "secondary" : "destructive"}>
-                              {campaign.status.replace('_', ' ')}
+                              {campaign.status?.replace('_', ' ') || 'unknown'}
                             </Badge>
                           </div>
                           <p className="text-gray-400 mb-4">{campaign.description}</p>
@@ -988,7 +988,7 @@ export function AdminDashboard() {
                             <div>
                               <p className="text-gray-400">Created</p>
                               <p className="text-white font-semibold">
-                                {new Date(campaign.createdAt).toLocaleDateString()}
+                                {campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString() : 'N/A'}
                               </p>
                             </div>
                           </div>
@@ -1061,7 +1061,7 @@ export function AdminDashboard() {
                           <div>
                             <h3 className="text-white font-bold">{user.firstName} {user.lastName}</h3>
                             <p className="text-gray-400">{user.email}</p>
-                            <p className="text-red-400 text-sm">Reason: {user.flagReason || "Policy violation"}</p>
+                            <p className="text-red-400 text-sm">Reason: {user.flaggedReason || "Policy violation"}</p>
                           </div>
                         </div>
                         
@@ -1139,7 +1139,7 @@ export function AdminDashboard() {
                           <div>
                             <h3 className="text-white font-bold">Appeal Request</h3>
                             <p className="text-amber-400 text-sm">
-                              Status: {request.status} • {new Date(request.createdAt).toLocaleDateString()}
+                              Status: {request.status} • {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'N/A'}
                             </p>
                           </div>
                           <Badge variant="outline" className="border-amber-400/50 text-amber-400">
