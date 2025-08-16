@@ -55,7 +55,7 @@ export default function CampaignDetail() {
   const { isConnected } = useWallet();
 
   const { data: campaign, isLoading } = useQuery({
-    queryKey: ["/api/campaigns", id],
+    queryKey: [`/api/campaigns/${id}`],
     retry: false,
   });
 
@@ -111,12 +111,12 @@ export default function CampaignDetail() {
   };
 
   const { data: contributions = [] } = useQuery({
-    queryKey: ["/api/contributions", id],
+    queryKey: [`/api/contributions/${id}`],
     retry: false,
   });
 
   const { data: transactions = [] } = useQuery({
-    queryKey: ["/api/transactions", id],
+    queryKey: [`/api/transactions/${id}`],
     retry: false,
   });
 
@@ -143,8 +143,8 @@ export default function CampaignDetail() {
       });
       setContributionAmount("");
       setContributionMessage("");
-      queryClient.invalidateQueries({ queryKey: ["/api/campaigns", id] });
-      queryClient.invalidateQueries({ queryKey: ["/api/contributions", id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/campaigns/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/contributions/${id}`] });
     },
     onError: (error: any) => {
       if (isUnauthorizedError(error)) {
@@ -672,7 +672,7 @@ export default function CampaignDetail() {
         }}
         onPaymentSuccess={(transaction) => {
           // Update campaign data and show success message
-          queryClient.invalidateQueries({ queryKey: ["/api/campaigns", id] });
+          queryClient.invalidateQueries({ queryKey: [`/api/campaigns/${id}`] });
           queryClient.invalidateQueries({ queryKey: ["/api/transactions", id] });
           toast({
             title: "Payment Successful!",
