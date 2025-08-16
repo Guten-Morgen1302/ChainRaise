@@ -230,8 +230,10 @@ export function requireAdmin(req: any, res: any, next: any) {
   }
   
   const user = req.user;
+  console.log("Admin check - User:", user.username, "Role:", user.role);
+  
   if (user.role !== "admin") {
-    return res.status(403).json({ message: "Admin access required" });
+    return res.status(403).json({ message: `Admin access required. Current role: ${user.role}` });
   }
   
   return next();

@@ -27,8 +27,13 @@ export default function AdminPage() {
   
   // Redirect if not admin
   useEffect(() => {
-    if (user && user.role !== 'admin') {
-      setLocation("/");
+    console.log("Admin page - User:", user);
+    if (user) {
+      console.log("User role:", user.role);
+      if (user.role !== 'admin') {
+        console.log("Not admin, redirecting...");
+        setLocation("/");
+      }
     }
   }, [user, setLocation]);
   
