@@ -306,6 +306,7 @@ export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 
 export type AiInteraction = typeof aiInteractions.$inferSelect;
 export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
+export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
 
 export type ReinstatementRequest = typeof reinstatementRequests.$inferSelect;
 export type InsertReinstatementRequest = z.infer<typeof insertReinstatementRequestSchema>;
