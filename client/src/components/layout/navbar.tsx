@@ -7,7 +7,7 @@ import { Menu, X, Wallet } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
 export default function Navbar() {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, user, isLoading, logout } = useAuth();
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -126,7 +126,7 @@ export default function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.location.href = '/api/logout'}
+                  onClick={logout}
                   className="btn-glass"
                 >
                   Logout
@@ -214,7 +214,7 @@ export default function Navbar() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => window.location.href = '/api/logout'}
+                      onClick={logout}
                     >
                       Logout
                     </Button>
