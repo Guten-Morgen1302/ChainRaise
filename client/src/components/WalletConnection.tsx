@@ -2,7 +2,7 @@ import { useWallet } from '@/hooks/useWallet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, RefreshCw } from 'lucide-react';
+import { Wallet, RefreshCw, X } from 'lucide-react';
 
 interface WalletConnectionProps {
   showBalance?: boolean;
@@ -22,7 +22,7 @@ export function WalletConnection({ showBalance = true, compact = false }: Wallet
               Connected
             </Badge>
             {showBalance && (
-              <span className="text-sm font-mono">
+              <span className="text-sm font-mono text-foreground">
                 {parseFloat(balance).toFixed(4)} AVAX
               </span>
             )}
@@ -34,6 +34,15 @@ export function WalletConnection({ showBalance = true, compact = false }: Wallet
               data-testid="button-refresh-balance"
             >
               <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={disconnectWallet}
+              className="text-red-500 hover:text-red-600"
+              data-testid="button-disconnect-wallet"
+            >
+              <X className="h-3 w-3" />
             </Button>
           </div>
         ) : (
@@ -61,7 +70,7 @@ export function WalletConnection({ showBalance = true, compact = false }: Wallet
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm">
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-md text-red-500 text-sm">
             {error}
           </div>
         )}
@@ -69,22 +78,22 @@ export function WalletConnection({ showBalance = true, compact = false }: Wallet
         {isConnected ? (
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-foreground">
                 Wallet Address
               </label>
-              <div className="p-2 bg-gray-50 rounded font-mono text-sm break-all">
+              <div className="p-2 bg-muted rounded font-mono text-sm break-all text-foreground">
                 {address}
               </div>
             </div>
             
             {showBalance && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-foreground">
                   Balance
                 </label>
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-gray-50 rounded font-mono text-sm">
-                    <span data-testid="text-wallet-balance">
+                  <div className="p-2 bg-muted rounded font-mono text-sm">
+                    <span data-testid="text-wallet-balance" className="text-foreground">
                       {parseFloat(balance).toFixed(4)} AVAX
                     </span>
                   </div>
@@ -122,7 +131,7 @@ export function WalletConnection({ showBalance = true, compact = false }: Wallet
           </div>
         ) : (
           <div className="text-center space-y-4">
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Connect your Avalanche wallet to make payments and track transactions.
             </p>
             <Button 
