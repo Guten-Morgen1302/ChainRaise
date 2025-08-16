@@ -20,20 +20,33 @@ import {
 } from "lucide-react";
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [time, setTime] = useState(new Date());
   const [hackerText, setHackerText] = useState("");
   
-  // Redirect if not admin
+  // Show login form if not authenticated
+  if (!isLoading && !user) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="bg-gray-900 border border-green-500 p-8 rounded-lg shadow-2xl max-w-md w-full">
+          <h1 className="text-2xl font-bold text-green-400 mb-6 text-center">Admin Access Required</h1>
+          <p className="text-gray-300 mb-6 text-center">Please log in to access the admin panel.</p>
+          <button 
+            onClick={() => setLocation("/auth")}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition-colors"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Redirect if logged in but not admin
   useEffect(() => {
-    console.log("Admin page - User:", user);
-    if (user) {
-      console.log("User role:", user.role);
-      if (user.role !== 'admin') {
-        console.log("Not admin, redirecting...");
-        setLocation("/");
-      }
+    if (user && user.role !== 'admin') {
+      setLocation("/");
     }
   }, [user, setLocation]);
   
